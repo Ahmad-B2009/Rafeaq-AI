@@ -19,6 +19,15 @@ export default function Login() {
   const fullPhone = '+218' + phone.replace(/\D/g, '')
   const isValid = phone.replace(/\D/g, '').length >= 9
 
+  // ✅ ميزة الحفظ الدائم - لو مسجل قبل يخش طول
+  useEffect(() => {
+    const savedToken = localStorage.getItem('rafeaq_token')
+    const savedUser = localStorage.getItem('rafeaq_user')
+    if (savedToken && savedUser) {
+      nav('/dashboard')
+    }
+  }, [nav])
+
   useEffect(() => {
     if (timer === 0) return
     const t = setTimeout(() => setTimer(timer - 1), 1000)
@@ -33,8 +42,12 @@ export default function Login() {
           try {
             const payload = r.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
             const p = JSON.parse(decodeURIComponent(escape(atob(payload))))
-            localStorage.setItem('rafeaq_user', p.email); localStorage.setItem('rafeaq_name', p.name)
-            localStorage.setItem('rafeaq_token', 'google_' + p.sub); nav('/dashboard')
+            localStorage.setItem('rafeaq_user', p.email); 
+            localStorage.setItem('rafeaq_name', p.name)
+            localStorage.setItem('rafeaq_token', 'google_' + p.sub);
+            localStorage.setItem('rafeaq_login_time', Date.now().toString());
+            localStorage.setItem('rafeaq_remember', 'true');
+            nav('/dashboard')
           } catch { setError('تعذر إكمال تسجيل الدخول بحساب Google. حاول مرة أخرى.') }
         }})
         setGoogleReady(true)
@@ -81,7 +94,13 @@ export default function Login() {
   }
 
   function verify(full){
-    if(full===serverCode){ localStorage.setItem('rafeaq_user',fullPhone); localStorage.setItem('rafeaq_token','tg_'+Date.now()); nav('/dashboard') }
+    if(full===serverCode){
+      localStorage.setItem('rafeaq_user',fullPhone); 
+      localStorage.setItem('rafeaq_token','tg_'+Date.now());
+      localStorage.setItem('rafeaq_login_time', Date.now().toString());
+      localStorage.setItem('rafeaq_remember', 'true');
+      nav('/dashboard') 
+    }
     else if(full.length===6) setError('الكود غير صحيح، تأكد من الكود في تيليجرام')
   }
 
