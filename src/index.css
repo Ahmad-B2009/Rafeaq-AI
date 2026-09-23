@@ -1,0 +1,13 @@
+
+* { font-family: 'Tajawal', system-ui, sans-serif; }
+body { margin:0; background:#FBF9FF; overflow-x:hidden; }
+.glass-strong {
+  background: linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.72) 100%);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 24px 80px rgba(124,58,237,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+* { font-family: 'Tajawal', sans-serif; box-sizing: border-box; }
+body { margin:0; background:#fff; }
+.blob { position:absolute; border-radius:50%; filter: blur(80px); pointer-events:none; }
