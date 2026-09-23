@@ -102,7 +102,7 @@ export default function Login() {
             <span className="font-extrabold text-[20px] text-[#1E1B4B]">Rafeaq AI</span>
           </div>
           <div className="mt-10">
-            <h1 className="text-[40px] font-extrabold leading-[1.05] text-[#1E1B4B]">منصتك الذكية<br/>لإدارة الأعمال.</h1>
+            <h1 className="text-[40px] font-extrabold leading-[1.05] text-[#1E1B4B]">منصتك الذكية<br/>لتعليم أفضل.</h1>
             <p className="mt-5 text-[14px] leading-7 text-[#6D6A8A] max-w-[360px]">اربط Gmail و تيليجرام في مكان واحد. بسيط، آمن، وسريع.</p>
           </div>
         </div>
