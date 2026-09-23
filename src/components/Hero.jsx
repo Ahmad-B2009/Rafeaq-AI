@@ -22,7 +22,7 @@ export default function Hero(){
             <span className="bg-[linear-gradient(100deg,#7C3AED,#6D28D9,#A78BFA,#7C3AED)] bg-[length:200%_200%] bg-clip-text text-transparent" style={{animation:'gradientMove 4s ease infinite'}}>رفيق</span> يفهمك<br/>ويجاوبك زي صاحبك
           </h1>
           <p className="mt-6 text-[18px] leading-7 opacity-60 max-w-[520px]">
-            مساعد ذكاء اصطناعي يفهم اللهجة الليبية، يساعدك في الكتابة، الشرح، التلخيص، والأفكار. واجهة بسيطة وسريعة بدون تعقيد.
+            مساحة دراسية متكاملة تجمع رفيق AI، دفتر المصادر، مكتبتك، عروضك، وخطة تركيزك اليومية في مكان واحد.
           </p>
           <div className="mt-8 flex gap-3">
             <button onClick={()=>nav('/login')} className="h-[52px] px-8 rounded-full bg-black text-white font-medium shadow-[0_8px_20px_rgba(0,0,0,0.18)] hover:scale-[1.03] hover:shadow-[0_14px_36px_rgba(0,0,0,0.28)] transition-all duration-300">ابدأ المحادثة</button>

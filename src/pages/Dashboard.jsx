@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { answerFromSources, deleteDeviceFile, extractPdfText, getDeviceFile, listDeviceFiles, saveDeviceFile } from '../lib/deviceStorage.js'
 
 export default function Dashboard() {
   const nav = useNavigate()
@@ -66,7 +67,7 @@ export default function Dashboard() {
     { id: 'notebook', label: T.notebook, letter: 'N', color: '#F59E0B', desc: 'NotebookLM' },
     { id: 'library', label: T.library, letter: 'L', color: '#10B981', desc: T.curriculum },
     { id: 'slides', label: T.slides, letter: 'S', color: '#EC4899', desc: 'PowerPoint' },
-    { id: 'khazna', label: T.khazna, letter: 'K', color: '#6366F1', desc: 'TeraBox 100GB' },
+    { id: 'khazna', label: T.khazna, letter: 'K', color: '#6366F1', desc: isAr ? 'مساحتك الشخصية' : 'Personal space' },
     { id: 'tasks', label: T.tasks, letter: 'T', color: '#059669', desc: T.myTasks },
     { id: 'pomo', label: T.pomodoro, letter: 'P', color: '#EF4444', desc: T.focus },
     { id: 'flash', label: T.flashcards, letter: 'F', color: '#8B5CF6', desc: T.smartReview },
@@ -279,37 +280,43 @@ function HomeView({ T, isAr, setTab }) {
 }
 
 function AIView({ T, isAr }) {
-  const [msgs, setMsgs] = useState([{ role: 'a', text: isAr ? 'هلا والله! أنا رفيق' : 'Hello! I am Rafeaq' }])
+  const today = new Date().toISOString().slice(0, 10)
+  const [history, setHistory] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_ai_history') || '[]') } catch { return [] } })
+  const [msgs, setMsgs] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_ai_messages') || '[{"role":"a","text":"هلا! أنا رفيق، نقدر نشرح ونلخص ونرتب لك خطة مذاكرة."}]') } catch { return [] } })
   const [inp, setInp] = useState('')
+  const [busy, setBusy] = useState(false)
   const ref = useRef(null)
-  useEffect(() => { ref.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs])
-  function send() {
-    const u = inp.trim()
-    if (!u) return
-    setMsgs([...msgs, { role: 'u', text: u }])
-    setInp('')
-    setTimeout(() => setMsgs((m) => [...m, { role: 'a', text: (isAr ? 'تمام: ' : 'Got: ') + u }]), 300)
+  const used = history.filter((d) => d === today).length
+  const remaining = Math.max(0, 25 - used)
+  useEffect(() => { localStorage.setItem('rafeaq_ai_messages', JSON.stringify(msgs)); ref.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs])
+  function localReply(question) {
+    if (/لخص|تلخيص/.test(question)) return 'أكيد. أرسل لي النص أو صورة الدرس وسألخصه لك في نقاط مرتبة مع أهم التعريفات.'
+    if (/خطة|جدول|مذاكرة/.test(question)) return 'خلينا نمشوا بخطة بسيطة: 25 دقيقة تركيز على جزء صغير، 5 دقائق راحة، ثم نراجع أهم ما فهمناه في دقيقتين.'
+    if (/اشرح|شرح|درس/.test(question)) return 'تمام، اكتب اسم المادة والصف والجزء الذي تريد شرحه، وسأرتبه لك خطوة خطوة مع مثال بسيط.'
+    return 'وصلني سؤالك. اكتب المادة أو أرفق محتوى الدرس وحدد هل تريد شرحًا أو تلخيصًا أو أسئلة للمراجعة.'
   }
-  return (
-    <div className="max-w-[600px] mx-auto min-w-0">
-      <div className="bg-white rounded-2xl border p-4">
-        <div className="space-y-2 max-h-[360px] overflow-y-auto">
-          {msgs.map((m, i) => (
-            <div key={i} className={'flex ' + (m.role === 'u' ? 'justify-end' : 'justify-start')}>
-              <div className={'max-w-[80%] rounded-xl px-3 py-2 text-[11px] ' + (m.role === 'u' ? 'bg-[#A78BFA] text-white' : 'bg-[#F8F7FF] border')}>{m.text}</div>
-            </div>
-          ))}
-          <div ref={ref}></div>
-        </div>
-        <div className="mt-3 flex gap-2">
-          <input value={inp} onChange={(e) => setInp(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} placeholder={T.search} className="flex-1 h-[36px] rounded-full border px-4 text-[11px] outline-none" />
-          <button onClick={send} className="w-9 h-9 rounded-full bg-[#A78BFA] text-white">↑</button>
-        </div>
-      </div>
+  async function send() {
+    const text = inp.trim()
+    if (!text || busy || remaining === 0) return
+    const nextHistory = [...history, today]
+    setHistory(nextHistory); localStorage.setItem('rafeaq_ai_history', JSON.stringify(nextHistory))
+    setMsgs((m) => [...m, { role: 'u', text }]); setInp(''); setBusy(true)
+    try {
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setMsgs((m) => [...m, { role: 'a', text: data.reply || localReply(text) }])
+    } catch { setMsgs((m) => [...m, { role: 'a', text: localReply(text) }]) }
+    finally { setBusy(false) }
+  }
+  return <div className="max-w-[760px] mx-auto min-w-0">
+    <div className="flex items-center justify-between mb-4"><div><h1 className="font-extrabold text-[20px]">رفيق AI</h1><p className="text-[11px] opacity-55 mt-1">مساعدك الدراسي: شرح، تلخيص، وأسئلة مراجعة.</p></div><div className="px-3 py-2 rounded-2xl bg-[#F0EBFF] text-[#6D28D9] text-[11px] font-bold">{remaining} من 25 اليوم</div></div>
+    <div className="bg-white rounded-[24px] border border-[#E7E0FF] shadow-[0_12px_40px_rgba(124,58,237,.08)] p-4">
+      <div className="space-y-3 h-[410px] overflow-y-auto p-1">{msgs.map((m,i)=><div key={i} className={'flex '+(m.role==='u'?'justify-end':'justify-start')}><div className={'max-w-[82%] rounded-2xl px-4 py-3 text-[13px] leading-6 '+(m.role==='u'?'bg-[#7C3AED] text-white rounded-bl-sm':'bg-[#F8F7FF] border border-[#EEEAFE] text-[#27213F] rounded-br-sm')}>{m.text}</div></div>)}{busy && <div className="text-[11px] opacity-50 px-3">رفيق يجهز الرد…</div>}<div ref={ref}/></div>
+      <div className="mt-3 flex gap-2"><input value={inp} onChange={(e)=>setInp(e.target.value)} onKeyDown={(e)=>e.key==='Enter'&&send()} disabled={remaining===0} placeholder={remaining ? 'اكتب سؤالك الدراسي هنا…' : 'اكتملت محادثات اليوم'} className="flex-1 h-[48px] rounded-2xl border border-[#E5E0F7] px-4 text-[12px] outline-none focus:border-[#7C3AED] disabled:bg-slate-50"/><button onClick={send} disabled={!inp.trim()||busy||remaining===0} className="w-12 h-12 rounded-2xl bg-[#7C3AED] text-white disabled:opacity-40">↑</button></div>
     </div>
-  )
+  </div>
 }
-
 function TasksView({ T, search, isAr }) {
   const [tasks, setTasks] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_tasks') || '[]') } catch { return [] } })
   useEffect(() => { localStorage.setItem('rafeaq_tasks', JSON.stringify(tasks)) }, [tasks])
@@ -338,7 +345,7 @@ function TasksView({ T, search, isAr }) {
 
 function LibraryView({ T, isAr }) {
   const [books, setBooks] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_books') || '[]') } catch { return [] } })
-  const URL = 'https://www.al-amgaad.com/2021/08/allbooks.html'
+  const URL = 'https://cerc.moe.gov.ly/'
   function onFile(e) {
     const files = e.target.files
     if (!files) return
@@ -369,29 +376,48 @@ function LibraryView({ T, isAr }) {
           </div>
         ))}
       </div>
-      <div className="bg-white rounded-xl border overflow-hidden"><iframe src={URL} title="books" className="w-full h-[400px] border-0"></iframe></div>
+      <div className="bg-[#F8F7FF] rounded-xl border border-dashed p-5 text-center"><div className="font-bold text-[12px]">مصدر الكتب المعتمد</div><p className="text-[11px] opacity-60 mt-2">اختر الكتب من موقع مركز المناهج التعليمية والبحوث التربوية، ثم أضف ملفات PDF التي تريد الاحتفاظ بها في مكتبتك على هذا الجهاز.</p><a href={URL} target="_blank" rel="noreferrer" className="inline-flex mt-3 h-[34px] px-4 items-center rounded-full bg-[#7C3AED] text-white text-[11px] font-bold">فتح موقع مركز المناهج ↗</a></div>
     </div>
   )
 }
 
 function NotebookView({ T }) {
-  const [sources, setSources] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_sources') || '[]') } catch { return [] } })
-  const [note, setNote] = useState('')
-  function add() {
-    if (!note.trim()) return
-    const ns = [...sources, { id: Date.now(), title: note.slice(0, 30) }]
-    setSources(ns)
-    localStorage.setItem('rafeaq_sources', JSON.stringify(ns))
-    setNote('')
+  const [sources, setSources] = useState([])
+  const [question, setQuestion] = useState('')
+  const [answer, setAnswer] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const loadSources = async () => setSources(await listDeviceFiles('notebook'))
+  useEffect(() => { loadSources().catch(() => setError('تعذر فتح مصادر دفتر رفيق على هذا الجهاز.')) }, [])
+  async function upload(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (file.type !== 'application/pdf') { setError('دفتر رفيق يقبل ملفات PDF فقط.'); return }
+    setLoading(true); setError('')
+    try {
+      const text = await extractPdfText(file)
+      if (!text) throw new Error('empty')
+      await saveDeviceFile(file, 'notebook', { text, pagesHint: 'PDF' })
+      await loadSources()
+    } catch { setError('لم نتمكن من قراءة النص من هذا الـPDF. تأكد أن الملف ليس صورة ممسوحة فقط أو محميًا بكلمة مرور.') }
+    finally { setLoading(false) }
   }
-  return (
-    <div className="grid grid-cols-[200px_1fr] gap-3 max-w-[800px] mx-auto min-w-0">
-      <div className="bg-white rounded-xl border p-3 min-w-0"><h3 className="font-bold text-[11px]">Sources ({sources.length})</h3><textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Paste..." className="mt-2 w-full h-[60px] rounded-lg border p-2 text-[10px]" /><button onClick={add} className="mt-2 w-full h-[28px] rounded-full bg-[#A78BFA] text-white text-[10px]">Add</button></div>
-      <div className="bg-white rounded-xl border p-4 min-w-0"><h3 className="font-bold text-[12px]">{T.notebook}</h3></div>
-    </div>
-  )
+  async function ask() {
+    if (!question.trim() || !sources.length) return
+    setAnswer(answerFromSources(question, sources)); setQuestion('')
+  }
+  async function remove(id) { await deleteDeviceFile(id); await loadSources(); setAnswer(null) }
+  return <div className="max-w-[980px] mx-auto grid lg:grid-cols-[290px_1fr] gap-4 min-w-0">
+    <aside className="bg-white rounded-[22px] border border-[#E9E3F8] p-4 min-w-0">
+      <div className="flex justify-between items-center"><div><h2 className="font-extrabold text-[14px]">مصادر دفتر رفيق</h2><p className="text-[10px] opacity-50 mt-1">PDF محفوظ على جهازك</p></div><span className="text-[11px] text-[#7C3AED] font-bold">{sources.length}</span></div>
+      <label className="mt-4 h-[42px] rounded-xl bg-[#7C3AED] text-white text-[11px] font-bold flex items-center justify-center cursor-pointer">{loading ? 'جاري قراءة الملف…' : '+ إضافة PDF'}<input type="file" accept="application/pdf" onChange={upload} disabled={loading} className="hidden"/></label>
+      {error && <p className="mt-3 p-3 rounded-xl bg-red-50 text-red-700 text-[10px] leading-5">{error}</p>}
+      <div className="mt-3 space-y-2">{sources.map((source) => <div key={source.id} className="rounded-xl bg-[#FAF9FF] border border-[#EEEAFE] p-3"><div className="flex gap-2"><span className="w-7 h-7 shrink-0 rounded-lg bg-[#EEE8FF] text-[#7C3AED] flex items-center justify-center text-[9px] font-bold">PDF</span><div className="min-w-0 flex-1"><p className="font-bold text-[10px] truncate">{source.name}</p><p className="text-[9px] opacity-45 mt-1">{Math.ceil(source.size / 1024)} KB</p></div><button onClick={() => remove(source.id)} className="text-[11px] opacity-35 hover:opacity-100">×</button></div></div>)}{!sources.length && <p className="py-8 text-center text-[10px] opacity-45">أضف كتابًا أو ملزمة للبدء.</p>}</div>
+    </aside>
+    <section className="bg-white rounded-[22px] border border-[#E9E3F8] p-5 min-w-0"><div className="inline-flex px-3 py-1 rounded-full bg-[#F1EDFF] text-[#6D28D9] text-[10px] font-bold">إجابة من مصادرِك فقط</div><h1 className="font-extrabold text-[20px] mt-3">{T.notebook}</h1><p className="text-[12px] opacity-55 mt-2 leading-6">اسأل عن المحتوى المرفوع، ولن يضيف الدفتر معلومات خارج المصادر.</p><div className="mt-6 flex gap-2"><input value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && ask()} placeholder={sources.length ? 'اسأل عن الدرس أو اطلب تلخيصًا…' : 'أضف PDF أولًا'} disabled={!sources.length} className="flex-1 h-[48px] rounded-xl border border-[#E5E0F7] px-4 text-[12px] outline-none focus:border-[#7C3AED] disabled:bg-slate-50"/><button onClick={ask} disabled={!sources.length || !question.trim()} className="px-5 rounded-xl bg-[#7C3AED] text-white text-[11px] font-bold disabled:opacity-40">اسأل</button></div>{answer && <div className="mt-5 rounded-2xl bg-[#FAF9FF] border border-[#EEEAFE] p-4"><p className="text-[12px] leading-7 whitespace-pre-line">{answer.text}</p>{answer.citations?.length > 0 && <p className="text-[10px] text-[#7C3AED] font-bold mt-4">المصدر: {answer.citations.join('، ')}</p>}</div>}</section>
+  </div>
 }
-
 function SlidesView({ T }) {
   const [slides, setSlides] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_slides') || '[{"t":"Hello","c":""}]') } catch { return [{ t: 'Hello', c: '' }] } })
   const [idx, setIdx] = useState(0)
@@ -405,28 +431,24 @@ function SlidesView({ T }) {
 }
 
 function KhaznaView({ T }) {
-  const [files, setFiles] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_khazna') || '[]') } catch { return [] } })
-  function onFile(e) {
-    const fs = e.target.files
-    if (!fs) return
-    Array.from(fs).forEach((f) => {
-      const r = new FileReader()
-      r.onload = () => {
-        const file = { id: Date.now() + Math.random(), name: f.name }
-        const cur = JSON.parse(localStorage.getItem('rafeaq_khazna') || '[]')
-        const nb = [...cur, file]
-        setFiles(nb)
-        localStorage.setItem('rafeaq_khazna', JSON.stringify(nb))
-      }
-      r.readAsDataURL(f)
-    })
-    e.target.value = ''
+  const [files, setFiles] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const loadFiles = async () => setFiles(await listDeviceFiles('vault'))
+  useEffect(() => { loadFiles().catch(() => setError('تعذر فتح الخزنة على هذا الجهاز.')) }, [])
+  async function upload(event) {
+    const selected = Array.from(event.target.files || []); event.target.value = ''
+    if (!selected.length) return
+    setLoading(true); setError('')
+    try { for (const file of selected) await saveDeviceFile(file, 'vault'); await loadFiles() }
+    catch { setError('تعذر حفظ أحد الملفات. تأكد من توفر مساحة كافية على جهازك.') }
+    finally { setLoading(false) }
   }
-  return (
-    <div className="max-w-[600px] mx-auto min-w-0"><div className="bg-white rounded-xl border p-3 flex justify-between gap-2"><h3 className="font-bold text-[12px] truncate">{T.khazna} - {files.length}</h3><label className="h-[28px] px-3 rounded-full bg-[#A78BFA] text-white text-[9px] flex items-center cursor-pointer shrink-0">+ Upload<input type="file" multiple onChange={onFile} className="hidden" /></label></div><div className="mt-2 grid grid-cols-3 gap-2">{files.map((f) => (<div key={f.id} className="bg-white rounded-lg border p-2 min-w-0"><div className="text-[9px] font-bold truncate">{f.name}</div></div>))}</div></div>
-  )
+  async function download(id) { const file = await getDeviceFile(id); const url = URL.createObjectURL(file.blob); const link = document.createElement('a'); link.href = url; link.download = file.name; link.click(); URL.revokeObjectURL(url) }
+  async function remove(id) { await deleteDeviceFile(id); await loadFiles() }
+  const total = files.reduce((sum, file) => sum + file.size, 0)
+  return <div className="max-w-[860px] mx-auto min-w-0"><div className="rounded-[22px] bg-gradient-to-l from-[#33206E] to-[#6D3CD5] text-white p-5 flex flex-wrap items-center justify-between gap-4"><div><p className="text-[11px] opacity-70">خزنة رفيق · ملفاتك على هذا الجهاز</p><h1 className="text-[22px] font-extrabold mt-1">{T.khazna}</h1><p className="text-[11px] opacity-75 mt-2">{files.length} ملفات · {(total / 1024 / 1024).toFixed(1)} MB</p></div><label className="h-[42px] px-4 rounded-xl bg-white text-[#5B21B6] text-[11px] font-bold flex items-center cursor-pointer">{loading ? 'جاري الحفظ…' : '+ رفع ملفات'}<input type="file" multiple onChange={upload} disabled={loading} className="hidden"/></label></div>{error && <p className="mt-3 p-3 rounded-xl bg-red-50 text-red-700 text-[10px]">{error}</p>}<div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{files.map((file) => <div key={file.id} className="bg-white rounded-2xl border border-[#E9E3F8] p-4"><div className="w-10 h-10 rounded-xl bg-[#F1EDFF] text-[#6D28D9] flex items-center justify-center text-[10px] font-bold">{file.name.split('.').pop()?.slice(0,4).toUpperCase() || 'FILE'}</div><p className="font-bold text-[11px] mt-3 truncate">{file.name}</p><p className="text-[10px] opacity-45 mt-1">{(file.size / 1024).toFixed(1)} KB</p><div className="mt-4 flex gap-2"><button onClick={() => download(file.id)} className="flex-1 h-[30px] rounded-lg bg-[#F1EDFF] text-[#6D28D9] text-[10px] font-bold">تنزيل</button><button onClick={() => remove(file.id)} className="w-[30px] rounded-lg border text-[13px] opacity-50">×</button></div></div>)}{!files.length && <div className="sm:col-span-2 lg:col-span-3 py-14 text-center bg-white rounded-2xl border border-dashed text-[11px] opacity-45">الخزنة فارغة. ارفع أول ملف تريد الاحتفاظ به.</div>}</div></div>
 }
-
 function PomoView({ T, isAr }) {
   const [work, setWork] = useState(25)
   const [brk, setBrk] = useState(5)
