@@ -13,10 +13,8 @@ export default function Dashboard() {
   const [search, setSearch] = useState('')
   const [showNotif, setShowNotif] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-
   const isAr = lang === 'ar'
 
-  // كل الترجمات كاملة 100% - عربي / انجليزي
   const T = {
     dashboard: isAr ? 'لوحة التحكم' : 'Dashboard',
     welcome: isAr ? 'مرحبا بعودتك - اليوم' : 'Welcome back - Today',
@@ -62,32 +60,32 @@ export default function Dashboard() {
   }
 
   const tabs = [
-    { id: 'home', label: T.home, letter: 'R', color: '#A78BFA', desc: T.overview },
-    { id: 'ai', label: T.aiChat, letter: 'AI', color: '#7C3AED', desc: T.aiChats },
-    { id: 'notebook', label: T.notebook, letter: 'N', color: '#F59E0B', desc: 'NotebookLM' },
-    { id: 'library', label: T.library, letter: 'L', color: '#10B981', desc: T.curriculum },
-    { id: 'slides', label: T.slides, letter: 'S', color: '#EC4899', desc: 'PowerPoint' },
-    { id: 'khazna', label: T.khazna, letter: 'K', color: '#6366F1', desc: isAr ? 'مساحتك الشخصية' : 'Personal space' },
-    { id: 'tasks', label: T.tasks, letter: 'T', color: '#059669', desc: T.myTasks },
-    { id: 'pomo', label: T.pomodoro, letter: 'P', color: '#EF4444', desc: T.focus },
-    { id: 'flash', label: T.flashcards, letter: 'F', color: '#8B5CF6', desc: T.smartReview },
-    { id: 'exam', label: T.exams, letter: 'E', color: '#F97316', desc: T.countdown }
+    { id: 'home', label: T.home, icon: 'H', desc: T.overview },
+    { id: 'ai', label: T.aiChat, icon: 'AI', desc: T.aiChats },
+    { id: 'notebook', label: T.notebook, icon: 'N', desc: 'NotebookLM' },
+    { id: 'library', label: T.library, icon: 'L', desc: T.curriculum },
+    { id: 'slides', label: T.slides, icon: 'S', desc: 'PowerPoint' },
+    { id: 'khazna', label: T.khazna, icon: 'K', desc: isAr ? 'مساحتك الشخصية' : 'Personal space' },
+    { id: 'tasks', label: T.tasks, icon: 'T', desc: T.myTasks },
+    { id: 'pomo', label: T.pomodoro, icon: 'P', desc: T.focus },
+    { id: 'flash', label: T.flashcards, icon: 'F', desc: T.smartReview },
+    { id: 'exam', label: T.exams, icon: 'E', desc: T.countdown }
   ]
 
-  useEffect(() => {
+  useEffect(function() {
     const u = localStorage.getItem('rafeaq_user') || ''
     setUser(u)
     setTempName(u)
     const savedLang = localStorage.getItem('rafeaq_lang')
     if (savedLang) setLang(savedLang)
-    const onDocClick = (e) => {
+    function onDocClick(e) {
       if (!e.target.closest('.dd')) {
         setShowNotif(false)
         setShowSettings(false)
       }
     }
     document.addEventListener('click', onDocClick)
-    return () => document.removeEventListener('click', onDocClick)
+    return function() { document.removeEventListener('click', onDocClick) }
   }, [])
 
   function saveName() {
@@ -97,55 +95,58 @@ export default function Dashboard() {
     localStorage.setItem('rafeaq_user', n)
     setEditingName(false)
   }
-
   function toggleLang() {
     const nl = lang === 'ar' ? 'en' : 'ar'
     setLang(nl)
     localStorage.setItem('rafeaq_lang', nl)
-    // تحديث فوري بدون ريلود
   }
-
   function logout() {
     localStorage.removeItem('rafeaq_token')
     localStorage.removeItem('rafeaq_user')
     nav('/login')
   }
 
-  const sideW = collapsed ? 'w-[72px]' : 'w-[260px]'
-  const mainMl = collapsed ? 'ml-[72px]' : 'ml-[260px]'
+  const sideW = collapsed ? 'w-[72px]' : 'w-[280px]'
+  const mainMr = collapsed ? 'mr-[72px]' : 'mr-[280px]'
 
   return (
-    <div className="min-h-screen bg-[#F8F7FF] flex overflow-x-hidden" dir={isAr ? 'rtl' : 'ltr'} style={{ fontFamily: 'Tajawal, sans-serif' }}>
-      {/* SIDEBAR - بدون Link */}
-      <div className={sideW + ' bg-white border-r border-[#A78BFA]/10 fixed left-0 top-0 h-screen z-30 flex flex-col justify-between transition-all duration-300'}>
-        <div className="p-3 flex-1 overflow-y-auto overflow-x-hidden">
+    <div className="min-h-screen bg-[#F7F5F3] flex overflow-x-hidden text-[#0E1217]" dir={isAr ? 'rtl' : 'ltr'}>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap'); *{font-family:'IBM Plex Sans Arabic',sans-serif}"}</style>
+
+      <div className={sideW + " bg-[#0E1217] border-l border-[#1E242E] fixed right-0 top-0 h-screen z-30 flex flex-col justify-between transition-all duration-300"}>
+        <div className="p-5 flex-1 overflow-y-auto overflow-x-hidden">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-[#A78BFA] text-white flex items-center justify-center font-black shrink-0">ر</div>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 bg-[#F5F3EF] text-[#0E1217] flex items-center justify-center font-bold text-[15px] shrink-0">ر</div>
               {!collapsed && (
                 <div className="min-w-0">
-                  <div className="font-extrabold text-[13px] truncate">رفيق</div>
-                  <div className="text-[8px] opacity-40 -mt-1">Rafeaq OS Beta</div>
+                  <div className="font-semibold text-[13px] text-[#F5F3EF]">رفيق</div>
+                  <div className="text-[9px] tracking-[0.2em] uppercase text-[#5A6372] -mt-0.5">Rafeaq OS - الرسمية</div>
                 </div>
               )}
             </div>
-            <button onClick={() => setCollapsed(!collapsed)} className="w-7 h-7 rounded-full bg-[#F5F3FF] border flex items-center justify-center text-[11px] shrink-0 hover:bg-[#A78BFA] hover:text-white">
+            <button onClick={function(){ setCollapsed(!collapsed) }} className="w-7 h-7 rounded-[6px] bg-[#1E242E] border border-[#252E3D] flex items-center justify-center text-[11px] text-[#8A919E] hover:text-white shrink-0">
               {collapsed ? '>' : '<'}
             </button>
           </div>
-
-          <div className="mt-5 space-y-1">
-            {tabs.map((t) => {
+          {!collapsed && (
+            <div className="mt-6 px-1">
+              <div className="h-px bg-[#1E242E]"></div>
+              <div className="mt-4 text-[10px] tracking-[0.15em] uppercase text-[#5A6372] font-semibold">المنصة التعليمية</div>
+            </div>
+          )}
+          <div className="mt-6 space-y-1">
+            {tabs.map(function(t) {
               const active = tab === t.id
               return (
-                <button key={t.id} onClick={() => setTab(t.id)} className={'w-full flex items-center gap-2 px-2 h-[42px] rounded-xl transition-all overflow-hidden ' + (active ? 'bg-[#A78BFA] text-white shadow' : 'hover:bg-[#F5F3FF] text-black/60 hover:text-black')}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: active ? 'rgba(255,255,255,0.25)' : t.color + '15', color: active ? 'white' : t.color }}>
-                    {t.letter}
+                <button key={t.id} onClick={function(){ setTab(t.id) }} className={"w-full flex items-center gap-3 px-3 h-[40px] rounded-[8px] transition-all overflow-hidden text-right " + (active ? 'bg-[#1E242E] text-[#F5F3EF] border border-[#252E3D]' : 'text-[#8A919E] hover:text-[#F5F3EF] hover:bg-[#151A23]')}>
+                  <div className={"w-7 h-7 rounded-[6px] flex items-center justify-center text-[12px] shrink-0 " + (active ? 'bg-[#F5F3EF] text-[#0E1217]' : 'bg-[#1A1F2B] text-[#8A919E]')}>
+                    {t.icon}
                   </div>
                   {!collapsed && (
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="text-[11px] font-bold truncate">{t.label}</div>
-                      <div className="text-[9px] opacity-50 truncate">{t.desc}</div>
+                    <div className="flex-1 text-right min-w-0">
+                      <div className="text-[12px] font-medium truncate">{t.label}</div>
+                      <div className="text-[10px] opacity-60 truncate">{t.desc}</div>
                     </div>
                   )}
                 </button>
@@ -153,79 +154,91 @@ export default function Dashboard() {
             })}
           </div>
         </div>
-
-        <div className="p-3 border-t border-black/5 space-y-2 bg-white">
-          <button onClick={toggleLang} className="w-full h-[34px] rounded-full bg-[#F5F3FF] border border-[#A78BFA]/20 text-[10px] font-bold text-[#7C3AED] hover:bg-[#A78BFA] hover:text-white">
+        <div className="p-4 border-t border-[#1E242E] space-y-3 bg-[#0E1217]">
+          <button onClick={toggleLang} className="w-full h-[34px] rounded-[8px] bg-[#151A23] border border-[#1E242E] text-[11px] font-medium text-[#8A919E] hover:text-[#F5F3EF]">
             {collapsed ? 'EN' : T.langBtn}
           </button>
-
-          <div className={'flex items-center gap-2 ' + (collapsed ? 'justify-center' : '')}>
-            <div className="w-8 h-8 rounded-full bg-[#A78BFA] text-white flex items-center justify-center font-bold text-[11px] shrink-0">
+          <div className={"flex items-center gap-3 p-2.5 rounded-[10px] bg-[#151A23] border border-[#1E242E] " + (collapsed ? 'justify-center' : '')}>
+            <div className="w-8 h-8 rounded-[8px] bg-[#F5F3EF] text-[#0E1217] flex items-center justify-center font-bold text-[11px] shrink-0">
               {user ? user[0].toUpperCase() : '?'}
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 {editingName ? (
                   <div className="flex gap-1">
-                    <input value={tempName} onChange={(e) => setTempName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveName()} className="flex-1 min-w-0 h-[24px] rounded-full border px-2 text-[10px] outline-none" autoFocus />
-                    <button onClick={saveName} className="w-6 h-6 rounded-full bg-[#A78BFA] text-white text-[10px]">✓</button>
+                    <input value={tempName} onChange={function(e){ setTempName(e.target.value) }} onKeyDown={function(e){ if(e.key === 'Enter') saveName() }} className="flex-1 min-w-0 h-[26px] rounded-[6px] bg-[#0E1217] border border-[#252E3D] px-2 text-[11px] text-white outline-none" autoFocus />
+                    <button onClick={saveName} className="w-6 h-6 rounded-[6px] bg-white text-black text-[10px]">✓</button>
                   </div>
                 ) : (
                   <div className="min-w-0">
-                    <div className="text-[11px] font-bold truncate flex items-center gap-1">
+                    <div className="text-[12px] font-medium text-[#F5F3EF] truncate flex items-center gap-1">
                       <span className="truncate">{user || T.editName}</span>
-                      <button onClick={() => { setEditingName(true); setTempName(user) }} className="opacity-30 text-[9px]">✎</button>
+                      <button onClick={function(){ setEditingName(true); setTempName(user) }} className="opacity-40 text-[10px]">✎</button>
                     </div>
-                    <div className="text-[8px] opacity-40">{T.premium}</div>
+                    <div className="text-[10px] text-[#5A6372]">{T.premium}</div>
                   </div>
                 )}
               </div>
             )}
           </div>
-
-          <button onClick={logout} className="w-full h-[32px] rounded-full border text-[10px] font-bold hover:bg-black hover:text-white">
-            {collapsed ? '↪' : T.logout}
+          <button onClick={logout} className="w-full h-[34px] rounded-[8px] bg-transparent border border-[#1E242E] text-[11px] font-medium text-[#8A919E] hover:bg-[#1E242E] hover:text-white">
+            {collapsed ? 'X' : T.logout}
           </button>
+          <div className="text-[9px] text-[#3A424E] text-center">© 2026 رفيق - منصة رسمية</div>
         </div>
       </div>
 
-      {/* MAIN */}
-      <div className={'flex-1 min-w-0 ' + mainMl + ' transition-all duration-300'}>
-        <div className="h-[52px] px-4 flex items-center justify-between bg-white border-b border-[#A78BFA]/10 sticky top-0 z-20 gap-3">
-          <div className="flex items-center gap-2 shrink-0">
+      <div className={"flex-1 min-w-0 " + mainMr + " transition-all duration-300"}>
+        <div className="h-[60px] px-6 flex items-center justify-between bg-[#FFFFFF] border-b border-[#E8E6E1] sticky top-0 z-20 gap-4">
+          <div className="flex items-center gap-4 shrink-0">
             <div className="dd relative">
-              <button onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); setShowNotif(false) }} className="w-8 h-8 rounded-full bg-[#F5F3FF] border flex items-center justify-center text-[11px]">⚙</button>
+              <button onClick={function(e){ e.stopPropagation(); setShowSettings(!showSettings); setShowNotif(false) }} className="w-8 h-8 rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] flex items-center justify-center text-[13px] text-[#5A6372] hover:bg-[#0E1217] hover:text-white">⚙</button>
               {showSettings && (
-                <div className="absolute top-[40px] left-0 w-[200px] bg-white rounded-xl border shadow-xl p-3 z-50">
-                  <div className="font-bold text-[11px]">{T.settings}</div>
-                  <div className="text-[9px] opacity-50 mt-1">{T.language}</div>
-                  <button onClick={toggleLang} className="mt-2 w-full h-[34px] rounded-full bg-[#F5F3FF] border text-[11px] font-bold">{T.langBtn}</button>
-                  <button onClick={() => setShowSettings(false)} className="mt-2 w-full h-[30px] rounded-full bg-black text-white text-[10px]">{T.close}</button>
+                <div className="absolute top-[44px] right-0 w-[240px] bg-white rounded-[12px] border border-[#E8E6E1] shadow-lg p-4 z-50">
+                  <div className="text-[10px] tracking-[0.15em] uppercase text-[#8A919E] font-semibold">{T.settings}</div>
+                  <div className="text-[11px] text-[#5A6372] mt-3">{T.language}</div>
+                  <button onClick={toggleLang} className="mt-2 w-full h-[36px] rounded-[8px] bg-[#0E1217] text-white text-[12px] font-medium">{T.langBtn}</button>
+                  <button onClick={function(){ setShowSettings(false) }} className="mt-2 w-full h-[32px] rounded-[8px] bg-[#F7F5F3] border text-[11px]">{T.close}</button>
                 </div>
               )}
             </div>
             <div className="dd relative">
-              <button onClick={(e) => { e.stopPropagation(); setShowNotif(!showNotif); setShowSettings(false) }} className="w-8 h-8 rounded-full bg-[#F5F3FF] border flex items-center justify-center text-[11px]">🔔</button>
+              <button onClick={function(e){ e.stopPropagation(); setShowNotif(!showNotif); setShowSettings(false) }} className="w-8 h-8 rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] flex items-center justify-center text-[13px]">!</button>
               {showNotif && (
-                <div className="absolute top-[40px] left-0 w-[240px] bg-white rounded-xl border shadow-xl p-3 z-50">
-                  <div className="font-bold text-[11px]">{T.notif}</div>
-                  <div className="mt-2 text-[10px] p-2 rounded-lg bg-[#F5F3FF]">{T.notif1}</div>
-                  <button onClick={() => setShowNotif(false)} className="mt-2 w-full h-[30px] rounded-full bg-black text-white text-[10px]">{T.close}</button>
+                <div className="absolute top-[44px] right-0 w-[280px] bg-white rounded-[12px] border border-[#E8E6E1] shadow-lg p-4 z-50">
+                  <div className="text-[11px] font-semibold">{T.notif}</div>
+                  <div className="mt-3 text-[12px] p-3 rounded-[8px] bg-[#F7F5F3] border">{T.notif1}</div>
+                  <button onClick={function(){ setShowNotif(false) }} className="mt-3 w-full h-[32px] rounded-[8px] bg-[#0E1217] text-white text-[11px]">{T.close}</button>
                 </div>
               )}
             </div>
+            <div className="h-4 w-px bg-[#E8E6E1] hidden md:block"></div>
+            <div className="hidden md:block">
+              <div className="text-[12px] font-semibold">{T.dashboard}</div>
+              <div className="text-[11px] text-[#8A919E]">{T.welcome}</div>
+            </div>
           </div>
-
-          <div className="flex-1 max-w-[320px] min-w-0">
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={T.search} className="w-full h-[34px] rounded-full bg-[#F5F3FF] border border-[#A78BFA]/10 px-4 text-[11px] outline-none focus:bg-white focus:border-[#A78BFA]" />
+          <div className="flex-1 max-w-[360px] min-w-0 hidden md:block">
+            <div className="relative">
+              <input value={search} onChange={function(e){ setSearch(e.target.value) }} placeholder={T.search} className="w-full h-[36px] rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] pr-4 pl-9 text-[12px] outline-none focus:bg-white focus:border-[#0E1217]" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A919E] text-[12px]">⌕</span>
+            </div>
           </div>
-
-          <div className="w-7 h-7 rounded-full bg-[#A78BFA] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-            {user ? user[0].toUpperCase() : '?'}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden lg:flex items-center gap-2 text-[11px] text-[#8A919E]">
+              <span>{new Date().toLocaleDateString(isAr ? 'ar-LY' : 'en-GB')}</span>
+              <span className="w-1 h-1 bg-[#8A919E] rounded-full"></span>
+              <span className="text-[#0E1217] font-medium">طرابلس</span>
+            </div>
+            <div className="w-8 h-8 rounded-[8px] bg-[#0E1217] text-white flex items-center justify-center text-[11px] font-bold">
+              {user ? user[0].toUpperCase() : '?'}
+            </div>
           </div>
         </div>
-
-        <div className="p-4 lg:p-5 min-w-0 overflow-x-hidden">
+        <div className="md:hidden p-4 bg-white border-b border-[#E8E6E1]">
+          <input value={search} onChange={function(e){ setSearch(e.target.value) }} placeholder={T.search} className="w-full h-[40px] rounded-[10px] bg-[#F7F5F3] border border-[#E8E6E1] px-4 text-[13px] outline-none" />
+        </div>
+        <div className="p-5 lg:p-7 min-w-0 overflow-x-hidden max-w-[1280px] mx-auto w-full">
           {tab === 'home' && <HomeView T={T} isAr={isAr} setTab={setTab} />}
           {tab === 'ai' && <AIView T={T} isAr={isAr} />}
           {tab === 'notebook' && <NotebookView T={T} />}
@@ -245,116 +258,152 @@ export default function Dashboard() {
 function HomeView({ T, isAr, setTab }) {
   return (
     <div className="min-w-0">
-      <h1 className="text-[20px] font-extrabold">{T.dashboard}</h1>
-      <p className="text-[11px] opacity-60 mt-1">{T.welcome} • {new Date().toLocaleDateString(isAr ? 'ar-LY' : 'en-US')}</p>
-
-      <div className="mt-4 grid lg:grid-cols-3 gap-3">
-        <div className="rounded-xl bg-[#EDE9FE] border border-[#A78BFA]/20 p-4 min-w-0">
-          <div className="flex justify-between items-center"><div className="font-bold text-[12px]">{T.aiChat}</div><span className="text-[9px] px-2 py-1 rounded-full bg-white border">25</span></div>
-          <div className="mt-3 bg-white rounded-lg p-3 text-[10px] leading-5 truncate">{isAr ? 'التنفس الخلوي يحول الجلوكوز...' : 'Cellular respiration converts glucose...'}</div>
-          <button onClick={() => setTab('ai')} className="mt-3 w-full h-[30px] rounded-full bg-white border text-[10px] font-bold">{T.open} ↗</button>
-        </div>
-        <div className="rounded-xl bg-white border p-4 min-w-0">
-          <div className="font-bold text-[12px]">{T.tasks} - 3/6</div>
-          <div className="mt-3 space-y-2 text-[11px]">
-            <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-green-500 text-white flex items-center justify-center text-[8px]">✓</span><span className="truncate">{T.review}</span></div>
-            <div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full border"></span><span className="truncate">{isAr ? 'واجب رياضيات' : 'Math Worksheet'}</span></div>
+      <div className="flex items-baseline gap-3 mb-6">
+        <h1 className="text-[28px] font-bold text-[#0E1217]">لوحة التحكم</h1>
+        <div className="h-px flex-1 bg-[#E8E6E1]"></div>
+        <span className="text-[11px] text-[#8A919E]">{new Date().toLocaleDateString(isAr ? 'ar-LY' : 'en-US')}</span>
+      </div>
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="rounded-[12px] bg-[#0E1217] border border-[#1E242E] p-5 text-white min-w-0">
+          <div className="flex justify-between">
+            <div className="text-[11px] tracking-[0.15em] uppercase text-[#8A919E] font-semibold">{T.aiChat}</div>
+            <span className="text-[10px] px-2 py-1 rounded-full bg-[#1E242E] border">25 / يوم</span>
           </div>
-          <button onClick={() => setTab('tasks')} className="mt-3 w-full h-[30px] rounded-full bg-[#F5F3FF] text-[10px] font-bold">+ {isAr ? 'مهمة' : 'Task'}</button>
+          <div className="mt-4 bg-[#151A23] rounded-[8px] p-3 text-[12px] leading-6 text-[#C2C8D1] border border-[#1E242E] truncate">{isAr ? 'التنفس الخلوي يحول الجلوكوز...' : 'Cellular respiration...'}</div>
+          <button onClick={function(){ setTab('ai') }} className="mt-4 w-full h-[36px] rounded-[8px] bg-white text-black text-[12px] font-semibold">فتح →</button>
         </div>
-        <div className="rounded-xl bg-white border p-4 text-center min-w-0">
-          <div className="font-bold text-[12px]">{T.pomodoro}</div>
-          <div className="text-[28px] font-extrabold text-[#5B21B6]">24:00</div>
-          <button onClick={() => setTab('pomo')} className="mt-2 w-full h-[30px] rounded-full bg-[#5B21B6] text-white text-[10px] font-bold">{T.start}</button>
+        <div className="rounded-[12px] bg-white border border-[#E8E6E1] p-5 min-w-0">
+          <div className="flex justify-between">
+            <div className="text-[11px] tracking-[0.15em] uppercase text-[#8A919E] font-semibold">{T.tasks} - 3/6</div>
+          </div>
+          <div className="mt-4 space-y-2.5 text-[12px]">
+            <div className="flex items-center gap-2.5"><span className="w-5 h-5 rounded-full bg-[#0E1217] text-white flex items-center justify-center text-[9px]">✓</span><span className="truncate">{T.review}</span></div>
+            <div className="flex items-center gap-2.5"><span className="w-5 h-5 rounded-full border border-[#E8E6E1]"></span><span className="truncate text-[#5A6372]">{isAr ? 'واجب رياضيات' : 'Math Worksheet'}</span></div>
+          </div>
+          <button onClick={function(){ setTab('tasks') }} className="mt-5 w-full h-[36px] rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] text-[12px] font-medium hover:bg-[#0E1217] hover:text-white">+ {isAr ? 'مهمة جديدة' : 'New Task'}</button>
+        </div>
+        <div className="rounded-[12px] bg-white border border-[#E8E6E1] p-5 text-center min-w-0 flex flex-col">
+          <div className="text-[11px] tracking-[0.15em] uppercase text-[#8A919E] font-semibold">{T.pomodoro}</div>
+          <div className="mt-3 text-[36px] font-semibold">24:00</div>
+          <div className="text-[11px] text-[#8A919E] mt-1">{T.focus}</div>
+          <div className="mt-auto pt-5"><button onClick={function(){ setTab('pomo') }} className="w-full h-[36px] rounded-[8px] bg-[#0E1217] text-white text-[12px] font-medium">{T.start}</button></div>
         </div>
       </div>
-
-      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <button onClick={() => setTab('flash')} className="rounded-xl bg-white border p-3 text-left min-w-0"><div className="text-[10px] font-bold truncate">{T.flashcards}</div><div className="font-bold">124</div></button>
-        <button onClick={() => setTab('library')} className="rounded-xl bg-white border p-3 text-left min-w-0"><div className="text-[10px] font-bold truncate">{T.library}</div><div className="font-bold">36</div></button>
-        <button onClick={() => setTab('notebook')} className="rounded-xl bg-white border p-3 text-left min-w-0"><div className="text-[10px] font-bold truncate">{T.notebook}</div><div className="font-bold">8</div></button>
-        <button onClick={() => setTab('slides')} className="rounded-xl bg-white border p-3 text-left min-w-0"><div className="text-[10px] font-bold truncate">{T.slides}</div><div className="font-bold">3</div></button>
+      <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <button onClick={function(){ setTab('flash') }} className="rounded-[12px] bg-white border border-[#E8E6E1] p-4 text-right hover:border-[#0E1217] text-left min-w-0 group">
+          <div className="flex justify-between items-center"><div className="text-[11px] text-[#8A919E]">{T.flashcards}</div><span className="group-hover:text-[#0E1217]">↗</span></div>
+          <div className="text-[22px] font-semibold mt-2">124</div>
+          <div className="text-[11px] text-[#5A6372] mt-1">{T.smartReview}</div>
+        </button>
+        <button onClick={function(){ setTab('library') }} className="rounded-[12px] bg-white border border-[#E8E6E1] p-4 text-right hover:border-[#0E1217] text-left min-w-0 group">
+          <div className="flex justify-between"><div className="text-[11px] text-[#8A919E]">{T.library}</div><span className="group-hover:text-[#0E1217]">↗</span></div>
+          <div className="text-[22px] font-semibold mt-2">36</div>
+          <div className="text-[11px] text-[#5A6372] mt-1">{T.curriculum}</div>
+        </button>
+        <button onClick={function(){ setTab('notebook') }} className="rounded-[12px] bg-white border border-[#E8E6E1] p-4 text-right hover:border-[#0E1217] min-w-0 group">
+          <div className="flex justify-between"><div className="text-[11px] text-[#8A919E]">{T.notebook}</div><span className="group-hover:text-[#0E1217]">↗</span></div>
+          <div className="text-[22px] font-semibold mt-2">8</div>
+          <div className="text-[11px] text-[#5A6372] mt-1">PDF sources</div>
+        </button>
+        <button onClick={function(){ setTab('slides') }} className="rounded-[12px] bg-white border border-[#E8E6E1] p-4 text-right hover:border-[#0E1217] min-w-0 group">
+          <div className="flex justify-between"><div className="text-[11px] text-[#8A919E]">{T.slides}</div><span className="group-hover:text-[#0E1217]">↗</span></div>
+          <div className="text-[22px] font-semibold mt-2">3</div>
+          <div className="text-[11px] text-[#5A6372] mt-1">Presentations</div>
+        </button>
       </div>
     </div>
   )
 }
 
-function AIView({ T, isAr }) {
+function AIView({ T }) {
   const today = new Date().toISOString().slice(0, 10)
-  const [history, setHistory] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_ai_history') || '[]') } catch { return [] } })
-  const [msgs, setMsgs] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_ai_messages') || '[{"role":"a","text":"هلا! أنا رفيق، نقدر نشرح ونلخص ونرتب لك خطة مذاكرة."}]') } catch { return [] } })
+  const [history, setHistory] = useState(function(){ try { return JSON.parse(localStorage.getItem('rafeaq_ai_history') || '[]') } catch(e){ return [] } }())
+  const [msgs, setMsgs] = useState(function(){ try { return JSON.parse(localStorage.getItem('rafeaq_ai_messages') || '[{"role":"a","text":"هلا! أنا رفيق، نقدر نشرح ونلخص ونرتب لك خطة مذاكرة."}]') } catch(e){ return [] } }())
   const [inp, setInp] = useState('')
   const [busy, setBusy] = useState(false)
   const ref = useRef(null)
-  const used = history.filter((d) => d === today).length
+  const used = history.filter(function(d){ return d === today }).length
   const remaining = Math.max(0, 25 - used)
-  useEffect(() => { localStorage.setItem('rafeaq_ai_messages', JSON.stringify(msgs)); ref.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs])
-  function localReply(question) {
-    if (/لخص|تلخيص/.test(question)) return 'أكيد. أرسل لي النص أو صورة الدرس وسألخصه لك في نقاط مرتبة مع أهم التعريفات.'
-    if (/خطة|جدول|مذاكرة/.test(question)) return 'خلينا نمشوا بخطة بسيطة: 25 دقيقة تركيز على جزء صغير، 5 دقائق راحة، ثم نراجع أهم ما فهمناه في دقيقتين.'
-    if (/اشرح|شرح|درس/.test(question)) return 'تمام، اكتب اسم المادة والصف والجزء الذي تريد شرحه، وسأرتبه لك خطوة خطوة مع مثال بسيط.'
-    return 'وصلني سؤالك. اكتب المادة أو أرفق محتوى الدرس وحدد هل تريد شرحًا أو تلخيصًا أو أسئلة للمراجعة.'
-  }
+  useEffect(function(){ localStorage.setItem('rafeaq_ai_messages', JSON.stringify(msgs)); if(ref.current) ref.current.scrollIntoView({ behavior: 'smooth' }) }, [msgs])
+  function localReply(q) { if (/لخص/.test(q)) return 'أرسل النص وسألخصه.'; return 'اكتب المادة وحدد شرح أو تلخيص.' }
   async function send() {
     const text = inp.trim()
     if (!text || busy || remaining === 0) return
-    const nextHistory = [...history, today]
+    const nextHistory = history.concat([today])
     setHistory(nextHistory); localStorage.setItem('rafeaq_ai_history', JSON.stringify(nextHistory))
-    setMsgs((m) => [...m, { role: 'u', text }]); setInp(''); setBusy(true)
+    setMsgs(function(m){ return m.concat([{ role: 'u', text: text }]) }); setInp(''); setBusy(true)
     try {
       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) })
-      if (!res.ok) throw new Error()
       const data = await res.json()
-      setMsgs((m) => [...m, { role: 'a', text: data.reply || localReply(text) }])
-    } catch { setMsgs((m) => [...m, { role: 'a', text: localReply(text) }]) }
+      setMsgs(function(m){ return m.concat([{ role: 'a', text: data.reply || localReply(text) }]) })
+    } catch(e) { setMsgs(function(m){ return m.concat([{ role: 'a', text: localReply(text) }]) }) }
     finally { setBusy(false) }
   }
-  return <div className="max-w-[760px] mx-auto min-w-0">
-    <div className="flex items-center justify-between mb-4"><div><h1 className="font-extrabold text-[20px]">رفيق AI</h1><p className="text-[11px] opacity-55 mt-1">مساعدك الدراسي: شرح، تلخيص، وأسئلة مراجعة.</p></div><div className="px-3 py-2 rounded-2xl bg-[#F0EBFF] text-[#6D28D9] text-[11px] font-bold">{remaining} من 25 اليوم</div></div>
-    <div className="bg-white rounded-[24px] border border-[#E7E0FF] shadow-[0_12px_40px_rgba(124,58,237,.08)] p-4">
-      <div className="space-y-3 h-[410px] overflow-y-auto p-1">{msgs.map((m,i)=><div key={i} className={'flex '+(m.role==='u'?'justify-end':'justify-start')}><div className={'max-w-[82%] rounded-2xl px-4 py-3 text-[13px] leading-6 '+(m.role==='u'?'bg-[#7C3AED] text-white rounded-bl-sm':'bg-[#F8F7FF] border border-[#EEEAFE] text-[#27213F] rounded-br-sm')}>{m.text}</div></div>)}{busy && <div className="text-[11px] opacity-50 px-3">رفيق يجهز الرد…</div>}<div ref={ref}/></div>
-      <div className="mt-3 flex gap-2"><input value={inp} onChange={(e)=>setInp(e.target.value)} onKeyDown={(e)=>e.key==='Enter'&&send()} disabled={remaining===0} placeholder={remaining ? 'اكتب سؤالك الدراسي هنا…' : 'اكتملت محادثات اليوم'} className="flex-1 h-[48px] rounded-2xl border border-[#E5E0F7] px-4 text-[12px] outline-none focus:border-[#7C3AED] disabled:bg-slate-50"/><button onClick={send} disabled={!inp.trim()||busy||remaining===0} className="w-12 h-12 rounded-2xl bg-[#7C3AED] text-white disabled:opacity-40">↑</button></div>
-    </div>
-  </div>
-}
-function TasksView({ T, search, isAr }) {
-  const [tasks, setTasks] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_tasks') || '[]') } catch { return [] } })
-  useEffect(() => { localStorage.setItem('rafeaq_tasks', JSON.stringify(tasks)) }, [tasks])
-  function add() {
-    const t = prompt(isAr ? 'اكتب المهمة؟' : 'Task?')
-    if (!t) return
-    setTasks([...tasks, { id: Date.now(), title: t, done: false }])
-  }
-  const filtered = tasks.filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()))
   return (
-    <div className="max-w-[500px] mx-auto min-w-0">
-      <div className="flex justify-between mb-3"><h2 className="font-bold">{T.tasks} ({filtered.length})</h2><button onClick={add} className="h-[32px] px-3 rounded-full bg-[#A78BFA] text-white text-[10px]">+ {isAr ? 'مهمة' : 'Task'}</button></div>
-      {filtered.length === 0 && <div className="text-center py-8 opacity-40 text-[11px]">{T.noTasks}</div>}
-      <div className="bg-white rounded-xl border p-3 space-y-2">
-        {filtered.map((t) => (
-          <div key={t.id} className="flex items-center gap-2 p-2 rounded-lg bg-[#F8F7FF] border min-w-0">
-            <button onClick={() => setTasks(tasks.map((v) => v.id === t.id ? { ...v, done: !v.done } : v))} className={'w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ' + (t.done ? 'bg-[#A78BFA] text-white' : '')}>{t.done ? '✓' : ''}</button>
-            <span className="flex-1 text-[11px] truncate">{t.title}</span>
-            <button onClick={() => setTasks(tasks.filter((v) => v.id !== t.id))} className="opacity-30 text-[10px]">X</button>
-          </div>
-        ))}
+    <div className="max-w-[760px] mx-auto min-w-0">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-[24px] font-bold">رفيق AI</h1>
+          <p className="text-[12px] text-[#8A919E] mt-1">مساعدك الدراسي الرسمي</p>
+        </div>
+        <div className="px-3 py-2 rounded-full bg-white border border-[#E8E6E1] text-[11px] font-medium">{remaining} من 25 اليوم</div>
+      </div>
+      <div className="bg-white rounded-[12px] border border-[#E8E6E1] p-4">
+        <div className="space-y-3 h-[420px] overflow-y-auto p-1">
+          {msgs.map(function(m,i){ return (<div key={i} className={"flex " + (m.role==='u'?'justify-end':'justify-start')}><div className={"max-w-[82%] rounded-[10px] px-4 py-3 text-[13px] leading-6 " + (m.role==='u'?'bg-[#0E1217] text-white':'bg-[#F7F5F3] border border-[#E8E6E1]')}>{m.text}</div></div>) })}
+          {busy && <div className="text-[11px] text-[#8A919E] px-3">رفيق يجهز الرد...</div>}
+          <div ref={ref}></div>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <input value={inp} onChange={function(e){ setInp(e.target.value) }} onKeyDown={function(e){ if(e.key==='Enter') send() }} disabled={remaining===0} placeholder={remaining ? 'اكتب سؤالك الدراسي هنا...' : 'اكتملت محادثات اليوم'} className="flex-1 h-[44px] rounded-[8px] border border-[#E8E6E1] bg-[#F7F5F3] px-4 text-[13px] outline-none focus:bg-white focus:border-[#0E1217]" />
+          <button onClick={send} disabled={!inp.trim()||busy||remaining===0} className="w-11 h-11 rounded-[8px] bg-[#0E1217] text-white disabled:opacity-30">↑</button>
+        </div>
       </div>
     </div>
   )
 }
 
-function LibraryView({ T, isAr }) {
-  const [books, setBooks] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_books') || '[]') } catch { return [] } })
+function TasksView({ T, search, isAr }) {
+  const [tasks, setTasks] = useState(function(){ try { return JSON.parse(localStorage.getItem('rafeaq_tasks') || '[]') } catch(e){ return [] } }())
+  useEffect(function(){ localStorage.setItem('rafeaq_tasks', JSON.stringify(tasks)) }, [tasks])
+  function add() { const t = prompt(isAr ? 'اكتب المهمة؟' : 'Task?'); if (!t) return; setTasks(tasks.concat([{ id: Date.now(), title: t, done: false }])) }
+  const filtered = tasks.filter(function(t){ return !search || t.title.toLowerCase().includes(search.toLowerCase()) })
+  return (
+    <div className="max-w-[560px] mx-auto min-w-0">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-[20px] font-bold">{T.tasks} ({filtered.length})</h2>
+        <button onClick={add} className="h-[36px] px-4 rounded-[8px] bg-[#0E1217] text-white text-[12px] font-medium">+ {isAr ? 'مهمة' : 'Task'}</button>
+      </div>
+      {filtered.length === 0 && <div className="text-center py-12 bg-white border border-[#E8E6E1] rounded-[12px] text-[13px] text-[#8A919E]">{T.noTasks}</div>}
+      <div className="bg-white rounded-[12px] border border-[#E8E6E1] p-3 space-y-2">
+        {filtered.map(function(t){
+          return (
+            <div key={t.id} className="flex items-center gap-3 p-3 rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] min-w-0 hover:border-[#0E1217]">
+              <button onClick={function(){ setTasks(tasks.map(function(v){ return v.id === t.id ? { id: v.id, title: v.title, done: !v.done } : v })) }} className={"w-5 h-5 rounded-full border flex items-center justify-center shrink-0 " + (t.done ? 'bg-[#0E1217] text-white border-[#0E1217]' : 'bg-white border-[#E8E6E1]')}>
+                {t.done ? '✓' : ''}
+              </button>
+              <span className={"flex-1 text-[13px] truncate " + (t.done ? 'line-through text-[#8A919E]' : '')}>{t.title}</span>
+              <button onClick={function(){ setTasks(tasks.filter(function(v){ return v.id !== t.id })) }} className="text-[#8A919E] hover:text-[#0E1217] text-[12px]">X</button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function LibraryView({ T }) {
+  const [books, setBooks] = useState(function(){ try { return JSON.parse(localStorage.getItem('rafeaq_books') || '[]') } catch(e){ return [] } }())
   const URL = 'https://cerc.moe.gov.ly/'
   function onFile(e) {
     const files = e.target.files
     if (!files) return
-    Array.from(files).forEach((f) => {
+    Array.from(files).forEach(function(f){
       const r = new FileReader()
-      r.onload = () => {
+      r.onload = function(){
         const b = { id: Date.now() + Math.random(), name: f.name.replace('.pdf', ''), data: r.result }
         const cur = JSON.parse(localStorage.getItem('rafeaq_books') || '[]')
-        const nb = [...cur, b]
+        const nb = cur.concat([b])
         setBooks(nb)
         localStorage.setItem('rafeaq_books', JSON.stringify(nb))
       }
@@ -363,20 +412,22 @@ function LibraryView({ T, isAr }) {
     e.target.value = ''
   }
   return (
-    <div className="max-w-[800px] mx-auto min-w-0 space-y-3">
-      <div className="bg-white rounded-xl border p-3 flex justify-between gap-2">
-        <h3 className="font-bold text-[12px] truncate">{T.library} - {books.length}</h3>
-        <label className="h-[30px] px-3 rounded-full bg-[#A78BFA] text-white text-[10px] flex items-center cursor-pointer shrink-0">+ PDF<input type="file" accept="application/pdf" multiple onChange={onFile} className="hidden" /></label>
+    <div className="max-w-[900px] mx-auto min-w-0 space-y-4">
+      <div className="bg-white rounded-[12px] border border-[#E8E6E1] p-4 flex justify-between gap-3">
+        <div><h3 className="font-semibold text-[13px]">{T.library} - {books.length} كتاب</h3><p className="text-[11px] text-[#8A919E] mt-1">مكتبة المنهج الليبي الرسمية</p></div>
+        <label className="h-[36px] px-4 rounded-[8px] bg-[#0E1217] text-white text-[12px] flex items-center cursor-pointer font-medium">+ PDF<input type="file" accept="application/pdf" multiple onChange={onFile} className="hidden" /></label>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        {books.map((b) => (
-          <div key={b.id} className="bg-white rounded-xl border p-2 min-w-0">
-            <div className="h-[50px] bg-[#F5F3FF] rounded-lg flex items-center justify-center text-[9px]">PDF</div>
-            <div className="text-[10px] font-bold mt-1 truncate">{b.name}</div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {books.map(function(b){
+          return (<div key={b.id} className="bg-white rounded-[12px] border border-[#E8E6E1] p-3 min-w-0 hover:border-[#0E1217]"><div className="h-[64px] bg-[#F7F5F3] border border-[#E8E6E1] rounded-[8px] flex items-center justify-center text-[10px] font-medium tracking-wide">PDF - رسمي</div><div className="text-[12px] font-medium mt-3 truncate">{b.name}</div></div>)
+        })}
       </div>
-      <div className="bg-[#F8F7FF] rounded-xl border border-dashed p-5 text-center"><div className="font-bold text-[12px]">مصدر الكتب المعتمد</div><p className="text-[11px] opacity-60 mt-2">اختر الكتب من موقع مركز المناهج التعليمية والبحوث التربوية، ثم أضف ملفات PDF التي تريد الاحتفاظ بها في مكتبتك على هذا الجهاز.</p><a href={URL} target="_blank" rel="noreferrer" className="inline-flex mt-3 h-[34px] px-4 items-center rounded-full bg-[#7C3AED] text-white text-[11px] font-bold">فتح موقع مركز المناهج ↗</a></div>
+      <div className="bg-[#0E1217] rounded-[12px] p-6 text-white">
+        <div className="text-[11px] tracking-[0.15em] uppercase text-[#8A919E]">المصدر المعتمد</div>
+        <div className="font-semibold text-[14px] mt-2">مركز المناهج التعليمية والبحوث التربوية</div>
+        <p className="text-[12px] text-[#8A919E] mt-2 leading-6">اختر الكتب من الموقع الرسمي لوزارة التعليم.</p>
+        <a href={URL} target="_blank" rel="noreferrer" className="inline-flex mt-4 h-[36px] px-4 items-center rounded-[8px] bg-white text-black text-[12px] font-medium">فتح موقع المركز →</a>
+      </div>
     </div>
   )
 }
@@ -387,45 +438,61 @@ function NotebookView({ T }) {
   const [answer, setAnswer] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const loadSources = async () => setSources(await listDeviceFiles('notebook'))
-  useEffect(() => { loadSources().catch(() => setError('تعذر فتح مصادر دفتر رفيق على هذا الجهاز.')) }, [])
-  async function upload(event) {
-    const file = event.target.files?.[0]
+  async function loadSources() { const s = await listDeviceFiles('notebook'); setSources(s) }
+  useEffect(function(){ loadSources().catch(function(){ setError('تعذر فتح مصادر دفتر رفيق') }) }, [])
+  async function upload(event){
+    const file = event.target.files ? event.target.files[0] : null
     event.target.value = ''
     if (!file) return
-    if (file.type !== 'application/pdf') { setError('دفتر رفيق يقبل ملفات PDF فقط.'); return }
+    if (file.type !== 'application/pdf') { setError('PDF فقط.'); return }
     setLoading(true); setError('')
-    try {
-      const text = await extractPdfText(file)
-      if (!text) throw new Error('empty')
-      await saveDeviceFile(file, 'notebook', { text, pagesHint: 'PDF' })
-      await loadSources()
-    } catch { setError('لم نتمكن من قراءة النص من هذا الـPDF. تأكد أن الملف ليس صورة ممسوحة فقط أو محميًا بكلمة مرور.') }
-    finally { setLoading(false) }
+    try { const text = await extractPdfText(file); if (!text) throw new Error('empty'); await saveDeviceFile(file, 'notebook', { text: text, pagesHint: 'PDF' }); await loadSources() } catch(e){ setError('لم نتمكن من قراءة النص') } finally { setLoading(false) }
   }
-  async function ask() {
-    if (!question.trim() || !sources.length) return
-    setAnswer(answerFromSources(question, sources)); setQuestion('')
-  }
-  async function remove(id) { await deleteDeviceFile(id); await loadSources(); setAnswer(null) }
-  return <div className="max-w-[980px] mx-auto grid lg:grid-cols-[290px_1fr] gap-4 min-w-0">
-    <aside className="bg-white rounded-[22px] border border-[#E9E3F8] p-4 min-w-0">
-      <div className="flex justify-between items-center"><div><h2 className="font-extrabold text-[14px]">مصادر دفتر رفيق</h2><p className="text-[10px] opacity-50 mt-1">PDF محفوظ على جهازك</p></div><span className="text-[11px] text-[#7C3AED] font-bold">{sources.length}</span></div>
-      <label className="mt-4 h-[42px] rounded-xl bg-[#7C3AED] text-white text-[11px] font-bold flex items-center justify-center cursor-pointer">{loading ? 'جاري قراءة الملف…' : '+ إضافة PDF'}<input type="file" accept="application/pdf" onChange={upload} disabled={loading} className="hidden"/></label>
-      {error && <p className="mt-3 p-3 rounded-xl bg-red-50 text-red-700 text-[10px] leading-5">{error}</p>}
-      <div className="mt-3 space-y-2">{sources.map((source) => <div key={source.id} className="rounded-xl bg-[#FAF9FF] border border-[#EEEAFE] p-3"><div className="flex gap-2"><span className="w-7 h-7 shrink-0 rounded-lg bg-[#EEE8FF] text-[#7C3AED] flex items-center justify-center text-[9px] font-bold">PDF</span><div className="min-w-0 flex-1"><p className="font-bold text-[10px] truncate">{source.name}</p><p className="text-[9px] opacity-45 mt-1">{Math.ceil(source.size / 1024)} KB</p></div><button onClick={() => remove(source.id)} className="text-[11px] opacity-35 hover:opacity-100">×</button></div></div>)}{!sources.length && <p className="py-8 text-center text-[10px] opacity-45">أضف كتابًا أو ملزمة للبدء.</p>}</div>
-    </aside>
-    <section className="bg-white rounded-[22px] border border-[#E9E3F8] p-5 min-w-0"><div className="inline-flex px-3 py-1 rounded-full bg-[#F1EDFF] text-[#6D28D9] text-[10px] font-bold">إجابة من مصادرِك فقط</div><h1 className="font-extrabold text-[20px] mt-3">{T.notebook}</h1><p className="text-[12px] opacity-55 mt-2 leading-6">اسأل عن المحتوى المرفوع، ولن يضيف الدفتر معلومات خارج المصادر.</p><div className="mt-6 flex gap-2"><input value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && ask()} placeholder={sources.length ? 'اسأل عن الدرس أو اطلب تلخيصًا…' : 'أضف PDF أولًا'} disabled={!sources.length} className="flex-1 h-[48px] rounded-xl border border-[#E5E0F7] px-4 text-[12px] outline-none focus:border-[#7C3AED] disabled:bg-slate-50"/><button onClick={ask} disabled={!sources.length || !question.trim()} className="px-5 rounded-xl bg-[#7C3AED] text-white text-[11px] font-bold disabled:opacity-40">اسأل</button></div>{answer && <div className="mt-5 rounded-2xl bg-[#FAF9FF] border border-[#EEEAFE] p-4"><p className="text-[12px] leading-7 whitespace-pre-line">{answer.text}</p>{answer.citations?.length > 0 && <p className="text-[10px] text-[#7C3AED] font-bold mt-4">المصدر: {answer.citations.join('، ')}</p>}</div>}</section>
-  </div>
-}
-function SlidesView({ T }) {
-  const [slides, setSlides] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_slides') || '[{"t":"Hello","c":""}]') } catch { return [{ t: 'Hello', c: '' }] } })
-  const [idx, setIdx] = useState(0)
-  useEffect(() => { localStorage.setItem('rafeaq_slides', JSON.stringify(slides)) }, [slides])
+  async function ask(){ if (!question.trim() || !sources.length) return; const a = answerFromSources(question, sources); setAnswer(a); setQuestion('') }
+  async function remove(id){ await deleteDeviceFile(id); await loadSources(); setAnswer(null) }
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-3 max-w-[800px] mx-auto min-w-0">
-      <div className="bg-white rounded-xl border p-2 min-w-0">{slides.map((s, i) => (<button key={i} onClick={() => setIdx(i)} className={'w-full p-2 rounded-lg text-[10px] text-left mb-1 truncate ' + (i === idx ? 'bg-[#A78BFA] text-white' : 'bg-[#F5F3FF]')}>{s.t}</button>))}<button onClick={() => { setSlides([...slides, { t: 'New', c: '' }]); setIdx(slides.length) }} className="w-full h-[26px] rounded-full bg-black/5 text-[9px]">+ Slide</button></div>
-      <div className="bg-white rounded-xl border p-3 min-w-0"><input value={slides[idx] ? slides[idx].t : ''} onChange={(e) => { const n = [...slides]; n[idx].t = e.target.value; setSlides(n) }} className="font-bold text-[13px] w-full outline-none" /><textarea value={slides[idx] ? slides[idx].c : ''} onChange={(e) => { const n = [...slides]; n[idx].c = e.target.value; setSlides(n) }} className="mt-2 w-full h-[200px] outline-none text-[11px]" /></div>
+    <div className="max-w-[980px] mx-auto grid lg:grid-cols-[300px_1fr] gap-4 min-w-0">
+      <aside className="bg-white rounded-[12px] border border-[#E8E6E1] p-4 min-w-0">
+        <div className="flex justify-between items-center"><div><h2 className="font-semibold text-[13px]">مصادر دفتر رفيق</h2><p className="text-[11px] text-[#8A919E] mt-1">PDF محفوظ محليا</p></div><span className="text-[11px] font-mono bg-[#F7F5F3] border border-[#E8E6E1] px-2 py-1 rounded-full">{sources.length}</span></div>
+        <label className="mt-4 h-[40px] rounded-[8px] bg-[#0E1217] text-white text-[12px] font-medium flex items-center justify-center cursor-pointer">{loading ? 'جاري القراءة...' : '+ إضافة PDF'}<input type="file" accept="application/pdf" onChange={upload} disabled={loading} className="hidden"/></label>
+        {error && <p className="mt-3 p-3 rounded-[8px] bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] text-[11px]">{error}</p>}
+        <div className="mt-4 space-y-2">
+          {sources.map(function(source){
+            return (<div key={source.id} className="rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] p-3 flex gap-2"><span className="w-7 h-7 shrink-0 rounded-[6px] bg-white border border-[#E8E6E1] flex items-center justify-center text-[9px] font-bold">PDF</span><div className="min-w-0 flex-1"><p className="font-medium text-[11px] truncate">{source.name}</p><p className="text-[10px] text-[#8A919E] mt-1">{Math.ceil(source.size / 1024)} KB</p></div><button onClick={function(){ remove(source.id) }} className="text-[12px] text-[#8A919E]">X</button></div>)
+          })}
+          {!sources.length && <p className="py-10 text-center text-[12px] text-[#8A919E]">أضف كتابا للبدء.</p>}
+        </div>
+      </aside>
+      <section className="bg-white rounded-[12px] border border-[#E8E6E1] p-6 min-w-0">
+        <div className="inline-flex px-2.5 py-1 rounded-full bg-[#F7F5F3] border border-[#E8E6E1] text-[#5A6372] text-[10px] font-medium">إجابة من مصادرك فقط</div>
+        <h1 className="text-[22px] font-bold mt-4">{T.notebook}</h1>
+        <p className="text-[12px] text-[#8A919E] mt-2 leading-6">اسأل عن المحتوى المرفوع.</p>
+        <div className="mt-6 flex gap-2">
+          <input value={question} onChange={function(e){ setQuestion(e.target.value) }} onKeyDown={function(e){ if(e.key === 'Enter') ask() }} placeholder={sources.length ? 'اسأل عن الدرس...' : 'أضف PDF أولا'} disabled={!sources.length} className="flex-1 h-[44px] rounded-[8px] border border-[#E8E6E1] bg-[#F7F5F3] px-4 text-[13px] outline-none focus:bg-white focus:border-[#0E1217]"/>
+          <button onClick={ask} disabled={!sources.length || !question.trim()} className="px-5 rounded-[8px] bg-[#0E1217] text-white text-[12px] font-medium disabled:opacity-40">اسأل</button>
+        </div>
+        {answer && <div className="mt-6 rounded-[10px] bg-[#F7F5F3] border border-[#E8E6E1] p-4"><p className="text-[13px] leading-7 whitespace-pre-line">{answer.text}</p>{answer.citations && answer.citations.length > 0 && <p className="text-[11px] text-[#5A6372] font-medium mt-4 border-t border-[#E8E6E1] pt-3">المصدر: {answer.citations.join('، ')}</p>}</div>}
+      </section>
+    </div>
+  )
+}
+
+function SlidesView({ T }) {
+  const [slides, setSlides] = useState(function(){ try { return JSON.parse(localStorage.getItem('rafeaq_slides') || '[{"t":"Hello","c":""}]') } catch(e){ return [{ t: 'Hello', c: '' }] } }())
+  const [idx, setIdx] = useState(0)
+  useEffect(function(){ localStorage.setItem('rafeaq_slides', JSON.stringify(slides)) }, [slides])
+  return (
+    <div className="grid grid-cols-[160px_1fr] gap-4 max-w-[900px] mx-auto min-w-0">
+      <div className="bg-white rounded-[12px] border border-[#E8E6E1] p-2 min-w-0">
+        {slides.map(function(s,i){
+          return (<button key={i} onClick={function(){ setIdx(i) }} className={"w-full p-2.5 rounded-[8px] text-[11px] text-right mb-1 truncate border " + (i === idx ? 'bg-[#0E1217] text-white border-[#0E1217]' : 'bg-[#F7F5F3] border-[#E8E6E1] text-[#5A6372]')}>{i+1}. {s.t}</button>)
+        })}
+        <button onClick={function(){ setSlides(slides.concat([{ t: 'شريحة جديدة', c: '' }])); setIdx(slides.length) }} className="w-full h-[32px] rounded-[8px] bg-[#F7F5F3] border border-dashed border-[#E8E6E1] text-[11px] mt-1">+ شريحة</button>
+      </div>
+      <div className="bg-white rounded-[12px] border border-[#E8E6E1] p-5 min-w-0">
+        <input value={slides[idx] ? slides[idx].t : ''} onChange={function(e){ const n = slides.slice(); n[idx].t = e.target.value; setSlides(n) }} className="font-semibold text-[14px] w-full outline-none border-b border-[#E8E6E1] pb-2 focus:border-[#0E1217]" placeholder="عنوان الشريحة" />
+        <textarea value={slides[idx] ? slides[idx].c : ''} onChange={function(e){ const n = slides.slice(); n[idx].c = e.target.value; setSlides(n) }} className="mt-4 w-full h-[280px] outline-none text-[13px] leading-6 resize-none" placeholder="محتوى الشريحة..." />
+      </div>
     </div>
   )
 }
@@ -434,21 +501,35 @@ function KhaznaView({ T }) {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const loadFiles = async () => setFiles(await listDeviceFiles('vault'))
-  useEffect(() => { loadFiles().catch(() => setError('تعذر فتح الخزنة على هذا الجهاز.')) }, [])
-  async function upload(event) {
-    const selected = Array.from(event.target.files || []); event.target.value = ''
+  async function loadFiles(){ const f = await listDeviceFiles('vault'); setFiles(f) }
+  useEffect(function(){ loadFiles().catch(function(){ setError('تعذر فتح الخزنة') }) }, [])
+  async function upload(event){
+    const selected = Array.from(event.target.files || [])
+    event.target.value = ''
     if (!selected.length) return
     setLoading(true); setError('')
-    try { for (const file of selected) await saveDeviceFile(file, 'vault'); await loadFiles() }
-    catch { setError('تعذر حفظ أحد الملفات. تأكد من توفر مساحة كافية على جهازك.') }
-    finally { setLoading(false) }
+    try { for (const file of selected) { await saveDeviceFile(file, 'vault') } await loadFiles() } catch(e){ setError('تعذر حفظ أحد الملفات.') } finally { setLoading(false) }
   }
-  async function download(id) { const file = await getDeviceFile(id); const url = URL.createObjectURL(file.blob); const link = document.createElement('a'); link.href = url; link.download = file.name; link.click(); URL.revokeObjectURL(url) }
-  async function remove(id) { await deleteDeviceFile(id); await loadFiles() }
-  const total = files.reduce((sum, file) => sum + file.size, 0)
-  return <div className="max-w-[860px] mx-auto min-w-0"><div className="rounded-[22px] bg-gradient-to-l from-[#33206E] to-[#6D3CD5] text-white p-5 flex flex-wrap items-center justify-between gap-4"><div><p className="text-[11px] opacity-70">خزنة رفيق · ملفاتك على هذا الجهاز</p><h1 className="text-[22px] font-extrabold mt-1">{T.khazna}</h1><p className="text-[11px] opacity-75 mt-2">{files.length} ملفات · {(total / 1024 / 1024).toFixed(1)} MB</p></div><label className="h-[42px] px-4 rounded-xl bg-white text-[#5B21B6] text-[11px] font-bold flex items-center cursor-pointer">{loading ? 'جاري الحفظ…' : '+ رفع ملفات'}<input type="file" multiple onChange={upload} disabled={loading} className="hidden"/></label></div>{error && <p className="mt-3 p-3 rounded-xl bg-red-50 text-red-700 text-[10px]">{error}</p>}<div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{files.map((file) => <div key={file.id} className="bg-white rounded-2xl border border-[#E9E3F8] p-4"><div className="w-10 h-10 rounded-xl bg-[#F1EDFF] text-[#6D28D9] flex items-center justify-center text-[10px] font-bold">{file.name.split('.').pop()?.slice(0,4).toUpperCase() || 'FILE'}</div><p className="font-bold text-[11px] mt-3 truncate">{file.name}</p><p className="text-[10px] opacity-45 mt-1">{(file.size / 1024).toFixed(1)} KB</p><div className="mt-4 flex gap-2"><button onClick={() => download(file.id)} className="flex-1 h-[30px] rounded-lg bg-[#F1EDFF] text-[#6D28D9] text-[10px] font-bold">تنزيل</button><button onClick={() => remove(file.id)} className="w-[30px] rounded-lg border text-[13px] opacity-50">×</button></div></div>)}{!files.length && <div className="sm:col-span-2 lg:col-span-3 py-14 text-center bg-white rounded-2xl border border-dashed text-[11px] opacity-45">الخزنة فارغة. ارفع أول ملف تريد الاحتفاظ به.</div>}</div></div>
+  async function download(id){ const file = await getDeviceFile(id); const url = URL.createObjectURL(file.blob); const link = document.createElement('a'); link.href = url; link.download = file.name; link.click(); URL.revokeObjectURL(url) }
+  async function remove(id){ await deleteDeviceFile(id); await loadFiles() }
+  const total = files.reduce(function(sum, file){ return sum + file.size }, 0)
+  return (
+    <div className="max-w-[900px] mx-auto min-w-0">
+      <div className="rounded-[12px] bg-[#0E1217] text-white p-6 flex flex-wrap items-center justify-between gap-4 border border-[#1E242E]">
+        <div><p className="text-[11px] tracking-[0.15em] uppercase text-[#8A919E]">الخزنة الرسمية</p><h1 className="text-[20px] font-semibold mt-2">{T.khazna}</h1><p className="text-[12px] text-[#8A919E] mt-2">{files.length} ملفات - {(total / 1024 / 1024).toFixed(1)} MB</p></div>
+        <label className="h-[40px] px-5 rounded-[8px] bg-white text-black text-[12px] font-medium flex items-center cursor-pointer hover:bg-[#F5F3EF]">{loading ? 'جاري الحفظ...' : '+ رفع ملفات'}<input type="file" multiple onChange={upload} disabled={loading} className="hidden"/></label>
+      </div>
+      {error && <p className="mt-3 p-3 rounded-[8px] bg-[#FEF2F2] border border-[#FECACA] text-[#991B1B] text-[11px]">{error}</p>}
+      <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {files.map(function(file){
+          return (<div key={file.id} className="bg-white rounded-[12px] border border-[#E8E6E1] p-4 hover:border-[#0E1217]"><div className="w-10 h-10 rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] flex items-center justify-center text-[10px] font-bold">{file.name.split('.').pop().slice(0,4).toUpperCase() || 'FILE'}</div><p className="font-medium text-[12px] mt-3 truncate">{file.name}</p><p className="text-[11px] text-[#8A919E] mt-1">{(file.size / 1024).toFixed(1)} KB</p><div className="mt-4 flex gap-2"><button onClick={function(){ download(file.id) }} className="flex-1 h-[32px] rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] text-[11px] font-medium hover:bg-[#0E1217] hover:text-white">تنزيل</button><button onClick={function(){ remove(file.id) }} className="w-[32px] h-[32px] rounded-[8px] border border-[#E8E6E1] text-[13px] text-[#8A919E]">X</button></div></div>)
+        })}
+        {!files.length && <div className="sm:col-span-2 lg:col-span-3 py-16 text-center bg-white rounded-[12px] border border-dashed border-[#E8E6E1] text-[12px] text-[#8A919E]">الخزنة فارغة.</div>}
+      </div>
+    </div>
+  )
 }
+
 function PomoView({ T, isAr }) {
   const [work, setWork] = useState(25)
   const [brk, setBrk] = useState(5)
@@ -456,35 +537,31 @@ function PomoView({ T, isAr }) {
   const [run, setRun] = useState(false)
   const [mode, setMode] = useState('work')
   const ref = useRef(null)
-  useEffect(() => { setSec(work * 60) }, [work])
-  useEffect(() => {
+  useEffect(function(){ setSec(work * 60) }, [work])
+  useEffect(function(){
     if (!run) return
-    ref.current = setInterval(() => {
-      setSec((s) => {
-        if (s <= 1) {
-          const nm = mode === 'work' ? 'break' : 'work'
-          setMode(nm)
-          return nm === 'work' ? work * 60 : brk * 60
-        }
+    ref.current = setInterval(function(){
+      setSec(function(s){
+        if (s <= 1) { const nm = mode === 'work' ? 'break' : 'work'; setMode(nm); return nm === 'work' ? work * 60 : brk * 60 }
         return s - 1
       })
     }, 1000)
-    return () => clearInterval(ref.current)
+    return function(){ clearInterval(ref.current) }
   }, [run, mode, work, brk])
   const m = Math.floor(sec / 60)
   const s = sec % 60
   return (
-    <div className="max-w-[360px] mx-auto space-y-3 min-w-0">
-      <div className="bg-white rounded-xl border p-3 flex gap-3 justify-center">
-        <div className="flex items-center gap-1"><span className="text-[9px]">{T.work}</span><input type="number" value={work} onChange={(e) => setWork(Math.max(1, parseInt(e.target.value) || 1))} className="w-[44px] h-[26px] rounded-full border px-2 text-[10px] text-center" /></div>
-        <div className="flex items-center gap-1"><span className="text-[9px]">{T.break}</span><input type="number" value={brk} onChange={(e) => setBrk(Math.max(1, parseInt(e.target.value) || 1))} className="w-[44px] h-[26px] rounded-full border px-2 text-[10px] text-center" /></div>
+    <div className="max-w-[400px] mx-auto space-y-4 min-w-0">
+      <div className="bg-white rounded-[12px] border border-[#E8E6E1] p-4 flex gap-4 justify-center">
+        <div className="flex items-center gap-2"><span className="text-[11px] text-[#8A919E]">{T.work}</span><input type="number" value={work} onChange={function(e){ setWork(Math.max(1, parseInt(e.target.value) || 1)) }} className="w-[56px] h-[32px] rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] px-2 text-[12px] text-center outline-none focus:border-[#0E1217]" /></div>
+        <div className="flex items-center gap-2"><span className="text-[11px] text-[#8A919E]">{T.break}</span><input type="number" value={brk} onChange={function(e){ setBrk(Math.max(1, parseInt(e.target.value) || 1)) }} className="w-[56px] h-[32px] rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] px-2 text-[12px] text-center outline-none focus:border-[#0E1217]" /></div>
       </div>
-      <div className="bg-white rounded-2xl border p-5 text-center">
-        <div className="text-[11px] opacity-40">{mode === 'work' ? (isAr ? 'تركيز' : 'FOCUS') : (isAr ? 'راحة' : 'BREAK')}</div>
-        <div className="text-[36px] font-bold">{String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}</div>
-        <div className="mt-3 flex gap-2 justify-center">
-          <button onClick={() => setRun(!run)} className="h-[32px] px-5 rounded-full bg-[#A78BFA] text-white font-bold text-[11px]">{run ? T.pause : T.start}</button>
-          <button onClick={() => { setRun(false); setSec(work * 60) }} className="h-[32px] px-4 rounded-full bg-black/5 text-[11px]">{T.reset}</button>
+      <div className="bg-white rounded-[12px] border border-[#E8E6E1] p-8 text-center">
+        <div className="text-[10px] tracking-[0.15em] uppercase text-[#8A919E] font-semibold">{mode === 'work' ? (isAr ? 'تركيز' : 'FOCUS') : (isAr ? 'راحة' : 'BREAK')}</div>
+        <div className="text-[48px] font-semibold tracking-tight mt-2">{String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}</div>
+        <div className="mt-6 flex gap-2 justify-center">
+          <button onClick={function(){ setRun(!run) }} className="h-[40px] px-8 rounded-[8px] bg-[#0E1217] text-white font-medium text-[13px]">{run ? T.pause : T.start}</button>
+          <button onClick={function(){ setRun(false); setSec(work * 60) }} className="h-[40px] px-6 rounded-[8px] bg-[#F7F5F3] border border-[#E8E6E1] text-[13px]">{T.reset}</button>
         </div>
       </div>
     </div>
@@ -492,39 +569,41 @@ function PomoView({ T, isAr }) {
 }
 
 function FlashView({ T, isAr }) {
-  const [cards, setCards] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_flash') || '[]') } catch { return [] } })
-  function add() {
-    const q = prompt(isAr ? 'السؤال؟' : 'Question?')
-    if (!q) return
-    const a = prompt(isAr ? 'الجواب؟' : 'Answer?')
-    if (!a) return
-    setCards([...cards, { q, a }])
-  }
-  useEffect(() => { localStorage.setItem('rafeaq_flash', JSON.stringify(cards)) }, [cards])
+  const [cards, setCards] = useState(function(){ try { return JSON.parse(localStorage.getItem('rafeaq_flash') || '[]') } catch(e){ return [] } }())
+  function add(){ const q = prompt(isAr ? 'السؤال؟' : 'Question?'); if (!q) return; const a = prompt(isAr ? 'الجواب؟' : 'Answer?'); if (!a) return; setCards(cards.concat([{ q: q, a: a }])) }
+  useEffect(function(){ localStorage.setItem('rafeaq_flash', JSON.stringify(cards)) }, [cards])
   return (
-    <div className="max-w-[400px] mx-auto min-w-0"><div className="flex justify-between mb-3"><h3 className="font-bold text-[13px]">{T.flashcards}</h3><button onClick={add} className="h-[30px] px-3 rounded-full bg-[#A78BFA] text-white text-[10px]">+ {isAr ? 'بطاقة' : 'Card'}</button></div><div className="space-y-2">{cards.map((c, i) => (<div key={i} className="bg-white rounded-xl border p-3 min-w-0"><div className="font-bold text-[11px] truncate">{c.q}</div><div className="text-[10px] opacity-60 truncate">{c.a}</div></div>))}</div></div>
+    <div className="max-w-[480px] mx-auto min-w-0">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-[18px] font-bold">{T.flashcards}</h3>
+        <button onClick={add} className="h-[36px] px-4 rounded-[8px] bg-[#0E1217] text-white text-[12px] font-medium">+ {isAr ? 'بطاقة' : 'Card'}</button>
+      </div>
+      <div className="space-y-2">
+        {cards.map(function(c,i){ return (<div key={i} className="bg-white rounded-[12px] border border-[#E8E6E1] p-4 min-w-0 hover:border-[#0E1217]"><div className="font-medium text-[13px] truncate">{c.q}</div><div className="text-[12px] text-[#8A919E] mt-1 truncate">{c.a}</div></div>) })}
+        {!cards.length && <div className="py-12 text-center bg-white border border-dashed border-[#E8E6E1] rounded-[12px] text-[12px] text-[#8A919E]">{isAr ? 'لا توجد بطاقات بعد' : 'No cards yet'}</div>}
+      </div>
+    </div>
   )
 }
 
 function ExamView({ T, isAr }) {
-  const [exams, setExams] = useState(() => { try { return JSON.parse(localStorage.getItem('rafeaq_exams') || '[]') } catch { return [] } })
-  function add() {
-    const n = prompt(isAr ? 'اسم الامتحان؟' : 'Exam name?')
-    if (!n) return
-    const d = prompt('YYYY-MM-DD')
-    if (!d) return
-    setExams([...exams, { id: Date.now(), name: n, date: d }])
-  }
-  function editDate(id) {
-    const nd = prompt('YYYY-MM-DD')
-    if (!nd) return
-    setExams(exams.map((e) => e.id === id ? { ...e, date: nd } : e))
-  }
-  useEffect(() => { localStorage.setItem('rafeaq_exams', JSON.stringify(exams)) }, [exams])
+  const [exams, setExams] = useState(function(){ try { return JSON.parse(localStorage.getItem('rafeaq_exams') || '[]') } catch(e){ return [] } }())
+  function add(){ const n = prompt(isAr ? 'اسم الامتحان؟' : 'Exam name?'); if (!n) return; const d = prompt('YYYY-MM-DD'); if (!d) return; setExams(exams.concat([{ id: Date.now(), name: n, date: d }])) }
+  function editDate(id){ const nd = prompt('YYYY-MM-DD'); if (!nd) return; setExams(exams.map(function(e){ return e.id === id ? { id: e.id, name: e.name, date: nd } : e })) }
+  useEffect(function(){ localStorage.setItem('rafeaq_exams', JSON.stringify(exams)) }, [exams])
   return (
-    <div className="max-w-[400px] mx-auto min-w-0"><div className="flex justify-between mb-3"><h3 className="font-bold text-[13px]">{T.exams}</h3><button onClick={add} className="h-[30px] px-3 rounded-full bg-[#A78BFA] text-white text-[10px]">+ {isAr ? 'امتحان' : 'Exam'}</button></div><div className="space-y-2">{exams.map((ex) => {
-      const diff = Math.ceil((new Date(ex.date) - new Date()) / (1000 * 60 * 60 * 24))
-      return (<div key={ex.id} className="bg-white rounded-xl border p-3 flex justify-between items-center gap-2 min-w-0"><div className="min-w-0"><div className="font-bold text-[11px] truncate">{ex.name}</div><div className="text-[9px] opacity-50 flex items-center gap-1 truncate">{ex.date}<button onClick={() => editDate(ex.id)} className="px-2 py-0.5 rounded-full bg-[#F5F3FF] border text-[#7C3AED] text-[8px]">{T.edit}</button></div></div><div className="text-[14px] font-bold text-[#A78BFA] shrink-0">{diff}{isAr ? 'يوم' : 'd'}</div></div>)
-    })}</div></div>
+    <div className="max-w-[480px] mx-auto min-w-0">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-[18px] font-bold">{T.exams}</h3>
+        <button onClick={add} className="h-[36px] px-4 rounded-[8px] bg-[#0E1217] text-white text-[12px] font-medium">+ {isAr ? 'امتحان' : 'Exam'}</button>
+      </div>
+      <div className="space-y-2">
+        {exams.map(function(ex){
+          const diff = Math.ceil((new Date(ex.date) - new Date()) / (1000 * 60 * 60 * 24))
+          return (<div key={ex.id} className="bg-white rounded-[12px] border border-[#E8E6E1] p-4 flex justify-between items-center gap-3 min-w-0"><div className="min-w-0"><div className="font-medium text-[13px] truncate">{ex.name}</div><div className="text-[11px] text-[#8A919E] flex items-center gap-2 mt-1 truncate">{ex.date}<button onClick={function(){ editDate(ex.id) }} className="px-2 py-0.5 rounded-full bg-[#F7F5F3] border border-[#E8E6E1] text-[#5A6372] text-[10px] hover:border-[#0E1217]">{T.edit}</button></div></div><div className="text-[18px] font-semibold text-[#0E1217] shrink-0">{diff}{isAr ? 'ي' : 'd'}</div></div>)
+        })}
+        {!exams.length && <div className="py-12 text-center bg-white border border-dashed border-[#E8E6E1] rounded-[12px] text-[12px] text-[#8A919E]">{isAr ? 'لا توجد امتحانات' : 'No exams'}</div>}
+      </div>
+    </div>
   )
 }
