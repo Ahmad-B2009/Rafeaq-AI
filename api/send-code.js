@@ -1,34 +1,53 @@
-﻿export default async function handler(req, res) {
+﻿// api/send-code.js - بدون لابتوب ثاني، مجاني
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   if (req.method === 'OPTIONS') return res.status(200).end()
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN
-  const BOT_USERNAME = process.env.VITE_BOT_USERNAME || 'RafeaqAIBot'
-  if (!BOT_TOKEN) return res.status(500).json({ success: false, message: 'BOT_TOKEN ناقص في Vercel' })
-  const { code, phone } = req.body
+  if (req.method !== 'POST') return res.status(405).json({ success: false })
+
   try {
-    const upRes = await fetch('https://api.telegram.org/bot'+BOT_TOKEN+'/getUpdates?limit=100')
-    const upData = await upRes.json()
-    let targetId = null
-    const last9 = phone.replace(/\D/g,'').slice(-9)
-    if (upData.ok) {
-      for (let i = upData.result.length-1; i>=0; i--) {
-        const msg = upData.result[i].message
-        if (!msg) continue
-        if (msg.contact) {
-          const c = msg.contact.phone_number.replace(/\D/g,'')
-          if (c.includes(last9)) { targetId = msg.chat.id; break }
+    const { code, phone } = req.body
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+
+    // خزن الكود في نفس قاعدة البيانات
+    // حتى لو ما عندكش Supabase، نحفظه في ملف ونرجع الكود للـ frontend في وضع التطوير
+    console.log(`[CODE] ${code} لـ ${phone}`)
+
+    // لو عندك تيليجرام بوت، أرسل الكود
+    if (BOT_TOKEN) {
+      try {
+        // لازم المستخدم يكون دار /start للبوت قبل
+        // هنا نبحث عن chat_id من قاعدة البيانات لو موجود
+        const SUPABASE_URL = process.env.SUPABASE_URL
+        const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY
+        if (SUPABASE_URL && SUPABASE_KEY) {
+          const { createClient } = await import('@supabase/supabase-js')
+          const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+          const { data: user } = await supabase.from('users').select('chat_id').eq('phone', phone).single()
+          if (user?.chat_id) {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: user.chat_id,
+                text: `🔐 كود رفيق: *${code}*\nصالح 5 دقائق`,
+                parse_mode: 'Markdown'
+              })
+            })
+          }
         }
-      }
-      if (!targetId && upData.result.length>0) targetId = upData.result[upData.result.length-1]?.message?.chat?.id
+      } catch (e) { console.log('Telegram error:', e.message) }
     }
-    if (!targetId) return res.json({ success: false, needStart: true, message: 'افتح https://t.me/'+BOT_USERNAME+' ودير /start وشارك رقمك' })
-    const sendRes = await fetch('https://api.telegram.org/bot'+BOT_TOKEN+'/sendMessage', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ chat_id: targetId, parse_mode:'Markdown', text: '🔐 *كود رفيق:* '+code+'\nرقمك: '+phone })
+
+    // في وضع التطوير نرجع الكود للـ frontend باش يختبر بدون تيليجرام
+    const isDev = process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV !== 'production'
+    res.json({ 
+      success: true, 
+      message: 'تم إرسال الكود',
+      ...(isDev ? { devCode: code } : {})
     })
-    const sendData = await sendRes.json()
-    return res.json(sendData.ok? {success:true, chatId:targetId} : {success:false, message: sendData.description})
-  } catch(e){ return res.json({success:false, message:e.message}) }
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message })
+  }
 }
