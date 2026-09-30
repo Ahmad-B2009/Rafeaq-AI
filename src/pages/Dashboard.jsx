@@ -1,38 +1,5 @@
-
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const navItems = [
-  { id: 'home', label: 'الرئيسية', icon: '🏠' },
-  { id: 'ai', label: 'الذكاء الاصطناعي', icon: '💬' },
-  { id: 'notebook', label: 'دفتر رفيق', icon: '📓' },
-  { id: 'docs', label: 'المستندات', icon: '📄' },
-  { id: 'slides', label: 'العروض', icon: '🎨' },
-  { id: 'library', label: 'مكتبة رفيق', icon: '📚' },
-  { id: 'pomo', label: 'بومودورو', icon: '⏱️' },
-]
-
-function getInitialMsgs(){
-  try{
-    const s = localStorage.getItem('rafeaq_msgs')
-    if(s){
-      const p = JSON.parse(s)
-      if(Array.isArray(p) && p.length>0) return p
-    }
-  }catch(e){}
-  return [{role:'assistant', text:'أهلاً يا أحمد! 👋\n\nأنا رفيق AI - مساعدك الدراسي الذكي. أقدر:\n\n• أشرح أي درس بلهجة ليبية بسيطة\n• ألخص كتب ومذكرات طويلة\n• أديرلك اختبارات MCQ\n• أحفظ ملاحظاتك في دفتر رفيق\n• أحول أي درس لعرض تقديمي\n\nشن تبي نبدو بيه؟'}]
-}
-
-function getInitialSlides(){
-  try{
-    const s = localStorage.getItem('rafeaq_slides')
-    if(s){
-      const p = JSON.parse(s)
-      if(Array.isArray(p) && p.length>0) return p
-    }
-  }catch(e){}
-  return [{id:1,title:'مقدمة الدرس',content:'اكتب محتوى الدرس هنا... كل شريحة هي فكرة رئيسية'}]
-}
 
 function getLS(key, fallback){
   try{
@@ -46,7 +13,7 @@ export default function Dashboard(){
   const nav = useNavigate()
   const [tab,setTab] = useState('home')
   const [user,setUser] = useState('أحمد')
-  const [msgs,setMsgs] = useState(()=>getInitialMsgs())
+  const [msgs,setMsgs] = useState(()=>getLS('rafeaq_msgs', [{role:'assistant', text:'أهلاً يا أحمد! 👋\nأنا رفيق AI - مساعدك الدراسي. أقدر أشرح بلهجة ليبية، ألخص، أدير اختبارات، وأربط مع Notion.'}]))
   const [inp,setInp] = useState('')
   const [isAiLoading,setIsAiLoading] = useState(false)
   const bottomRef = useRef(null)
@@ -55,9 +22,13 @@ export default function Dashboard(){
   const [activeNoteId,setActiveNoteId] = useState(null)
   const [files,setFiles] = useState(()=>getLS('rafeaq_files', []))
   const [terabox,setTerabox] = useState(()=>getLS('rafeaq_terabox', []))
-  const [slides,setSlides] = useState(()=>getInitialSlides())
+  const [slides,setSlides] = useState(()=>getLS('rafeaq_slides', [{id:1,title:'مقدمة الدرس',content:'اكتب محتوى الدرس هنا...'}]))
   const [activeSlide,setActiveSlide] = useState(0)
-
+  const [notionTasks,setNotionTasks] = useState(()=>getLS('rafeaq_notion', [
+    {id:1, name:'ملخص رياضيات', status:'جاري', subject:'رياضيات', date:'27 أغسطس'},
+    {id:2, name:'واجب فيزياء', status:'منجز', subject:'فيزياء', date:'26 أغسطس'},
+    {id:3, name:'عرض عربي', status:'لم يبدأ', subject:'عربية', date:'28 أغسطس'},
+  ]))
   const [pomoTime,setPomoTime] = useState(25*60)
   const [pomoRunning,setPomoRunning] = useState(false)
   const [pomoMode,setPomoMode] = useState('work')
@@ -74,28 +45,13 @@ export default function Dashboard(){
   useEffect(()=>{ localStorage.setItem('rafeaq_files', JSON.stringify(files)) },[files])
   useEffect(()=>{ localStorage.setItem('rafeaq_terabox', JSON.stringify(terabox)) },[terabox])
   useEffect(()=>{ localStorage.setItem('rafeaq_slides', JSON.stringify(slides)) },[slides])
+  useEffect(()=>{ localStorage.setItem('rafeaq_notion', JSON.stringify(notionTasks)) },[notionTasks])
 
   useEffect(()=>{
     if(!pomoRunning) return
     const id = setInterval(()=> setPomoTime(t=> t>1 ? t-1 : 0), 1000)
     return ()=> clearInterval(id)
   },[pomoRunning])
-
-  useEffect(()=>{
-    if(pomoTime===0 && pomoRunning){
-      setPomoRunning(false)
-      const next = pomoMode==='work' ? 'break' : 'work'
-      setPomoMode(next)
-      setPomoTime(next==='work'?25*60:5*60)
-      if(typeof Notification!=='undefined' && Notification.permission==='granted'){
-        new Notification(next==='work'?'يلا نرجعو نقرو! 📚':'خود بريك ☕')
-      }
-    }
-  },[pomoTime,pomoRunning,pomoMode])
-
-  if(typeof window!=='undefined' && typeof Notification!=='undefined' && Notification.permission==='default'){
-    Notification.requestPermission()
-  }
 
   function logout(){
     localStorage.removeItem('rafeaq_token')
@@ -116,16 +72,16 @@ export default function Dashboard(){
         body: JSON.stringify({message:q, user:user})
       })
       const data = await res.json()
-      const reply = data.reply || data.text || `تمام يا ${user}:\n\n"${q}"\n\nنشرحهولك بلهجة ليبية بسيطة:\nيعني كأنه...\n\nتبي نحفظه في دفتر رفيق؟ ولا نديره عرض؟`
+      const reply = data.reply || data.text || `تمام يا ${user}: "${q}" نشرحهولك بلهجة ليبية...`
       setMsgs(m=>[...m,{role:'assistant',text:reply}])
     }catch(e){
-      setMsgs(m=>[...m,{role:'assistant',text:`تمام يا ${user}:\n\n"${q}"\n\nنشرحهولك بلهجة ليبية:\n• الفكرة الرئيسية...\n• مثال...\n• ملخص...\n\n(اربط OPENAI_API_KEY في Vercel باش يخدم AI الحقيقي)`}])
+      setMsgs(m=>[...m,{role:'assistant',text:`تمام يا ${user}: "${q}"\nشرح بلهجة ليبية بسيطة... (اربط OPENAI_API_KEY)`}])
     }
     setIsAiLoading(false)
   }
 
   function addNote(){
-    const n = {id:Date.now(), title:'ملاحظة جديدة', content:'', date:new Date().toLocaleDateString('ar-LY'), time:new Date().toLocaleTimeString('ar-LY',{hour:'2-digit',minute:'2-digit'})}
+    const n = {id:Date.now(), title:'ملاحظة جديدة', content:'', date:new Date().toLocaleDateString('ar-LY')}
     setNotes([n,...notes])
     setActiveNoteId(n.id)
   }
@@ -146,317 +102,314 @@ export default function Dashboard(){
   const totalMB = (totalBytes/1024/1024).toFixed(1)
 
   return (
-    <div className="min-h-screen bg-[#F8F9FF] flex" dir="rtl">
+    <div className="min-h-screen bg-[#F6F7FB] flex" dir="rtl">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');*{font-family:'Tajawal',sans-serif}::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#E9E5FF;border-radius:10px}`}</style>
 
-      <div className="w-[280px] bg-white border-l border-[#F0ECFF] hidden lg:flex flex-col fixed right-0 top-0 h-screen z-30">
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#7C6BFF] to-[#5B4DFF] flex items-center justify-center text-white font-black shadow-[0_6px_16px_rgba(124,107,255,0.3)]">ر</div>
+      {/* SIDEBAR DARK - EXACT LIKE IMAGE */}
+      <div className="w-[230px] bg-[#111827] hidden lg:flex flex-col fixed right-0 top-0 h-screen z-30">
+        <div className="p-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-[10px] bg-[#7C6BFF] flex items-center justify-center text-white font-black text-[14px]">ر</div>
             <div>
-              <div className="font-[800] text-[16px] text-[#1E1B4B] leading-none">رفيق AI</div>
-              <div className="text-[10px] text-[#8B8BA7] mt-1.5">مساعدك الدراسي الذكي</div>
+              <div className="font-bold text-[13px] text-white">رفيق AI</div>
+              <div className="text-[9px] text-white/50 -mt-0.5">Rafeaq • Notion</div>
             </div>
           </div>
-          <div className="mt-8 space-y-1">
-            {navItems.map(item=>{
-              const active = tab===item.id
-              return (
-                <button key={item.id} onClick={()=>setTab(item.id)} className={`w-full flex items-center gap-3 px-4 h-[46px] rounded-[12px] text-right transition-all ${active ? 'bg-[#7C6BFF] text-white shadow-[0_6px_16px_rgba(124,107,255,0.25)]' : 'text-[#6B7280] hover:bg-[#F8F7FF] hover:text-[#1E1B4B]'}`}>
-                  <span className={`text-[16px] ${active ? '' : 'opacity-70'}`}>{item.icon}</span>
-                  <span className={`text-[13px] ${active ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
-                  {active && <span className="mr-auto w-1.5 h-1.5 bg-white rounded-full"></span>}
-                </button>
-              )
-            })}
+          <div className="mt-8 space-y-1.5">
+            <button onClick={()=>setTab('home')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='home' ? 'bg-[#7C6BFF] text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>⌂ الرئيسية</button>
+            <button onClick={()=>setTab('ai')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='ai' ? 'bg-[#7C6BFF] text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>✦ الذكاء الاصطناعي</button>
+            <button onClick={()=>setTab('notebook')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='notebook' ? 'bg-[#7C6BFF] text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>📓 دفتر رفيق</button>
+            <button onClick={()=>setTab('docs')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='docs' ? 'bg-[#7C6BFF] text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>📄 المستندات</button>
+            <button onClick={()=>setTab('slides')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='slides' ? 'bg-[#7C6BFF] text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>🎨 العروض</button>
+            <button onClick={()=>setTab('library')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='library' ? 'bg-[#7C6BFF] text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>📚 مكتبة + TeraBox</button>
+            <button onClick={()=>setTab('notion')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='notion' ? 'bg-white text-black' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+              <span className="w-5 h-5 bg-white rounded-[4px] flex items-center justify-center text-[12px] font-black text-black">N</span> Notion
+            </button>
+            <button onClick={()=>setTab('pomo')} className={`w-full flex items-center gap-3 px-3 h-9 rounded-[10px] text-right text-[12px] ${tab==='pomo' ? 'bg-[#7C6BFF] text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>⏱️ بومودورو</button>
           </div>
         </div>
-        <div className="mt-auto p-4 border-t border-[#F3F0FF] space-y-3">
-          <div className="bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FF] rounded-[14px] p-3.5 border border-[#E9D5FF]">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-[#5B4DFF]">☁️ TeraBox 1TB</span>
-              <span className="text-[10px] bg-white px-2 py-0.5 rounded-full font-bold">{totalMB} MB</span>
+        <div className="mt-auto p-4 border-t border-white/5">
+          <div className="bg-[#1F2937] rounded-[12px] p-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-[#EDE9FF] flex items-center justify-center text-[10px]">👤</div>
+              <div><div className="text-[11px] font-bold text-white">{user}</div><div className="text-[9px] text-white/50">طالب • {totalMB} MB</div></div>
             </div>
-            <div className="w-full h-1.5 bg-white rounded-full mt-2.5 overflow-hidden"><div className="h-full bg-[#7C6BFF] rounded-full transition-all" style={{width:`${Math.min(100,(totalBytes/(1024*1024*1024))*100)}%`}}></div></div>
-            <div className="text-[10px] text-[#6B7280] mt-2">{terabox.length + files.length} ملفات محفوظة محلياً</div>
           </div>
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] bg-[#FAFBFF] border border-[#F0ECFF]">
-            <div className="w-8 h-8 rounded-full bg-[#7C6BFF] text-white flex items-center justify-center text-[11px] font-bold">{user[0] ? user[0].toUpperCase() : 'A'}</div>
-            <div className="flex-1">
-              <div className="text-[12px] font-bold text-[#1E1B4B] truncate">{user}</div>
-              <div className="text-[10px] text-[#8B8BA7]">طالب • متصل</div>
-            </div>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          </div>
-          <button onClick={logout} className="w-full h-9 rounded-full border text-[11px] font-bold hover:bg-black hover:text-white transition">تسجيل الخروج ↪</button>
+          <button onClick={logout} className="w-full mt-3 h-8 rounded-full bg-white/5 text-white/60 text-[10px] hover:bg-white/10">تسجيل الخروج ↪</button>
         </div>
       </div>
 
-      <div className="flex-1 lg:mr-[280px] min-h-screen flex flex-col">
-        <div className="h-[64px] bg-white/80 backdrop-blur-xl border-b border-[#F0ECFF] flex items-center justify-between px-6 sticky top-0 z-20">
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 text-[11px] text-[#6B7280] bg-[#F8F7FF] border border-[#F0ECFF] px-3 py-1.5 rounded-full">📅 السبت 23 أغسطس 2025</div>
-            <div className="flex items-center gap-2 text-[11px] text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">● متصل</div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative hidden md:block">
-              <input placeholder="ابحث..." className="w-[220px] h-9 pr-8 pl-4 rounded-full bg-[#F8F7FF] border border-[#F0ECFF] text-[11px] outline-none focus:border-[#7C6BFF]" />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] opacity-40">🔍</span>
+      <div className="flex-1 lg:mr-[230px]">
+        <div className="h-[56px] bg-white border-b border-[#EEF0F6] flex items-center justify-between px-5 sticky top-0 z-20">
+          <div className="flex items-center gap-3 flex-1 max-w-[420px]">
+            <div className="relative flex-1">
+              <input placeholder="ابحث في الدروس أو الواجبات" className="w-full h-8 pr-8 pl-16 rounded-[8px] bg-[#F3F4F6] border border-transparent text-[11px] outline-none focus:bg-white focus:border-[#E5E7EB]" />
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] opacity-40">🔍</span>
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] bg-white border px-1.5 py-0.5 rounded">Ctrl + K</span>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-[10px] text-[#6B7280] hidden md:block">السبت 23 أغسطس 2025<br/><span className="text-[9px] opacity-60">10:24 ص</span></div>
+            <button className="w-8 h-8 rounded-full bg-[#F9FAFB] flex items-center justify-center text-[14px]">🔔</button>
+            <div className="w-8 h-8 rounded-full bg-[#7C6BFF] text-white flex items-center justify-center text-[11px] font-bold">{user[0]||'A'}</div>
           </div>
         </div>
 
-        <div className="p-4 lg:p-6 bg-[#F8F9FF] flex-1">
+        <div className="p-5">
           <div className="max-w-[1400px] mx-auto">
 
             {tab==='home' && (
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
-                <div className="xl:col-span-3 space-y-5">
-                  <div className="rounded-[20px] bg-gradient-to-l from-[#EDE9FF] via-[#F3F0FF] to-white border border-[#EDE9FF] p-6 lg:p-8 flex items-center justify-between relative overflow-hidden">
-                    <div className="absolute -left-20 top-0 w-[300px] h-[300px] bg-white/60 rounded-full blur-3xl"></div>
-                    <div className="flex items-center gap-6 z-10">
-                      <div className="w-[88px] h-[88px] rounded-[20px] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex items-center justify-center text-[44px]">🤖</div>
-                      <div>
-                        <h1 className="text-[26px] font-[800] text-[#1E1B4B] flex items-center gap-2">مرحباً، {user} <span className="text-[22px]">👋</span></h1>
-                        <p className="text-[13px] text-[#6B7280] mt-1">معاً نحقق أهدافك.. خطوة بخطوة نحو مستقبل أفضل</p>
-                        <div className="mt-4 flex items-center gap-3 bg-white rounded-full px-3 py-1.5 border border-[#F0ECFF] w-fit">
-                          <span className="text-[10px] text-[#8B8BA7]">تقدمك في التعلم</span>
-                          <div className="w-20 h-1.5 bg-[#F3F0FF] rounded-full overflow-hidden"><div className="h-full bg-[#7C6BFF] w-[40%]"></div></div>
-                          <span className="text-[10px] font-bold text-[#7C6BFF]">40%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="hidden lg:block z-10">
-                      <div className="bg-white rounded-[14px] border p-3 shadow-sm">
-                        <div className="text-[10px] text-[#8B8BA7]">أنت الآن في</div>
-                        <div className="mt-1.5 bg-[#F5F3FF] text-[#7C6BFF] text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1">🎓 المستوى الأول</div>
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
+              <div className="xl:col-span-3 space-y-4">
+                <div className="rounded-[16px] overflow-hidden relative h-[160px] bg-gradient-to-l from-[#9F8CFF] via-[#A78BFA] to-[#C4B5FD] flex items-center px-8">
+                  <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80" alt="" className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-60" />
+                  <div className="absolute inset-0 bg-gradient-to-l from-[#7C6BFF]/80 to-[#A78BFA]/40"></div>
+                  <div className="absolute left-[28%] top-1/2 -translate-y-1/2 z-10 hidden md:block">
+                    <div className="w-[64px] h-[64px] rounded-full bg-gradient-to-br from-[#EDE9FF] to-[#A78BFA] shadow-[0_0_30px_rgba(255,255,255,0.5)] flex items-center justify-center text-[28px]">🪐</div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                      {id:'notebook', icon:'📓', bg:'#F5F3FF', title:'دفتر رفيق', desc: notes.length + ' ملاحظات محفوظة', color:'#7C6BFF'},
-                      {id:'docs', icon:'📄', bg:'#ECFDF5', title:'المستندات', desc: files.length + ' ملفات PDF', color:'#10B981'},
-                      {id:'slides', icon:'🎨', bg:'#FFF7ED', title:'العروض', desc: slides.length + ' عروض', color:'#F59E0B'},
-                      {id:'library', icon:'📚', bg:'#FDF2F8', title:'مكتبة رفيق', desc: terabox.length + ' ملفات TeraBox', color:'#EC4899'},
-                    ].map(c=>(
-                      <button key={c.id} onClick={()=>setTab(c.id)} className="bg-white rounded-[16px] border border-[#F0ECFF] p-5 text-right hover:shadow-[0_12px_32px_rgba(124,107,255,0.08)] hover:-translate-y-0.5 transition-all group">
-                        <div className="w-11 h-11 rounded-[12px] flex items-center justify-center text-[20px] group-hover:scale-110 transition" style={{background:c.bg}}>{c.icon}</div>
-                        <div className="mt-4 font-bold text-[13px] text-[#1E1B4B]">{c.title}</div>
-                        <div className="text-[11px] text-[#8B8BA7] mt-1">{c.desc}</div>
-                        <div className="mt-4 flex items-center gap-1 text-[11px] font-bold" style={{color:c.color}}>فتح <span className="group-hover:translate-x-1 transition">→</span></div>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                    <div className="lg:col-span-2 bg-white rounded-[16px] border border-[#F0ECFF] p-5">
-                      <div className="flex justify-between items-center mb-5">
-                        <h3 className="font-bold text-[13px]">🎯 مراجعة سريعة</h3>
-                        <span className="text-[11px] text-[#8B8BA7]">كل مميزاتك في مكان واحد</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button onClick={()=>setTab('notebook')} className="flex items-center gap-3 p-3.5 rounded-[12px] bg-[#F8F7FF] border border-[#F0ECFF] hover:bg-[#F5F3FF] transition text-right">
-                          <div className="w-10 h-10 rounded-[10px] bg-white border flex items-center justify-center">📓</div>
-                          <div><div className="text-[12px] font-bold">دفتر رفيق</div><div className="text-[10px] text-[#8B8BA7]">{notes.length} ملاحظات جديدة</div></div>
-                          <span className="mr-auto opacity-30">›</span>
-                        </button>
-                        <button onClick={()=>setTab('docs')} className="flex items-center gap-3 p-3.5 rounded-[12px] bg-[#F0FDF4] border border-[#DCFCE7] hover:bg-[#DCFCE7] transition text-right">
-                          <div className="w-10 h-10 rounded-[10px] bg-white border flex items-center justify-center">📄</div>
-                          <div><div className="text-[12px] font-bold">المستندات</div><div className="text-[10px] text-[#8B8BA7]">{files.length} ملفات مرفوعة</div></div>
-                          <span className="mr-auto opacity-30">›</span>
-                        </button>
-                        <button onClick={()=>setTab('pomo')} className="flex items-center gap-3 p-3.5 rounded-[12px] bg-[#FEF2F2] border border-[#FECACA] hover:bg-[#FECACA] transition text-right">
-                          <div className="w-10 h-10 rounded-[10px] bg-white border flex items-center justify-center">⏱️</div>
-                          <div><div className="text-[12px] font-bold">بومودورو</div><div className="text-[10px] text-[#8B8BA7]">{Math.floor(pomoTime/60)}:{String(pomoTime%60).padStart(2,'0')} متبقي</div></div>
-                          <span className="mr-auto opacity-30">›</span>
-                        </button>
-                        <button onClick={()=>setTab('library')} className="flex items-center gap-3 p-3.5 rounded-[12px] bg-[#FDF2F8] border border-[#FCE7F3] hover:bg-[#FCE7F3] transition text-right">
-                          <div className="w-10 h-10 rounded-[10px] bg-white border flex items-center justify-center">☁️</div>
-                          <div><div className="text-[12px] font-bold">TeraBox 1TB</div><div className="text-[10px] text-[#8B8BA7]">{totalMB} MB محفوظة</div></div>
-                          <span className="mr-auto opacity-30">›</span>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-[16px] border border-[#F0ECFF] p-5">
-                      <h3 className="font-bold text-[13px] mb-4">📊 إحصائياتك</h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-[#F8F7FF] rounded-[12px] p-4 text-center border border-[#F0ECFF]"><div className="text-[20px]">📚</div><div className="text-[20px] font-[800] mt-1">{notes.length + files.length + terabox.length}</div><div className="text-[10px] text-[#8B8BA7]">مواد محفوظة</div></div>
-                        <div className="bg-[#F8F7FF] rounded-[12px] p-4 text-center border border-[#F0ECFF]"><div className="text-[20px]">💬</div><div className="text-[20px] font-[800] mt-1">{msgs.length}</div><div className="text-[10px] text-[#8B8BA7]">رسائل AI</div></div>
-                        <div className="bg-[#F8F7FF] rounded-[12px] p-4 text-center border border-[#F0ECFF]"><div className="text-[20px]">🎯</div><div className="text-[20px] font-[800] mt-1">90%</div><div className="text-[10px] text-[#8B8BA7]">تقدم</div></div>
-                        <div className="bg-[#F8F7FF] rounded-[12px] p-4 text-center border border-[#F0ECFF]"><div className="text-[20px]">☁️</div><div className="text-[20px] font-[800] mt-1">{terabox.length}</div><div className="text-[10px] text-[#8B8BA7]">TeraBox</div></div>
-                      </div>
-                      <div className="mt-4 bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FF] rounded-[12px] p-3 border border-[#E9D5FF] flex gap-2">
-                        <span>💡</span><span className="text-[11px] leading-5"><b>أنت تسير بشكل رائع!</b> استمر، فالنجاح قادم.</span>
-                      </div>
+                  <div className="relative z-10 flex-1">
+                    <h1 className="text-[20px] font-[800] text-white">مرحبا، {user} 👋</h1>
+                    <p className="text-[11px] text-white/90 mt-1">مستعد للاستمرار في رحلتك الدراسية • مع Notion</p>
+                    <div className="flex gap-2 mt-4">
+                      <button onClick={()=>setTab('ai')} className="h-8 px-4 rounded-full bg-white text-[#7C6BFF] text-[11px] font-bold">ابدأ رحلة مع رفيق →</button>
+                      <button onClick={()=>setTab('notion')} className="h-8 px-3 rounded-full bg-black text-white text-[10px] flex items-center gap-1"><span className="w-4 h-4 bg-white rounded-[3px] flex items-center justify-center text-black font-black text-[10px]">N</span> فتح Notion</button>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-5">
-                  <div className="bg-gradient-to-br from-[#EDE9FF] to-[#F5F3FF] rounded-[20px] border border-[#E9D5FF] p-6 text-center">
-                    <div className="w-14 h-14 mx-auto rounded-full bg-white shadow-sm flex items-center justify-center text-[26px]">🤖</div>
-                    <div className="mt-3 font-bold text-[13px]">تحدث مع رفيق AI</div>
-                    <div className="text-[11px] text-[#6B7280] mt-1 leading-5">اسأل أي شيء عن دروسك</div>
-                    <button onClick={()=>setTab('ai')} className="mt-4 w-full h-11 rounded-full bg-[#7C6BFF] text-white text-[12px] font-bold hover:bg-[#6B5AE0] shadow-[0_6px_16px_rgba(124,107,255,0.3)]">→ بدء المحادثة</button>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="bg-white rounded-[12px] border border-[#F0ECFF] p-4 cursor-pointer hover:shadow-sm" onClick={()=>setTab('notebook')}>
+                    <div className="w-8 h-8 rounded-[8px] bg-[#F5F3FF] flex items-center justify-center">📓</div>
+                    <div className="mt-3 font-bold text-[11px]">دفتر رفيق</div>
+                    <div className="text-[10px] text-[#8B8BA7] mt-1">{notes.length} ملاحظات</div>
                   </div>
-                  <div className="bg-white rounded-[16px] border border-[#F0ECFF] p-5">
-                    <h3 className="font-bold text-[12px] mb-4">🔔 آخر الأنشطة</h3>
-                    <div className="space-y-4">
-                      <div className="flex gap-3"><div className="w-8 h-8 rounded-full bg-[#F5F3FF] flex items-center justify-center text-[12px]">☁️</div><div className="flex-1"><div className="text-[11px] font-bold">TeraBox 1TB</div><div className="text-[10px] text-[#8B8BA7] mt-1">تخزين محلي آمن ومجاني</div><div className="text-[9px] text-[#9CA3AF] mt-1">الآن</div></div></div>
-                      <div className="flex gap-3"><div className="w-8 h-8 rounded-full bg-[#FEF3C7] flex items-center justify-center text-[12px]">📚</div><div className="flex-1"><div className="text-[11px] font-bold">مكتبة الامجاد</div><div className="text-[10px] text-[#8B8BA7] mt-1">كتب ليبية - alamjad-ly.com</div><div className="text-[9px] text-[#9CA3AF] mt-1">مربوطة ✅</div></div></div>
-                      <div className="flex gap-3"><div className="w-8 h-8 rounded-full bg-[#DCFCE7] flex items-center justify-center text-[12px]">📓</div><div className="flex-1"><div className="text-[11px] font-bold">دفتر رفيق</div><div className="text-[10px] text-[#8B8BA7] mt-1">{notes.length} ملاحظات</div><div className="text-[9px] text-[#9CA3AF] mt-1">منذ 3 ساعات</div></div></div>
+                  <div className="bg-white rounded-[12px] border border-[#F0ECFF] p-4 cursor-pointer hover:shadow-sm" onClick={()=>setTab('ai')}>
+                    <div className="w-8 h-8 rounded-[8px] bg-[#ECFDF5] flex items-center justify-center">💬</div>
+                    <div className="mt-3 font-bold text-[11px]">الذكاء الاصطناعي</div>
+                    <div className="text-[10px] text-[#8B8BA7] mt-1">{msgs.length} رسائل</div>
+                  </div>
+                  <div className="bg-white rounded-[12px] border border-[#F0ECFF] p-4 cursor-pointer hover:shadow-sm" onClick={()=>setTab('notion')}>
+                    <div className="w-8 h-8 rounded-[8px] bg-black flex items-center justify-center"><span className="w-5 h-5 bg-white rounded-[3px] flex items-center justify-center font-black text-[11px]">N</span></div>
+                    <div className="mt-3 font-bold text-[11px]">Notion</div>
+                    <div className="text-[10px] text-[#8B8BA7] mt-1">{notionTasks.length} مهام</div>
+                  </div>
+                  <div className="bg-white rounded-[12px] border border-[#F0ECFF] p-4 cursor-pointer hover:shadow-sm" onClick={()=>setTab('library')}>
+                    <div className="w-8 h-8 rounded-[8px] bg-[#FFF7ED] flex items-center justify-center">☁️</div>
+                    <div className="mt-3 font-bold text-[11px]">TeraBox 1TB</div>
+                    <div className="text-[10px] text-[#8B8BA7] mt-1">{totalMB} MB</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="lg:col-span-2 bg-white rounded-[12px] border border-[#F0ECFF] p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-[12px] flex items-center gap-2"><span className="w-5 h-5 bg-black rounded-[4px] flex items-center justify-center text-white font-black text-[10px]">N</span> Notion - مهامك</h3>
+                      <button onClick={()=>setTab('notion')} className="text-[10px] text-[#8B8BA7]">فتح Notion →</button>
+                    </div>
+                    <div className="space-y-2">
+                      {notionTasks.slice(0,4).map(t=>(
+                        <div key={t.id} className="flex items-center gap-3 p-2.5 rounded-[8px] border border-[#F3F0FF] bg-[#FAFBFF]">
+                          <div className={`w-2 h-2 rounded-full ${t.status==='منجز'?'bg-green-500':t.status==='جاري'?'bg-yellow-500':'bg-gray-300'}`}></div>
+                          <div className="flex-1"><div className="text-[11px] font-bold">{t.name}</div><div className="text-[9px] text-[#8B8BA7]">{t.subject} • {t.date}</div></div>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full border ${t.status==='منجز'?'bg-green-50 text-green-700 border-green-200':t.status==='جاري'?'bg-yellow-50 text-yellow-700 border-yellow-200':'bg-gray-50 text-gray-600'}`}>{t.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-[12px] border border-[#F0ECFF] p-4">
+                      <h3 className="font-bold text-[12px] mb-3">📊 إحصائياتك</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-[#F8F7FF] rounded-[10px] p-3 text-center border"><div className="text-[18px] font-bold">{notes.length + files.length}</div><div className="text-[9px] text-[#8B8BA7]">ملفات وملاحظات</div></div>
+                        <div className="bg-[#F8F7FF] rounded-[10px] p-3 text-center border"><div className="text-[18px] font-bold">{notionTasks.length}</div><div className="text-[9px] text-[#8B8BA7]">مهام Notion</div></div>
+                        <div className="bg-[#F8F7FF] rounded-[10px] p-3 text-center border"><div className="text-[18px] font-bold">{totalMB}</div><div className="text-[9px] text-[#8B8BA7]">MB</div></div>
+                        <div className="bg-[#F8F7FF] rounded-[10px] p-3 text-center border"><div className="text-[18px] font-bold">90%</div><div className="text-[9px] text-[#8B8BA7]">تقدم</div></div>
+                      </div>
+                    </div>
+                    <div className="bg-black rounded-[12px] p-4 text-white">
+                      <div className="flex items-center gap-2"><div className="w-6 h-6 bg-white rounded-[4px] flex items-center justify-center text-black font-black text-[12px]">N</div><div className="text-[11px] font-bold">Notion متصل ✅</div></div>
+                      <div className="text-[10px] opacity-60 mt-2 leading-4">كل مهامك تتزامن مع Notion محليا. تقدر تصدّر ل Notion الحقيقي.</div>
+                      <button onClick={()=>setTab('notion')} className="mt-3 w-full h-8 rounded-full bg-white text-black text-[10px] font-bold">فتح لوحة Notion</button>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <div className="space-y-4">
+                <div className="bg-white rounded-[12px] border border-[#F0ECFF] p-4">
+                  <div className="text-[11px] font-bold">الرسائل المتبقية اليوم</div>
+                  <div className="text-[10px] font-bold mt-1">12 / 25</div>
+                  <div className="w-full h-1.5 bg-[#F3F0FF] rounded-full mt-3"><div className="h-full bg-[#7C6BFF] w-[48%] rounded-full"></div></div>
+                </div>
+                <div className="bg-white rounded-[12px] border border-[#F0ECFF] overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&q=80" alt="" className="w-full h-[110px] object-cover" />
+                  <div className="p-3"><div className="text-[10px] leading-4 font-bold">الواجبات</div><div className="text-[9px] text-[#8B8BA7] mt-1">{files.length} ملفات • {notes.length} ملاحظات</div></div>
+                </div>
+                <div className="bg-gradient-to-br from-[#EDE9FF] to-[#F5F3FF] rounded-[12px] border border-[#E9D5FF] p-4 text-center">
+                  <div className="w-10 h-10 mx-auto rounded-full bg-white flex items-center justify-center">🤖</div>
+                  <div className="mt-2 font-bold text-[11px]">رفيق AI</div>
+                  <div className="text-[9px] text-[#6B7280] mt-1">مع Notion و TeraBox</div>
+                  <button onClick={()=>setTab('ai')} className="mt-3 w-full h-8 rounded-full bg-[#7C6BFF] text-white text-[10px] font-bold">→ ابدأ المحادثة</button>
+                </div>
+              </div>
+            </div>
             )}
 
             {tab==='ai' && (
-              <div className="max-w-[900px] mx-auto bg-white rounded-[20px] border border-[#F0ECFF] shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden">
+              <div className="max-w-[900px] mx-auto bg-white rounded-[16px] border border-[#F0ECFF] overflow-hidden">
                 <div className="p-4 border-b bg-[#FAFBFF] flex justify-between items-center">
-                  <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#7C6BFF] text-white flex items-center justify-center">🤖</div><div><div className="text-[13px] font-bold">رفيق AI</div><div className="text-[10px] text-[#8B8BA7]">متصل • يشرح بلهجة ليبية 🇱🇾</div></div></div>
-                  <button onClick={()=>setMsgs([{role:'assistant',text:'هلا! شن تبي نشرحلك؟'}])} className="text-[10px] px-3 py-1 rounded-full border bg-white">مسح</button>
+                  <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#7C6BFF] text-white flex items-center justify-center">🤖</div><div><div className="text-[13px] font-bold">رفيق AI + Notion</div><div className="text-[10px] text-[#8B8BA7]">يشرح بلهجة ليبية 🇱🇾 • يحفظ في Notion</div></div></div>
+                  <button onClick={()=>setMsgs([{role:'assistant',text:'هلا! شن تبي؟'}])} className="text-[10px] px-3 py-1 rounded-full border bg-white">مسح</button>
                 </div>
                 <div className="h-[55vh] overflow-y-auto p-5 space-y-4 bg-[#FCFBFF]">
                   {msgs.map((m,i)=>(
                     <div key={i} className={`flex ${m.role==='user'?'justify-start':'justify-end'}`}>
-                      <div className={`max-w-[78%] rounded-[18px] px-5 py-3.5 text-[13px] leading-7 whitespace-pre-wrap ${m.role==='user'?'bg-[#1E1B4B] text-white rounded-br-[4px]':'bg-white border border-[#F0ECFF] shadow-sm rounded-bl-[4px]'}`}>
-                        {m.text}
-                      </div>
+                      <div className={`max-w-[78%] rounded-[14px] px-4 py-3 text-[12px] leading-6 whitespace-pre-wrap ${m.role==='user'?'bg-[#111827] text-white':'bg-white border'}`}>{m.text}</div>
                     </div>
                   ))}
-                  {isAiLoading && <div className="flex justify-end"><div className="bg-white border rounded-[18px] px-5 py-3 text-[12px]">يكتب... ●●●</div></div>}
+                  {isAiLoading && <div className="flex justify-end"><div className="bg-white border rounded-[14px] px-4 py-2 text-[11px]">يكتب... ●●●</div></div>}
                   <div ref={bottomRef}/>
                 </div>
                 <div className="p-3 border-t bg-white flex gap-2">
-                  <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="اكتب سؤالك..." className="flex-1 h-12 rounded-full bg-[#F8F7FF] border border-[#F0ECFF] px-5 text-[13px] outline-none focus:border-[#7C6BFF] focus:bg-white" />
-                  <button onClick={()=>send()} className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center hover:bg-[#222]">↑</button>
+                  <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="اسأل رفيق AI..." className="flex-1 h-11 rounded-full bg-[#F8F7FF] border px-5 text-[12px] outline-none focus:border-[#7C6BFF]" />
+                  <button onClick={()=>send()} className="w-11 h-11 rounded-full bg-black text-white">↑</button>
                 </div>
               </div>
             )}
 
             {tab==='notebook' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="bg-white rounded-[16px] border border-[#F0ECFF] p-4">
-                  <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-[13px]">📓 دفتر رفيق ({notes.length})</h3><button onClick={addNote} className="h-8 px-3 rounded-full bg-black text-white text-[11px]">+ جديد</button></div>
+                <div className="bg-white rounded-[12px] border p-4">
+                  <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-[12px]">📓 دفتر رفيق ({notes.length})</h3><button onClick={addNote} className="h-8 px-3 rounded-full bg-black text-white text-[11px]">+ جديد</button></div>
                   <div className="space-y-2 max-h-[65vh] overflow-y-auto">
                     {notes.map(n=>(
-                      <button key={n.id} onClick={()=>setActiveNoteId(n.id)} className={`w-full text-right p-3.5 rounded-[12px] border transition ${activeNoteId===n.id?'bg-[#1E1B4B] text-white border-[#1E1B4B]':'bg-[#FAFBFF] border-[#F0ECFF] hover:bg-white'}`}>
-                        <div className="font-bold text-[12px] truncate">{n.title||'بدون عنوان'}</div>
-                        <div className="text-[11px] mt-1 opacity-70 line-clamp-2">{n.content.slice(0,80)||'فارغ...'}</div>
-                        <div className="text-[9px] mt-2 opacity-50">{n.date}</div>
+                      <button key={n.id} onClick={()=>setActiveNoteId(n.id)} className={`w-full text-right p-3 rounded-[10px] border text-[11px] ${activeNoteId===n.id?'bg-black text-white':'bg-[#FAFBFF]'}`}>
+                        <div className="font-bold truncate">{n.title}</div><div className="text-[10px] opacity-60 mt-1">{n.content.slice(0,40)}</div>
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="lg:col-span-2 bg-white rounded-[16px] border border-[#F0ECFF] p-6 min-h-[65vh]">
+                <div className="lg:col-span-2 bg-white rounded-[12px] border p-6 min-h-[60vh]">
                   {activeNoteId ? (
                     (()=>{ const note = notes.find(n=>n.id===activeNoteId); if(!note) return null; return (
                       <div>
-                        <input value={note.title} onChange={e=>setNotes(ns=>ns.map(x=>x.id===activeNoteId?{...x,title:e.target.value}:x))} className="w-full text-[18px] font-bold outline-none" placeholder="عنوان الملاحظة" />
-                        <div className="text-[10px] text-[#8B8BA7] mt-1">{note.date} {note.time}</div>
-                        <textarea value={note.content} onChange={e=>setNotes(ns=>ns.map(x=>x.id===activeNoteId?{...x,content:e.target.value}:x))} className="w-full h-[50vh] mt-6 outline-none text-[13px] leading-8 resize-none" placeholder="اكتب هنا..." />
-                        <div className="flex gap-2 mt-4">
-                          <button onClick={()=>{ setNotes(ns=>ns.filter(x=>x.id!==activeNoteId)); setActiveNoteId(null)}} className="text-[11px] px-3 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-100">حذف</button>
-                        </div>
+                        <input value={note.title} onChange={e=>setNotes(ns=>ns.map(x=>x.id===activeNoteId?{...x,title:e.target.value}:x))} className="w-full text-[16px] font-bold outline-none" placeholder="عنوان" />
+                        <textarea value={note.content} onChange={e=>setNotes(ns=>ns.map(x=>x.id===activeNoteId?{...x,content:e.target.value}:x))} className="w-full h-[50vh] mt-4 outline-none text-[12px] leading-7 resize-none" placeholder="اكتب هنا..." />
+                        <div className="flex gap-2 mt-3"><button onClick={()=>{ setNotes(ns=>ns.filter(x=>x.id!==activeNoteId)); setActiveNoteId(null)}} className="text-[10px] px-3 py-1 rounded-full bg-red-50 text-red-600 border">حذف</button><button onClick={()=>{ setTab('notion'); setNotionTasks([...notionTasks,{id:Date.now(), name:note.title, status:'جاري', subject:'ملاحظة', date:new Date().toLocaleDateString('ar-LY')}])}} className="text-[10px] px-3 py-1 rounded-full bg-black text-white flex items-center gap-1"><span className="w-3 h-3 bg-white rounded-[2px] flex items-center justify-center text-black font-black text-[8px]">N</span> أرسل ل Notion</button></div>
                       </div>
                     )})()
                   ) : (
-                    <div className="h-[60vh] flex flex-col items-center justify-center text-center">
-                      <div className="w-20 h-20 rounded-full bg-[#F8F7FF] flex items-center justify-center text-[32px]">📓</div>
-                      <div className="mt-4 font-bold text-[14px]">دفتر رفيق</div>
-                      <div className="text-[11px] text-[#8B8BA7] mt-1">كل ملاحظاتك محفوظة محلياً</div>
-                      <button onClick={addNote} className="mt-6 px-5 py-2 rounded-full bg-black text-white text-[11px]">+ ملاحظة جديدة</button>
-                    </div>
+                    <div className="h-[50vh] flex flex-col items-center justify-center text-center"><div className="w-16 h-16 rounded-full bg-[#F8F7FF] flex items-center justify-center text-[24px]">📓</div><div className="mt-3 font-bold text-[13px]">دفتر رفيق</div><div className="text-[10px] text-[#8B8BA7] mt-1">محفوظ محليا + يرتبط مع Notion</div><button onClick={addNote} className="mt-4 px-4 py-2 rounded-full bg-black text-white text-[11px]">+ ملاحظة جديدة</button></div>
                   )}
                 </div>
               </div>
             )}
 
             {tab==='docs' && (
-              <div className="bg-white rounded-[16px] border border-[#F0ECFF] p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold text-[14px]">📄 المستندات ({files.length})</h3>
-                  <label className="h-9 px-4 rounded-full bg-black text-white text-[11px] flex items-center justify-center cursor-pointer">+ رفع PDF<input type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={e=>handleUpload(e,'docs')} /></label>
-                </div>
+              <div className="bg-white rounded-[12px] border p-6">
+                <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-[13px]">📄 المستندات ({files.length})</h3><label className="h-9 px-4 rounded-full bg-black text-white text-[11px] flex items-center justify-center cursor-pointer">+ رفع PDF<input type="file" className="hidden" onChange={e=>handleUpload(e,'docs')} /></label></div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {files.map(f=>(
-                    <div key={f.id} className="border border-[#F0ECFF] rounded-[14px] p-4 bg-[#FAFBFF]">
-                      <div className="w-10 h-10 rounded-[10px] bg-white border flex items-center justify-center text-[16px]">📄</div>
-                      <div className="mt-3 font-bold text-[12px] truncate">{f.name}</div>
-                      <div className="text-[10px] text-[#8B8BA7] mt-1">{f.date} • {(f.size/1024).toFixed(0)} KB</div>
-                      <div className="flex gap-2 mt-3">
-                        <a href={f.data} download={f.name} className="text-[10px] px-3 py-1 rounded-full bg-white border">تحميل</a>
-                        <button onClick={()=>setFiles(fs=>fs.filter(x=>x.id!==f.id))} className="text-[10px] px-3 py-1 rounded-full bg-red-50 text-red-600">حذف</button>
-                      </div>
-                    </div>
+                    <div key={f.id} className="border rounded-[12px] p-4 bg-[#FAFBFF]"><div className="font-bold text-[11px] truncate">{f.name}</div><div className="text-[10px] text-[#8B8BA7] mt-1">{f.date}</div><div className="flex gap-2 mt-3"><a href={f.data} download={f.name} className="text-[10px] px-2 py-1 rounded-full bg-white border">تحميل</a><button onClick={()=>setFiles(fs=>fs.filter(x=>x.id!==f.id))} className="text-[10px] px-2 py-1 rounded-full bg-red-50 text-red-600">حذف</button></div></div>
                   ))}
+                  {files.length===0 && <div className="col-span-3 py-16 text-center text-[11px] text-[#8B8BA7]">مافيش ملفات - ارفع PDF</div>}
                 </div>
               </div>
             )}
 
             {tab==='slides' && (
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-                <div className="bg-white rounded-[16px] border border-[#F0ECFF] p-4">
-                  <h3 className="font-bold text-[13px] mb-4">🎨 العروض ({slides.length})</h3>
-                  <div className="space-y-2">
-                    {slides.map((s,i)=>(
-                      <button key={s.id||i} onClick={()=>setActiveSlide(i)} className={`w-full text-right p-3 rounded-[12px] border text-[12px] ${activeSlide===i?'bg-black text-white border-black':'bg-[#FAFBFF] border-[#F0ECFF]'}`}>
-                        <div className="font-bold truncate">{i+1}. {s.title}</div>
-                      </button>
-                    ))}
-                  </div>
-                  <button onClick={()=>setSlides([...slides,{id:Date.now(),title:`شريحة ${slides.length+1}`,content:'محتوى جديد...'}])} className="w-full mt-4 h-10 rounded-full border text-[11px] font-bold">+ شريحة جديدة</button>
+                <div className="bg-white rounded-[12px] border p-4">
+                  <h3 className="font-bold text-[12px] mb-4">🎨 العروض ({slides.length})</h3>
+                  <div className="space-y-2">{slides.map((s,i)=><button key={s.id||i} onClick={()=>setActiveSlide(i)} className={`w-full text-right p-3 rounded-[10px] border text-[11px] ${activeSlide===i?'bg-black text-white':'bg-[#FAFBFF]'}`}>{i+1}. {s.title}</button>)}</div>
+                  <button onClick={()=>setSlides([...slides,{id:Date.now(),title:`شريحة ${slides.length+1}`,content:'...'}])} className="w-full mt-4 h-9 rounded-full border text-[11px]">+ شريحة</button>
                 </div>
-                <div className="lg:col-span-3">
-                  <div className="bg-white rounded-[20px] border border-[#F0ECFF] shadow-[0_12px_40px_rgba(0,0,0,0.06)] p-10 lg:p-16 min-h-[500px] flex flex-col justify-center">
-                    <input value={slides[activeSlide]?.title||''} onChange={e=>{ const ns=[...slides]; ns[activeSlide].title=e.target.value; setSlides(ns)}} className="text-[32px] font-[800] text-center outline-none text-[#1E1B4B]" />
-                    <textarea value={slides[activeSlide]?.content||''} onChange={e=>{ const ns=[...slides]; ns[activeSlide].content=e.target.value; setSlides(ns)}} className="w-full mt-8 h-[200px] outline-none text-[15px] leading-8 text-center resize-none text-[#374151]" />
-                  </div>
+                <div className="lg:col-span-3 bg-white rounded-[16px] border p-10 min-h-[400px] flex flex-col justify-center">
+                  <input value={slides[activeSlide]?.title||''} onChange={e=>{ const ns=[...slides]; ns[activeSlide].title=e.target.value; setSlides(ns)}} className="text-[24px] font-bold text-center outline-none" />
+                  <textarea value={slides[activeSlide]?.content||''} onChange={e=>{ const ns=[...slides]; ns[activeSlide].content=e.target.value; setSlides(ns)}} className="w-full mt-6 h-[200px] outline-none text-[13px] leading-7 text-center resize-none" />
                 </div>
               </div>
             )}
 
             {tab==='library' && (
               <div className="space-y-5">
-                <div className="rounded-[20px] bg-gradient-to-br from-[#7C6BFF] to-[#4F46E5] p-7 text-white">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="text-[20px] font-bold">☁️ TeraBox 1TB - تخزين محلي آمن</div>
-                      <div className="text-[12px] opacity-80 mt-2">{terabox.length + files.length} ملفات • {totalMB} MB</div>
-                    </div>
-                    <label className="bg-white text-black text-[12px] font-bold px-5 py-2.5 rounded-full cursor-pointer">+ رفع ملف<input type="file" className="hidden" onChange={e=>handleUpload(e,'terabox')} /></label>
-                  </div>
+                <div className="rounded-[16px] bg-gradient-to-br from-[#7C6BFF] to-[#4F46E5] p-6 text-white flex justify-between items-center">
+                  <div><div className="font-bold text-[14px]">☁️ TeraBox 1TB</div><div className="text-[11px] opacity-80 mt-1">{terabox.length + files.length} ملفات • {totalMB} MB محفوظة محليا</div></div>
+                  <label className="bg-white text-black text-[11px] font-bold px-4 py-2 rounded-full cursor-pointer">+ رفع<input type="file" className="hidden" onChange={e=>handleUpload(e,'terabox')} /></label>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {terabox.map(f=>(
-                    <div key={f.id} className="bg-white border border-[#F0ECFF] rounded-[14px] p-4">
-                      <div className="w-10 h-10 rounded-[10px] bg-[#F5F3FF] flex items-center justify-center">☁️</div>
-                      <div className="mt-3 font-bold text-[11px] truncate">{f.name}</div>
-                      <div className="flex gap-1 mt-3"><a href={f.data} download={f.name} className="text-[10px] px-2 py-1 rounded-full bg-[#F5F3FF]">تحميل</a><button onClick={()=>setTerabox(t=>t.filter(x=>x.id!==f.id))} className="text-[10px] px-2 py-1 rounded-full bg-red-50 text-red-600">حذف</button></div>
-                    </div>
+                    <div key={f.id} className="bg-white border rounded-[12px] p-4"><div className="w-8 h-8 rounded-[8px] bg-[#F5F3FF] flex items-center justify-center">☁️</div><div className="mt-2 font-bold text-[10px] truncate">{f.name}</div><div className="flex gap-1 mt-2"><a href={f.data} download={f.name} className="text-[9px] px-2 py-1 rounded-full bg-[#F5F3FF]">تحميل</a><button onClick={()=>setTerabox(t=>t.filter(x=>x.id!==f.id))} className="text-[9px] px-2 py-1 rounded-full bg-red-50 text-red-600">حذف</button></div></div>
                   ))}
                 </div>
-                <div className="bg-white rounded-[16px] border border-[#F0ECFF] p-6">
-                  <h3 className="font-bold text-[14px]">📚 مكتبة الامجاد</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
-                    <a href="https://alamjad-ly.com" target="_blank" className="border rounded-[14px] p-5 bg-[#FFFBEB]"><div className="font-bold text-[13px]">موقع الامجاد الرسمي</div><div className="text-[11px] text-[#8B8BA7] mt-2">alamjad-ly.com</div></a>
-                    <div className="border rounded-[14px] p-5 bg-[#ECFDF5]"><div className="font-bold text-[13px]">مكتبة رفيق المحلية</div><div className="text-[11px] text-[#8B8BA7] mt-2">{files.length + terabox.length} ملفات</div></div>
+                <div className="bg-white rounded-[12px] border p-5">
+                  <h3 className="font-bold text-[12px]">📚 مكتبة الامجاد</h3>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <a href="https://alamjad-ly.com" target="_blank" className="border rounded-[10px] p-4 bg-[#FFFBEB]"><div className="font-bold text-[11px]">موقع الامجاد</div><div className="text-[9px] text-[#8B8BA7] mt-1">alamjad-ly.com</div></a>
+                    <div className="border rounded-[10px] p-4 bg-[#ECFDF5]"><div className="font-bold text-[11px]">مكتبة رفيق</div><div className="text-[9px] text-[#8B8BA7] mt-1">{files.length + terabox.length} ملفات</div></div>
                   </div>
                 </div>
               </div>
             )}
 
-            {tab==='pomo' && (
-              <div className="max-w-[520px] mx-auto">
-                <div className="bg-white rounded-[24px] border border-[#F0ECFF] p-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.04)]">
-                  <div className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold border ${pomoMode==='work'?'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]':'bg-[#ECFDF5] border-[#A7F3D0] text-[#059669]'}`}>{pomoMode==='work'?'📚 وقت التركيز':'☕ بريك'}</div>
-                  <div className="text-[80px] font-[800] mt-6 tabular-nums text-[#1E1B4B]">{String(Math.floor(pomoTime/60)).padStart(2,'0')}:{String(pomoTime%60).padStart(2,'0')}</div>
-                  <div className="flex justify-center gap-4 mt-10">
-                    <button onClick={()=>setPomoRunning(!pomoRunning)} className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-[24px] shadow-[0_8px_24px_rgba(0,0,0,0.15)] ${pomoRunning?'bg-[#1E1B4B] text-white':'bg-[#7C6BFF] text-white'}`}>{pomoRunning?'⏸':'▶️'}</button>
-                    <button onClick={()=>{ setPomoRunning(false); setPomoTime(pomoMode==='work'?25*60:5*60)}} className="w-[72px] h-[72px] rounded-full bg-[#F8F7FF] border border-[#F0ECFF] flex items-center justify-center text-[20px]">🔄</button>
+            {tab==='notion' && (
+              <div className="space-y-5">
+                <div className="bg-black rounded-[16px] p-6 text-white flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white rounded-[8px] flex items-center justify-center text-black font-black text-[18px]">N</div>
+                    <div>
+                      <div className="font-bold text-[15px]">Notion • نظام إدارة الدراسة</div>
+                      <div className="text-[11px] opacity-60 mt-1">قاعدة بيانات مهامك - نفس ستايل Notion بالزبط</div>
+                    </div>
                   </div>
+                  <button onClick={()=>setNotionTasks([...notionTasks,{id:Date.now(), name:'مهمة جديدة', status:'لم يبدأ', subject:'عام', date:new Date().toLocaleDateString('ar-LY')}])} className="h-9 px-4 rounded-full bg-white text-black text-[11px] font-bold">+ New</button>
+                </div>
+
+                <div className="bg-white rounded-[12px] border border-[#E5E7EB] overflow-hidden">
+                  <div className="p-3 border-b bg-[#FAFAFA] flex items-center gap-2 text-[11px]"><span className="w-5 h-5 bg-black rounded-[4px] flex items-center justify-center text-white font-black text-[10px]">N</span> مهام رفيق • {notionTasks.length} tasks</div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                      <thead className="bg-[#FAFAFA] border-b text-[10px] text-[#6B7280]">
+                        <tr><th className="p-3 font-medium">الاسم</th><th className="p-3 font-medium">المادة</th><th className="p-3 font-medium">الحالة</th><th className="p-3 font-medium">التاريخ</th><th className="p-3 font-medium"></th></tr>
+                      </thead>
+                      <tbody>
+                        {notionTasks.map(t=>(
+                          <tr key={t.id} className="border-b hover:bg-[#FAFBFF] group">
+                            <td className="p-3"><input value={t.name} onChange={e=>setNotionTasks(ts=>ts.map(x=>x.id===t.id?{...x,name:e.target.value}:x))} className="bg-transparent outline-none text-[11px] font-medium w-full" /></td>
+                            <td className="p-3"><input value={t.subject} onChange={e=>setNotionTasks(ts=>ts.map(x=>x.id===t.id?{...x,subject:e.target.value}:x))} className="bg-transparent outline-none text-[10px] w-[80px]" /></td>
+                            <td className="p-3">
+                              <select value={t.status} onChange={e=>setNotionTasks(ts=>ts.map(x=>x.id===t.id?{...x,status:e.target.value}:x))} className={`text-[10px] px-2 py-1 rounded-full border outline-none ${t.status==='منجز'?'bg-green-50 text-green-700 border-green-200':t.status==='جاري'?'bg-yellow-50 text-yellow-700 border-yellow-200':'bg-gray-50'}`}>
+                                <option>لم يبدأ</option><option>جاري</option><option>منجز</option>
+                              </select>
+                            </td>
+                            <td className="p-3 text-[10px] text-[#8B8BA7]">{t.date}</td>
+                            <td className="p-3"><button onClick={()=>setNotionTasks(ts=>ts.filter(x=>x.id!==t.id))} className="opacity-0 group-hover:opacity-100 text-[10px] text-red-500">حذف</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="p-2 bg-[#FAFAFA] border-t flex items-center gap-2 text-[10px] text-[#8B8BA7]">
+                    <span>+ New</span><span className="mr-auto">{notionTasks.filter(t=>t.status==='منجز').length} منجز • {notionTasks.filter(t=>t.status==='جاري').length} جاري</span>
+                    <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black rounded-[3px] flex items-center justify-center text-white font-black text-[8px]">N</span> Notion-style</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white rounded-[12px] border p-4 text-center"><div className="w-8 h-8 mx-auto bg-black rounded-[6px] flex items-center justify-center text-white font-black">N</div><div className="mt-2 font-bold text-[11px]">تصدير ل Notion</div><div className="text-[9px] text-[#8B8BA7] mt-1">انسخ الجدول والصقه في Notion الحقيقي</div><button onClick={()=>navigator.clipboard.writeText(JSON.stringify(notionTasks,null,2))} className="mt-3 w-full h-8 rounded-full bg-black text-white text-[10px]">نسخ JSON</button></div>
+                  <div className="bg-white rounded-[12px] border p-4 text-center"><div className="w-8 h-8 mx-auto bg-[#F5F3FF] rounded-[6px] flex items-center justify-center">🤖</div><div className="mt-2 font-bold text-[11px]">ربط مع AI</div><div className="text-[9px] text-[#8B8BA7] mt-1">رفيق يقرا مهام Notion ويذكرك</div><button onClick={()=>{ setTab('ai'); setTimeout(()=>send(`عندي هذه المهام في Notion: ${notionTasks.map(t=>t.name).join(', ')} - نظملي جدول مذاكرة`),200)}} className="mt-3 w-full h-8 rounded-full bg-[#7C6BFF] text-white text-[10px]">نظملي جدول ✨</button></div>
+                  <div className="bg-white rounded-[12px] border p-4 text-center"><div className="w-8 h-8 mx-auto bg-[#FFF7ED] rounded-[6px] flex items-center justify-center">☁️</div><div className="mt-2 font-bold text-[11px]">TeraBox + Notion</div><div className="text-[9px] text-[#8B8BA7] mt-1">{totalMB} MB + {notionTasks.length} مهام</div><div className="mt-3 w-full h-8 rounded-full bg-[#F8F7FF] border flex items-center justify-center text-[10px]">متصل ✅</div></div>
+                </div>
+              </div>
+            )}
+
+            {tab==='pomo' && (
+              <div className="max-w-[420px] mx-auto bg-white rounded-[16px] border p-8 text-center">
+                <div className="text-[64px] font-[800] tabular-nums">{String(Math.floor(pomoTime/60)).padStart(2,'0')}:{String(pomoTime%60).padStart(2,'0')}</div>
+                <div className="text-[11px] text-[#8B8BA7] mt-2">{pomoMode==='work'?'📚 تركيز':'☕ بريك'}</div>
+                <div className="flex justify-center gap-3 mt-6">
+                  <button onClick={()=>setPomoRunning(!pomoRunning)} className={`w-14 h-14 rounded-full text-white ${pomoRunning?'bg-black':'bg-[#7C6BFF]'}`}>{pomoRunning?'⏸':'▶️'}</button>
+                  <button onClick={()=>{ setPomoRunning(false); setPomoTime(25*60)}} className="w-14 h-14 rounded-full bg-[#F8F7FF] border">🔄</button>
                 </div>
               </div>
             )}
@@ -465,8 +418,12 @@ export default function Dashboard(){
         </div>
       </div>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#F0ECFF] p-2 flex gap-1 overflow-x-auto z-50">
-        {navItems.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={`px-3 h-9 rounded-full text-[11px] whitespace-nowrap font-bold border ${tab===t.id?'bg-black text-white border-black':'bg-white'}`}>{t.icon} {t.label}</button>)}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#111827] border-t border-white/10 p-2 flex gap-1 overflow-x-auto z-50">
+        <button onClick={()=>setTab('home')} className={`px-3 h-8 rounded-full text-[10px] whitespace-nowrap font-bold ${tab==='home'?'bg-white text-black':'bg-white/10 text-white/60'}`}>الرئيسية</button>
+        <button onClick={()=>setTab('ai')} className={`px-3 h-8 rounded-full text-[10px] whitespace-nowrap font-bold ${tab==='ai'?'bg-white text-black':'bg-white/10 text-white/60'}`}>AI</button>
+        <button onClick={()=>setTab('notion')} className={`px-3 h-8 rounded-full text-[10px] whitespace-nowrap font-bold flex items-center gap-1 ${tab==='notion'?'bg-white text-black':'bg-white/10 text-white/60'}`}><span className="w-3 h-3 bg-white rounded-[2px] flex items-center justify-center text-black font-black text-[7px]">N</span> Notion</button>
+        <button onClick={()=>setTab('notebook')} className={`px-3 h-8 rounded-full text-[10px] whitespace-nowrap font-bold ${tab==='notebook'?'bg-white text-black':'bg-white/10 text-white/60'}`}>دفتر</button>
+        <button onClick={()=>setTab('library')} className={`px-3 h-8 rounded-full text-[10px] whitespace-nowrap font-bold ${tab==='library'?'bg-white text-black':'bg-white/10 text-white/60'}`}>مكتبة</button>
       </div>
     </div>
   )
