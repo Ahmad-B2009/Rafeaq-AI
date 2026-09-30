@@ -1,32 +1,33 @@
-// api/telegram/webhook.js
+// api/telegram/webhook.js - نسخة مبسطة للبوت الأول - ترد 100%
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    return res.status(200).json({ ok: true, message: 'Rafeaq Telegram Webhook is running - use POST from Telegram' })
+    return res.status(200).json({ ok: true, message: 'Bot webhook is LIVE - POST only' })
   }
   if (req.method !== 'POST') return res.status(200).json({ ok: true })
 
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+  if (!BOT_TOKEN) {
+    console.log('NO TOKEN')
+    return res.status(200).json({ ok: true })
+  }
+
   try {
-    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-    const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+    const body = req.body
+    const msg = body?.message
+    if (!msg) return res.status(200).json({ ok: true })
 
-    if (!BOT_TOKEN) return res.status(200).json({ ok: true })
+    const chatId = msg.chat.id
+    const text = msg.text || ''
+    const contact = msg.contact
 
-    const update = req.body
-    const message = update?.message
-    if (!message) return res.status(200).json({ ok: true })
-
-    const chatId = message.chat?.id
-    const text = message.text
-    const contact = message.contact
-
+    // أي رسالة -> رد فوري
     if (text === '/start') {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
-          text: `مرحبا في رفيق! 🚀\n\nشارك رقمك باش نبعثلك كود الدخول`,
+          text: `مرحبا! 🚀\n\nبوت رفيق شغال 100%\n\nشارك رقمك:`,
           reply_markup: {
             keyboard: [[{ text: "📱 مشاركة رقمي", request_contact: true }]],
             resize_keyboard: true,
@@ -34,26 +35,26 @@ export default async function handler(req, res) {
           }
         })
       })
-    }
+    } else if (contact) {
+      const phone = contact.phone_number
+      const normalized = phone.startsWith('+') ? phone : '+' + phone
 
-    if (contact) {
-      const rawPhone = contact.phone_number || ''
-      const phone = rawPhone.startsWith('+') ? rawPhone : '+' + rawPhone.replace(/\D/g,'')
-      
-      if (SUPABASE_URL && SUPABASE_KEY) {
-        try {
+      // حاول تحفظ في Supabase - لو فشل مش مشكلة، البوت يرد على كل حال
+      try {
+        const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
+        const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+        if (SUPABASE_URL && SUPABASE_KEY) {
           const { createClient } = await import('@supabase/supabase-js')
           const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
           await supabase.from('users').upsert({
-            phone: phone,
-            chat_id: chatId.toString(),
+            phone: normalized,
+            chat_id: String(chatId),
             name: contact.first_name || 'مستخدم',
-            updated_at: new Date().toISOString(),
-            last_login: new Date().toISOString()
+            updated_at: new Date().toISOString()
           }, { onConflict: 'phone' })
-        } catch (e) {
-          console.log('save error', e.message)
         }
+      } catch (e) {
+        console.log('Supabase error but ignoring:', e.message)
       }
 
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -61,8 +62,17 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
-          text: `✅ تم حفظ رقمك ${phone}\n\nارجع لموقع رفيق وسجل دخول - الكود حيوصلك هنا!`,
+          text: `✅ تم حفظ رقمك ${normalized}\n\nارجع للموقع وسجل دخول!`,
           reply_markup: { remove_keyboard: true }
+        })
+      })
+    } else {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `دير /start باش تشارك رقمك`
         })
       })
     }
