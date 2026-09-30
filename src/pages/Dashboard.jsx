@@ -261,7 +261,7 @@ export default function Dashboard(){
                       <div className="py-16 text-center">
                         <div className="w-16 h-16 mx-auto rounded-[18px] bg-[#111] text-white flex items-center justify-center text-[24px]">✦</div>
                         <h2 className="mt-5 text-[20px] font-[700] tracking-tight">كيف نقدر نساعدك اليوم؟</h2>
-                        <p className="text-[13px] text-[#6B7280] mt-2">اسأل   - شرح، كويز، MCQ، وصوتي</p>
+                        <p className="text-[13px] text-[#6B7280] mt-2">اسأل مثل Gemini - شرح، كويز، MCQ، وصوتي</p>
                         <div className="mt-6 grid grid-cols-2 gap-2 max-w-[520px] mx-auto">
                           <button onClick={()=>send('اشرحلي قانون نيوتن الثاني بلهجة ليبية')} className="h-12 rounded-[12px] bg-white border border-[#EDEEF2] text-[12px] text-right px-4 hover:border-black/10">📚 اشرحلي درس بلهجة ليبية</button>
                           <button onClick={()=>send('ديرلي MCQ عن التكامل')} className="h-12 rounded-[12px] bg-white border border-[#EDEEF2] text-[12px] text-right px-4 hover:border-black/10">❓ أسئلة MCQ</button>
