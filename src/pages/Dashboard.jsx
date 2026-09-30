@@ -284,7 +284,7 @@ function LibraryView() {
       </div>
       {!books.length && <div className="bg-white rounded-[16px] border border-dashed p-12 text-center"><div className="text-[32px]">📚</div><p className="text-[13px] text-[#6B7280] mt-2">مكتبتك فارغة - الكتب تظهر هنا دائما بعد التحميل</p><a href="https://www.al-amjaad.com/%D8%A7%D9%84%D9%85%D9%86%D9%87%D8%AC/libya" target="_blank" className="inline-flex mt-3 h-9 px-4 rounded-xl bg-[#6C5CE7] text-white text-[12px] items-center">تصفح موقع الامجاد</a></div>}
       <div className="bg-[#1E1B4B] rounded-[16px] p-6 text-white">
-        <div className="text-[11px] text-[#A5B4FC]">المصدر المعتمد</div><div className="font-bold text-[14px] mt-2">موقع الامجاد التعليمي - المنهج الليبي</div>
+        <div className="text-[11px] text-[#A5B4FC]">المصدر المعتمد</div><div className="font-bold text-[14px] mt-2">مكتبة رفيق تتيح لك جميع كتبك الدراسية</div>
         <a href="https://www.al-amjaad.com/%D8%A7%D9%84%D9%85%D9%86%D9%87%D8%AC/libya" target="_blank" className="inline-flex mt-4 h-9 px-4 items-center rounded-xl bg-white text-black text-[12px] font-medium">فتح موقع الامجاد →</a>
       </div>
     </div>
