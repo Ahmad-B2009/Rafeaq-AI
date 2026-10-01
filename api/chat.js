@@ -1,25 +1,40 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   if (req.method === 'OPTIONS') return res.status(200).end()
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-  const message = String(req.body?.message || '').trim()
-  if (!message) return res.status(400).json({ error: 'Message is required' })
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return res.status(503).json({ error: 'AI service is not configured' })
+
+  const { message, mode, context } = req.body
+  const OPENAI_KEY = process.env.OPENAI_API_KEY
+
+  if (!OPENAI_KEY) {
+    // Mock لو ما عندكش مفتاح
+    return res.json({
+      reply: `**رد تجريبي (حط OPENAI_API_KEY باش يخدم الحقيقي):**\n\nسؤالك: ${message}\n\n${mode === 'notebook'? `لقيت ${context?.length || 0} مقتطفات من كتبك.` : 'هذا شرح مبسط:'}\n- النقطة 1\n- النقطة 2\n\n> حط مفتاح OpenAI في Vercel Environment Variables`
+    })
+  }
+
   try {
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const system = mode === 'notebook'
+     ? `انت مساعد دراسي يجيب فقط من المصادر المعطاة. اذكر رقم المقتطف [1] [2]`
+      : `انت رفيق، مساعد دراسي ليبي يشرح بلهجة ليبية مبسطة`
+
+    const userContent = context
+     ? `المصادر:\n${context.map(c=>`[${c.n}] ${c.title} ص${c.page||''}: ${c.text.slice(0,800)}`).join('\n')}\n\nالسؤال: ${message}`
+      : message
+
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
-        instructions: 'أنت رفيق، مساعد دراسي ليبي ودود. أجب بالعربية الواضحة وبأسلوب قصير ومنظم. لا تخترع معلومات عن المنهج؛ اطلب اسم الصف والكتاب عند الحاجة.',
-        input: message
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: system }, { role: 'user', content: userContent }],
+        temperature: 0.4
       })
     })
-    const data = await response.json()
-    if (!response.ok) return res.status(response.status).json({ error: data?.error?.message || 'AI request failed' })
-    return res.status(200).json({ reply: data.output_text || 'لم أتمكن من إعداد إجابة الآن.' })
-  } catch { return res.status(502).json({ error: 'AI service unavailable' }) }
+    const data = await r.json()
+    return res.json({ reply: data.choices?.[0]?.message?.content || 'ما قدرتش نجيب إجابة' })
+  } catch (e) {
+    return res.status(500).json({ error: e.message })
+  }
 }
