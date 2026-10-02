@@ -1,10 +1,12 @@
-// api/chat.js - FINAL WORKING 2026 - 【entity-【entity-nvidia¦canonical_name=Nvidia】¦canonical_name=【entity-Nvidia¦canonical_name=Nvidia】】/nemotron-3-nano-30b-a3b
+// api/chat.js - FINAL - Groq - أسرع وأرخص - 2026
+// المصمم: أحمد البنداق - فصحى
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   if (req.method === 'OPTIONS') return res.status(200).end()
-  if (req.method!== 'POST') return res.status(405).json({ error: 'POST only' })
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   try {
     const { message } = req.body
@@ -19,25 +21,24 @@ export default async function handler(req, res) {
       return res.json({ reply: 'أنا رفيق، مساعد ذكي تم تطويره وتصميمه بواسطة **أحمد البنداق**.' })
     }
 
-    const NVIDIA_KEY = process.env.NVIDIA_API_KEY
-    // موديل 2026 الشغال - سريع
-    const MODEL = (process.env.NVIDIA_MODEL || 'nvidia/nemotron-3-nano-30b-a3b').trim()
+    const GROQ_KEY = process.env.GROQ_API_KEY
+    const MODEL = (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile').trim()
 
-    if (!NVIDIA_KEY) return res.json({ reply: 'NVIDIA_API_KEY غير موجود' })
+    if (!GROQ_KEY) return res.json({ reply: 'GROQ_API_KEY غير موجود في Vercel - جيبه من console.groq.com' })
 
-    const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${NVIDIA_KEY}`
+        'Authorization': `Bearer ${GROQ_KEY}`
       },
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: 'أنت رفيق، مساعد دراسي ذكي. تتحدث باللغة العربية الفصحى الواضحة فقط، لا تستخدم العامية. إذا سُئلت عن مصممك فقل بوضوح: أنا من تطوير وتصميم أحمد البنداق.' },
+          { role: 'system', content: 'أنت رفيق، مساعد دراسي ذكي. تتحدث باللغة العربية الفصحى الواضحة فقط. إذا سُئلت عن مصممك فقل بوضوح: أنا من تطوير وتصميم أحمد البنداق. اشرح بذكاء ووضوح.' },
           { role: 'user', content: message }
         ],
-        temperature: 0.7,
+        temperature: 0.6,
         max_tokens: 700
       })
     })
@@ -46,9 +47,10 @@ export default async function handler(req, res) {
     let data
     try { data = JSON.parse(text) } catch { return res.json({ reply: `خطأ: ${text.slice(0,500)}` }) }
 
-    if (!r.ok) return res.json({ reply: `خطأ من Nvidia (${MODEL}): ${data.detail || data.error?.message || text.slice(0,400)}` })
+    if (!r.ok) return res.json({ reply: `خطأ من Groq: ${data.error?.message || text.slice(0,400)}` })
 
-    return res.json({ reply: data.choices?.[0]?.message?.content || 'لا يوجد رد' })
+    return res.json({ reply: data.choices?.[0]?.message?.content || 'لا يوجد رد', provider: 'groq' })
+
   } catch (e) {
     return res.json({ reply: `خطأ: ${e.message}` })
   }
