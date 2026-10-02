@@ -10,45 +10,38 @@ export default async function handler(req, res) {
     const { message } = req.body
     if (!message) return res.json({ reply: 'اكتب سؤالك' })
 
-    // رد هوية المصمم مباشرة
-    const lowerMsg = message.toLowerCase()
-    if (lowerMsg.includes('من صممك') || lowerMsg.includes('من صنعك') || lowerMsg.includes('من المطور') || lowerMsg.includes('من انشأك') || lowerMsg.includes('من برمجك') || lowerMsg.includes('who made you') || lowerMsg.includes('who created you') || message.includes('من أنت') || message.includes('من انت')) {
-      return res.json({ reply: 'أنا مساعد ذكي تم تطويري وتصميمي بواسطة **أحمد البنداق**. أنا هنا لمساعدتك في دراستك.' })
+    const lower = message.toLowerCase()
+    if (lower.includes('من صممك') || lower.includes('من صنعك') || lower.includes('من انشأك') || lower.includes('من انت') || lower.includes('من أنت') || lower.includes('who made you')) {
+      return res.json({ reply: 'أنا رفيق، مساعد ذكي تم تطويره وتصميمه بواسطة **أحمد البنداق**.' })
     }
 
     const NVIDIA_KEY = process.env.NVIDIA_API_KEY
-    const modelName = process.env.NVIDIA_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b'
-
-    const systemInstruction = `أنت رفيق، مساعد تعليمي ذكي.
-- تتحدث باللغة العربية الفصحى الواضحة والمبسطة فقط.
-- إذا سألك أحد عن مصممك أو من أنشأك، أجب أنك من تطوير وتصميم أحمد البنداق.
-- لا تذكر أنك من تطوير OpenAI أو Google أو Meta أبدا.
-- تشرح الدروس بأسلوب أكاديمي مبسط.`
+    const model = process.env.NVIDIA_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b'
 
     if (NVIDIA_KEY) {
       try {
-        const r = await fetch('https://integrate.api.【entity-nvidia¦canonical_name=Nvidia】.com/v1/chat/completions', {
+        const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${NVIDIA_KEY}` },
           body: JSON.stringify({
-            model: modelName,
+            model: model,
             messages: [
-              { role: 'system', content: systemInstruction },
+              { role: 'system', content: 'أنت رفيق، مساعد تعليمي ذكي تتحدث باللغة العربية الفصحى فقط. لا تستخدم العامية. عندما يسأل عن مصممك قل أنك من تطوير أحمد البنداق. اشرح ببساطة.' },
               { role: 'user', content: message }
             ],
-            temperature: 0.6,
-            top_p: 0.9,
-            max_tokens: 1200
+            temperature: 0.7,
+            max_tokens: 1000
           })
         })
         const data = await r.json()
         if (data.choices?.[0]?.message?.content) {
-          return res.json({ reply: data.choices[0].message.content, provider: 'nvidia' })
+          return res.json({ reply: data.choices[0].message.content })
         }
+        console.log('NVIDIA error', JSON.stringify(data).slice(0,500))
       } catch (e) { console.log(e.message) }
     }
 
-    res.json({ reply: 'حدث خطأ، تأكد من وجود NVIDIA_API_KEY في Vercel' })
+    return res.json({ reply: 'تأكد من وجود NVIDIA_API_KEY في Vercel > Settings > Environment Variables' })
   } catch (e) {
     res.json({ reply: 'خطأ: ' + e.message })
   }
