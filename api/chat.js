@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     const greetings = ['السلام عليكم', 'سلام', 'مرحبا', 'أهلا', 'هلا', 'hi', 'hello']
     if (greetings.includes(lower) || lower === 'السلام عليكم ورحمة الله') {
       return res.json({ 
-        reply: 'وعليكم السلام ورحمة الله وبركاته! أهلاً بك، أنا رفيق، مساعدك الدراس . كيف يمكنني مساعدتك اليوم؟',
+        reply: 'وعليكم السلام ورحمة الله وبركاته! أهلاً بك، أنا رفيق، مساعدك الدراسي. كيف يمكنني مساعدتك اليوم؟',
         provider: 'instant' 
       })
     }
