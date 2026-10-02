@@ -1,4 +1,6 @@
-// api/chat.js - FINAL - meta/llama-3.1-8b-instruct - سريع ومجاني
+// api/chat.js - FINAL - موديل 2026 شغال - meta/llama-3.3-70b-instruct
+// المصمم: أحمد البنداق - فصحى - سريع
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -12,15 +14,16 @@ export default async function handler(req, res) {
     const lower = message.toLowerCase().trim()
 
     if (lower.startsWith('السلام') || ['سلام', 'مرحبا', 'أهلا', 'هلا'].includes(lower)) {
-      return res.json({ reply: 'وعليكم السلام ورحمة الله وبركاته! أهلاً بك، أنا رفيق، مساعدك الدراسي الذي طوره **أحمد البنداق**.' })
+      return res.json({ reply: 'وعليكم السلام ورحمة الله وبركاته! أهلاً بك، أنا رفيق، مساعدك الدراسي الذي طوره **أحمد البنداق**. كيف أساعدك اليوم؟' })
     }
 
-    if (lower.includes('من صممك') || lower.includes('من صنعك') || lower.includes('من انت') || lower.includes('من أنت') || lower.includes('مصممك')) {
+    if (lower.includes('من صممك') || lower.includes('من صنعك') || lower.includes('من انشأك') || lower.includes('من انت') || lower.includes('من أنت') || lower.includes('مصممك')) {
       return res.json({ reply: 'أنا رفيق، مساعد ذكي تم تطويره وتصميمه بواسطة **أحمد البنداق**.' })
     }
 
     const NVIDIA_KEY = process.env.NVIDIA_API_KEY
-    const MODEL = (process.env.NVIDIA_MODEL || 'meta/llama-3.1-8b-instruct').trim()
+    // موديل 2026 الجديد - شغال وسريع
+    const MODEL = (process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct').trim()
 
     if (!NVIDIA_KEY) return res.json({ reply: 'NVIDIA_API_KEY غير موجود' })
 
@@ -33,7 +36,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: 'أنت رفيق، مساعد دراسي ذكي. تتحدث باللغة العربية الفصحى فقط. إذا سُئلت عن مصممك فقل: أنا من تطوير أحمد البنداق.' },
+          { role: 'system', content: 'أنت رفيق، مساعد دراسي ذكي. تتحدث باللغة العربية الفصحى الواضحة فقط. إذا سُئلت عن مصممك فقل: أنا من تطوير وتصميم أحمد البنداق. اشرح بذكاء ووضوح.' },
           { role: 'user', content: message }
         ],
         temperature: 0.6,
@@ -43,9 +46,9 @@ export default async function handler(req, res) {
 
     const text = await r.text()
     let data
-    try { data = JSON.parse(text) } catch { return res.json({ reply: `خطأ: ${text.slice(0,400)}` }) }
+    try { data = JSON.parse(text) } catch { return res.json({ reply: `خطأ: ${text.slice(0,500)}` }) }
 
-    if (!r.ok) return res.json({ reply: `خطأ من Nvidia (${MODEL}): ${data.error?.message || text.slice(0,400)}` })
+    if (!r.ok) return res.json({ reply: `خطأ من Nvidia (${MODEL}): ${data.error?.message || data.detail || text.slice(0,500)}` })
 
     return res.json({ reply: data.choices?.[0]?.message?.content || 'لا يوجد رد' })
   } catch (e) {
