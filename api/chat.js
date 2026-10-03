@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     const lower = message.toLowerCase().trim()
 
     if (lower.startsWith('السلام') || ['سلام','مرحبا','أهلا','هلا'].includes(lower)) {
-      return res.json({ reply: 'وعليكم السلام ورحمة الله وبركاته! أهلاً بك، أنا رفيق، مساعدك الدراسي الذي طوره **أحمد البنداق**. كيف أساعدك اليوم؟' })
+      return res.json({ reply: 'وعليكم السلام ورحمة الله.أهلا وسهلا بك,أنا رفيقAIومساعدك الشخصي للدراسة.كيف يمكنني مساعدتك؟' })
     }
 
     if (lower.includes('من صممك') || lower.includes('من صنعك') || lower.includes('من انت') || lower.includes('من أنت') || lower.includes('مصممك')) {
