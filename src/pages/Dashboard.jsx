@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 /* ============================== الثوابت ============================== */
 const DAILY_LIMIT = 25
 const SOURCE_PAGE = 'https://www.al-amgaad.com/2021/08/allbooks.html'
+const MAX_IMAGES = 3
 const ACCEPT_FILES = '.pdf,.docx,.txt,.md,.csv,.json,.srt,.vtt,.html,.htm'
 const STORAGE = {
   user: 'rafeaq_user',
@@ -153,6 +154,28 @@ function beep() {
   } catch {
     /* ignore */
   }
+}
+
+// يصغّر الصورة ويضغطها قبل الإرسال (أسرع وأخف على الخادم)
+function imageToDataUrl(file, maxSide = 1280, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('BAD_IMAGE'))
+    }
+    img.src = url
+  })
 }
 
 /* ============================== استخراج النص من الملفات (دفتر رفيق) ============================== */
@@ -459,6 +482,51 @@ function Modal({ title, onClose, children }) {
   )
 }
 
+function ImageTools({ onGallery, onCamera, disabled }) {
+  return (
+    <>
+      <button type="button" onClick={onGallery} disabled={disabled} title="إضافة صورة" className="btn-soft grid h-9 w-9 shrink-0 place-items-center rounded-full disabled:opacity-40">🖼</button>
+      <button type="button" onClick={onCamera} disabled={disabled} title="التقاط بالكاميرا" className="btn-soft grid h-9 w-9 shrink-0 place-items-center rounded-full disabled:opacity-40">📷</button>
+    </>
+  )
+}
+
+function ImagePreviews({ images, onRemove }) {
+  if (!images.length) return null
+  return (
+    <div className="mb-2 flex flex-wrap gap-2">
+      {images.map((img) => (
+        <div key={img.id} className="relative">
+          <img src={img.dataUrl} alt="" className="h-16 w-16 rounded-[12px] border border-[var(--line)] object-cover" />
+          <button
+            type="button"
+            onClick={() => onRemove(img.id)}
+            className="absolute -left-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#F04438] text-[9px] text-white"
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function UserContent({ m }) {
+  return (
+    <>
+      {m.images?.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {m.images.map((src, i) => (
+            <img key={i} src={src} alt="" className="h-20 w-20 rounded-[10px] object-cover" />
+          ))}
+        </div>
+      )}
+      {!m.images?.length && m.imageCount > 0 && <div className="mb-1 text-[10px] opacity-80">📎 {m.imageCount} صورة</div>}
+      {m.text}
+    </>
+  )
+}
+
 function AssistantActions({ text, onSave, onNotion, onToast }) {
   async function copy() {
     try {
@@ -537,6 +605,13 @@ export default function Dashboard() {
   const [nbLoading, setNbLoading] = useState(false)
   const nbBoxRef = useRef(null)
   const chatBoxRef = useRef(null)
+
+  /* الصور */
+  const [aiImages, setAiImages] = useState([])
+  const [nbImages, setNbImages] = useState([])
+  const galleryRef = useRef(null)
+  const cameraRef = useRef(null)
+  const imgTargetRef = useRef('ai')
 
   /* Notion */
   const [notion, setNotion] = useState({ connected: false, workspace: '', loading: true })
@@ -632,9 +707,9 @@ export default function Dashboard() {
   }, [])
 
   // نحتفظ بآخر رسائل فقط حتى لا تمتلئ مساحة localStorage فيتوقف الحفظ بصمت
-  useEffect(() => { writeLS(STORAGE.messages, messages.slice(-80)) }, [messages])
+  useEffect(() => { writeLS(STORAGE.messages, messages.slice(-80).map(({ images, ...m }) => (images?.length ? { ...m, imageCount: images.length } : m))) }, [messages])
   useEffect(() => { writeLS(STORAGE.notes, notes) }, [notes])
-  useEffect(() => { writeLS(STORAGE.nbMessages, nbMessages.slice(-60)) }, [nbMessages])
+  useEffect(() => { writeLS(STORAGE.nbMessages, nbMessages.slice(-60).map(({ images, ...m }) => (images?.length ? { ...m, imageCount: images.length } : m))) }, [nbMessages])
   useEffect(() => { writeLS(STORAGE.nbSelected, nbSelected) }, [nbSelected])
   useEffect(() => { writeLS(STORAGE.study, studyLog) }, [studyLog])
 
@@ -1004,8 +1079,37 @@ export default function Dashboard() {
     }
   }
 
+  /* ---------- الصور (معرض / كاميرا) ---------- */
+  function openImagePicker(target, camera = false) {
+    imgTargetRef.current = target
+    ;(camera ? cameraRef : galleryRef).current?.click()
+  }
+
+  async function onPickImages(e) {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('image/'))
+    e.target.value = ''
+    if (!files.length) return
+
+    const target = imgTargetRef.current
+    const setter = target === 'nb' ? setNbImages : setAiImages
+    const room = MAX_IMAGES - (target === 'nb' ? nbImages.length : aiImages.length)
+
+    if (room <= 0) {
+      showToast(`الحد الأقصى ${MAX_IMAGES} صور في الرسالة الواحدة.`)
+      return
+    }
+
+    try {
+      const urls = await Promise.all(files.slice(0, room).map((f) => imageToDataUrl(f)))
+      setter((c) => [...c, ...urls.map((dataUrl) => ({ id: uid(), dataUrl }))].slice(0, MAX_IMAGES))
+      if (files.length > room) showToast(`أُضيفت ${room} فقط (الحد الأقصى ${MAX_IMAGES}).`)
+    } catch {
+      showToast('تعذر قراءة الصورة.')
+    }
+  }
+
   /* ---------- استدعاء الذكاء الاصطناعي ---------- */
-  async function callAI({ message, mode, context, history }) {
+  async function callAI({ message, mode, context, history, images }) {
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -1015,6 +1119,7 @@ export default function Dashboard() {
         role: 'student',
         context,
         history,
+        ...(images?.length ? { images } : {}),
         student: { name: user, class: studentClass, section: studentSection },
       }),
     })
@@ -1063,7 +1168,8 @@ export default function Dashboard() {
   }
 
   async function sendMessage(customMessage = null, mode = 'general') {
-    const question = (customMessage ?? input).trim()
+    const imgs = aiImages
+    const question = (customMessage ?? input).trim() || (imgs.length ? 'اقرأ هذه الصورة واشرح ما فيها.' : '')
 
     if (!question || aiLoading) return
 
@@ -1081,13 +1187,17 @@ export default function Dashboard() {
 
     const history = toHistory(messages, 8)
 
-    setMessages((current) => [...current, { id: uid(), role: 'user', text: question }])
+    setMessages((current) => [
+      ...current,
+      { id: uid(), role: 'user', text: question, images: imgs.map((i) => i.dataUrl) },
+    ])
     setInput('')
+    setAiImages([])
     setAiLoading(true)
     setChances((current) => Math.max(0, current - 1))
 
     try {
-      const reply = await callAI({ message: question, mode, history })
+      const reply = await callAI({ message: question, mode, history, images: imgs.map((i) => i.dataUrl) })
       setMessages((current) => [...current, { id: uid(), role: 'assistant', text: reply }])
     } catch (error) {
       console.error('Rafeeq AI error:', error)
@@ -1127,14 +1237,15 @@ export default function Dashboard() {
   }
 
   async function askNotebook(customQuestion = null) {
-    const question = (customQuestion ?? nbInput).trim()
+    const imgs = nbImages
+    const question = (customQuestion ?? nbInput).trim() || (imgs.length ? 'اقرأ هذه الصورة واربطها بمصادري إن أمكن.' : '')
     if (!question || nbLoading) return
 
     // إذا لم يحدد الطالب شيئاً نستخدم كل المصادر الجاهزة تلقائياً
     const readyBooks = library.filter((b) => b.indexed).map((b) => b.id)
     const ids = nbSelected.length ? nbSelected : readyBooks
 
-    if (!ids.length) {
+    if (!ids.length && !imgs.length) {
       pushNb({ role: 'user', text: question })
       pushNb({
         role: 'assistant',
@@ -1152,9 +1263,10 @@ export default function Dashboard() {
       return
     }
 
-    pushNb({ role: 'user', text: question })
+    pushNb({ role: 'user', text: question, images: imgs.map((i) => i.dataUrl) })
     const history = toHistory(nbMessages, 4)
     setNbInput('')
+    setNbImages([])
     setNbLoading(true)
     setChances((c) => Math.max(0, c - 1))
     const refund = () => setChances((c) => Math.min(DAILY_LIMIT, c + 1))
@@ -1175,12 +1287,12 @@ export default function Dashboard() {
         )
       }
 
-      if (!pool.length) throw new Error('NO_TEXT')
+      if (!pool.length && !imgs.length) throw new Error('NO_TEXT')
 
       const isTask = Object.values(nbTasks).includes(question)
       const picked = isTask ? spreadChunks(pool, 8) : topChunks(question, pool, 6)
 
-      if (!picked.length) {
+      if (!picked.length && !imgs.length) {
         refund()
         pushNb({
           role: 'assistant',
@@ -1190,7 +1302,7 @@ export default function Dashboard() {
       }
 
       const context = picked.map((p, i) => ({ n: i + 1, title: p.title, page: p.page, text: p.text }))
-      const reply = await callAI({ message: question, mode: 'notebook', context, history })
+      const reply = await callAI({ message: question, mode: 'notebook', context, history, images: imgs.map((i) => i.dataUrl) })
 
       pushNb({
         role: 'assistant',
@@ -1568,6 +1680,8 @@ export default function Dashboard() {
 
       {/* حقل رفع الملفات المشترك */}
       <input ref={fileRef} type="file" multiple accept={ACCEPT_FILES} onChange={onPickFiles} className="hidden" />
+      <input ref={galleryRef} type="file" multiple accept="image/*" onChange={onPickImages} className="hidden" />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={onPickImages} className="hidden" />
 
       {/* ============ الشريط الجانبي ============ */}
       <aside className="glass fixed right-0 top-0 z-40 hidden h-screen w-[256px] flex-col border-y-0 border-r-0 lg:flex">
@@ -1946,7 +2060,7 @@ export default function Dashboard() {
                                       : 'rounded-tr-[5px] border border-[var(--line)] bg-white shadow-[0_4px_14px_rgba(109,94,245,.07)]'
                                 }`}
                               >
-                                {message.role === 'assistant' ? <RichText text={message.text} /> : message.text}
+                                {message.role === 'assistant' ? <RichText text={message.text} /> : <UserContent m={message} />}
                                 {message.role === 'assistant' && !message.error && (
                                   <AssistantActions
                                     text={message.text}
@@ -1972,6 +2086,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="border-t border-[var(--line)] bg-white/70 p-3 sm:p-4">
+                      <ImagePreviews images={aiImages} onRemove={(id) => setAiImages((c) => c.filter((x) => x.id !== id))} />
                       <div className="flex items-end gap-2 rounded-[18px] border border-[var(--line)] bg-white p-2 transition focus-within:border-[var(--brand)] focus-within:shadow-[0_0_0_4px_rgba(109,94,245,.12)]">
                         <button
                           onClick={toggleVoice}
@@ -1982,6 +2097,8 @@ export default function Dashboard() {
                         >
                           🎙
                         </button>
+
+                        <ImageTools onGallery={() => openImagePicker('ai')} onCamera={() => openImagePicker('ai', true)} disabled={aiLoading} />
 
                         <textarea
                           value={input}
@@ -1999,7 +2116,7 @@ export default function Dashboard() {
 
                         <button
                           onClick={() => sendMessage()}
-                          disabled={!input.trim() || aiLoading || chances <= 0}
+                          disabled={(!input.trim() && !aiImages.length) || aiLoading || chances <= 0}
                           className="btn-grad grid h-9 w-9 shrink-0 place-items-center rounded-full"
                         >
                           ↑
@@ -2209,7 +2326,7 @@ export default function Dashboard() {
                                         : 'rounded-tr-[5px] border border-[var(--line)] bg-white shadow-[0_4px_14px_rgba(109,94,245,.07)]'
                                   }`}
                                 >
-                                  {m.role === 'assistant' ? <RichText text={m.text} /> : m.text}
+                                  {m.role === 'assistant' ? <RichText text={m.text} /> : <UserContent m={m} />}
 
                                   {m.cites?.length > 0 && (
                                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--line)] pt-2">
@@ -2248,7 +2365,9 @@ export default function Dashboard() {
                       </div>
 
                       <div className="border-t border-[var(--line)] bg-white/70 p-3">
+                        <ImagePreviews images={nbImages} onRemove={(id) => setNbImages((c) => c.filter((x) => x.id !== id))} />
                         <div className="flex items-end gap-2 rounded-[18px] border border-[var(--line)] bg-white p-2 transition focus-within:border-[var(--brand)] focus-within:shadow-[0_0_0_4px_rgba(109,94,245,.12)]">
+                          <ImageTools onGallery={() => openImagePicker('nb')} onCamera={() => openImagePicker('nb', true)} disabled={nbLoading} />
                           <textarea
                             value={nbInput}
                             onChange={(e) => setNbInput(e.target.value)}
@@ -2264,7 +2383,7 @@ export default function Dashboard() {
                           />
                           <button
                             onClick={() => askNotebook()}
-                            disabled={!nbInput.trim() || nbLoading || chances <= 0}
+                            disabled={(!nbInput.trim() && !nbImages.length) || nbLoading || chances <= 0}
                             className="btn-grad grid h-9 w-9 shrink-0 place-items-center rounded-full"
                           >
                             ↑
