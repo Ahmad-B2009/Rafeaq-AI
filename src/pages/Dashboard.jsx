@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 /* ============================== الثوابت ============================== */
 const DAILY_LIMIT = 25
 const SOURCE_PAGE = 'https://www.al-amgaad.com/2021/08/allbooks.html'
+const ACCEPT_FILES = '.pdf,.docx,.txt,.md,.csv,.json,.srt,.vtt,.html,.htm'
 const STORAGE = {
   user: 'rafeaq_user',
   name: 'rafeaq_name',
@@ -14,8 +15,10 @@ const STORAGE = {
   chances: 'rafeaq_student_chances',
   chanceDate: 'rafeaq_student_chance_date',
   nbMessages: 'rafeaq_notebook_messages',
+  nbSelected: 'rafeaq_notebook_selected',
   catalog: 'rafeaq_books_catalog',
   profile: 'rafeaq_profile',
+  study: 'rafeaq_study_log',
 }
 
 /* ============================== LocalStorage ============================== */
@@ -39,18 +42,33 @@ function writeLS(key, value) {
 
 /* ============================== IndexedDB (تخزين الكتب على جهاز المستخدم) ============================== */
 // meta: بيانات الكتاب | files: ملف الكتاب (Blob) | texts: النص المستخرج لدفتر رفيق
+let dbPromise = null
+
 function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open('rafeaq_db', 1)
-    req.onupgradeneeded = () => {
-      const db = req.result
-      ;['meta', 'files', 'texts'].forEach((name) => {
-        if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' })
-      })
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
+  if (!dbPromise) {
+    dbPromise = new Promise((resolve, reject) => {
+      const req = indexedDB.open('rafeaq_db', 1)
+      req.onupgradeneeded = () => {
+        const db = req.result
+        ;['meta', 'files', 'texts'].forEach((name) => {
+          if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' })
+        })
+      }
+      req.onsuccess = () => {
+        const db = req.result
+        db.onversionchange = () => {
+          db.close()
+          dbPromise = null
+        }
+        resolve(db)
+      }
+      req.onerror = () => {
+        dbPromise = null
+        reject(req.error)
+      }
+    })
+  }
+  return dbPromise
 }
 
 async function idb(store, mode, fn) {
@@ -70,12 +88,15 @@ const dbAll = (store) => idb(store, 'readonly', (s) => s.getAll())
 const dbDel = (store, id) => idb(store, 'readwrite', (s) => s.delete(id))
 
 /* ============================== أدوات عامة ============================== */
-function todayKey() {
-  const d = new Date()
+function dateKey(d = new Date()) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
+}
+
+function todayKey() {
+  return dateKey(new Date())
 }
 
 function formatDate(value = new Date()) {
@@ -116,7 +137,51 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-/* ============================== استخراج النص + البحث (دفتر رفيق) ============================== */
+function beep() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    const ctx = new Ctx()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = 880
+    gain.gain.setValueAtTime(0.2, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.8)
+  } catch {
+    /* ignore */
+  }
+}
+
+/* ============================== استخراج النص من الملفات (دفتر رفيق) ============================== */
+function chunkText(raw, size = 1100) {
+  const paras = String(raw || '')
+    .replace(/\r/g, '')
+    .split(/\n+/)
+    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+
+  const chunks = []
+  let cur = ''
+
+  for (const p of paras) {
+    if (cur && (cur + ' ' + p).length > size) {
+      chunks.push(cur)
+      cur = ''
+    }
+    if (p.length > size) {
+      for (let i = 0; i < p.length; i += size) chunks.push(p.slice(i, i + size))
+    } else {
+      cur = cur ? `${cur} ${p}` : p
+    }
+  }
+  if (cur) chunks.push(cur)
+
+  return chunks.filter((t) => t.length > 20).map((text, i) => ({ page: null, part: i + 1, text }))
+}
+
 async function extractPdfText(blob, onProgress) {
   const pdfjs = await import('pdfjs-dist')
   const worker = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default
@@ -128,7 +193,13 @@ async function extractPdfText(blob, onProgress) {
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p)
     const content = await page.getTextContent()
-    const text = content.items.map((item) => item.str).join(' ').replace(/\s+/g, ' ').trim()
+    // NFKC يحوّل أشكال الحروف العربية "المعروضة" (ﻷ ﺑ ...) إلى حروف عادية فيصبح البحث ممكناً
+    const text = content.items
+      .map((item) => item.str)
+      .join(' ')
+      .normalize('NFKC')
+      .replace(/\s+/g, ' ')
+      .trim()
 
     for (let i = 0; i < text.length; i += 1100) {
       const piece = text.slice(i, i + 1200)
@@ -140,6 +211,112 @@ async function extractPdfText(blob, onProgress) {
   return chunks
 }
 
+// قراءة ملفات Word (.docx) بدون أي مكتبة خارجية: الملف عبارة عن ZIP نفك منه word/document.xml
+async function extractDocxText(file) {
+  if (typeof DecompressionStream === 'undefined') throw new Error('NO_DECOMPRESS')
+
+  const buf = await file.arrayBuffer()
+  const view = new DataView(buf)
+  const bytes = new Uint8Array(buf)
+
+  let eocd = -1
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
+    if (view.getUint32(i, true) === 0x06054b50) {
+      eocd = i
+      break
+    }
+  }
+  if (eocd < 0) throw new Error('BAD_DOCX')
+
+  const count = view.getUint16(eocd + 10, true)
+  let p = view.getUint32(eocd + 16, true)
+  const dec = new TextDecoder()
+
+  for (let n = 0; n < count; n++) {
+    if (view.getUint32(p, true) !== 0x02014b50) break
+
+    const method = view.getUint16(p + 10, true)
+    const csize = view.getUint32(p + 20, true)
+    const nameLen = view.getUint16(p + 28, true)
+    const extraLen = view.getUint16(p + 30, true)
+    const commLen = view.getUint16(p + 32, true)
+    const local = view.getUint32(p + 42, true)
+    const fname = dec.decode(bytes.subarray(p + 46, p + 46 + nameLen))
+    p += 46 + nameLen + extraLen + commLen
+
+    if (fname !== 'word/document.xml') continue
+
+    const lNameLen = view.getUint16(local + 26, true)
+    const lExtraLen = view.getUint16(local + 28, true)
+    const start = local + 30 + lNameLen + lExtraLen
+    const raw = bytes.subarray(start, start + csize)
+
+    let xmlBytes = raw
+    if (method === 8) {
+      const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+      xmlBytes = new Uint8Array(await new Response(stream).arrayBuffer())
+    }
+
+    return dec
+      .decode(xmlBytes)
+      .replace(/<\/w:p>/g, '\n')
+      .replace(/<w:tab\/>/g, ' ')
+      .replace(/<w:br\/>/g, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&amp;/g, '&')
+  }
+
+  throw new Error('BAD_DOCX')
+}
+
+async function extractAnyText(file, onProgress) {
+  const name = (file.name || '').toLowerCase()
+
+  if (name.endsWith('.pdf') || file.type === 'application/pdf') {
+    return extractPdfText(file, onProgress)
+  }
+  if (name.endsWith('.docx')) {
+    onProgress?.(30)
+    const text = await extractDocxText(file)
+    onProgress?.(100)
+    return chunkText(text)
+  }
+  if (/\.html?$/.test(name)) {
+    const html = await file.text()
+    onProgress?.(100)
+    return chunkText(
+      html
+        .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+        .replace(/<\/(p|div|li|h[1-6]|br|tr)>/gi, '\n')
+        .replace(/<[^>]+>/g, ' ')
+    )
+  }
+  if (/\.(txt|md|csv|json|srt|vtt|log)$/.test(name) || (file.type || '').startsWith('text/')) {
+    const text = await file.text()
+    onProgress?.(100)
+    return chunkText(text)
+  }
+
+  throw new Error('UNSUPPORTED')
+}
+
+function explainError(error, fileName = '') {
+  const msg = String(error?.message || error || '')
+  if (msg === 'UNSUPPORTED')
+    return 'نوع الملف غير مدعوم. المدعوم: PDF و Word (docx) و TXT و MD و CSV و HTML.'
+  if (msg === 'BAD_DOCX' || msg === 'NO_DECOMPRESS')
+    return 'تعذر قراءة ملف Word. جرّب حفظه كـ PDF أو TXT ثم ارفعه.'
+  if (error?.name === 'QuotaExceededError') return 'مساحة جهازك ممتلئة، احذف بعض الكتب وحاول مرة ثانية.'
+  if (/import|module|resolve|dynamically/i.test(msg))
+    return 'مكتبة قراءة PDF غير مثبتة. شغّل في الطرفية: npm i pdfjs-dist ثم أعد تشغيل Vite.'
+  return `تعذر قراءة ${fileName ? `"${fileName}"` : 'الملف'}.`
+}
+
+/* ============================== البحث داخل المصادر ============================== */
 function normalizeAr(s = '') {
   return s
     .toLowerCase()
@@ -158,14 +335,15 @@ function tokenize(s) {
 }
 
 function topChunks(question, pool, k = 6) {
-  const q = new Set(tokenize(question))
-  if (!q.size) return spreadChunks(pool, k)
+  const q = [...new Set(tokenize(question))]
+  if (!q.length) return spreadChunks(pool, k)
 
   return pool
     .map((chunk) => {
-      const words = new Set(tokenize(chunk.text))
+      const n = normalizeAr(chunk.text)
       let score = 0
-      q.forEach((w) => words.has(w) && (score += 1))
+      // includes بدل مطابقة الكلمة كاملة: يلتقط التصريفات واللواحق (الجهد، جهدان، بالجهد ...)
+      q.forEach((w) => n.includes(w) && (score += 1))
       return { chunk, score }
     })
     .filter((x) => x.score > 0)
@@ -178,6 +356,51 @@ function spreadChunks(pool, k = 8) {
   if (pool.length <= k) return pool
   const step = pool.length / k
   return Array.from({ length: k }, (_, i) => pool[Math.floor(i * step)])
+}
+
+/* ============================== عرض النص المنسق ============================== */
+function renderInline(text) {
+  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((p, i) => {
+    if (p.length > 4 && p.startsWith('**') && p.endsWith('**')) return <strong key={i}>{p.slice(2, -2)}</strong>
+    if (p.length > 2 && p.startsWith('`') && p.endsWith('`'))
+      return (
+        <code key={i} dir="ltr" className="rounded bg-[var(--soft)] px-1 text-[11px]">
+          {p.slice(1, -1)}
+        </code>
+      )
+    return p
+  })
+}
+
+function RichText({ text }) {
+  const lines = String(text || '').split('\n')
+  return (
+    <div className="space-y-1.5">
+      {lines.map((line, i) => {
+        const t = line.trim()
+        if (!t) return <div key={i} className="h-1.5" />
+
+        const h = t.match(/^#{1,4}\s+(.*)/)
+        if (h)
+          return (
+            <div key={i} className="mt-1 text-[13px] font-bold">
+              {renderInline(h[1])}
+            </div>
+          )
+
+        const li = t.match(/^([-*•]|\d+[.)])\s+(.*)/)
+        if (li)
+          return (
+            <div key={i} className="flex gap-2">
+              <span className="shrink-0 font-semibold text-[var(--brand)]">{/^\d/.test(li[1]) ? li[1] : '•'}</span>
+              <span>{renderInline(li[2])}</span>
+            </div>
+          )
+
+        return <div key={i}>{renderInline(t)}</div>
+      })}
+    </div>
+  )
 }
 
 /* ============================== مكونات صغيرة ============================== */
@@ -236,6 +459,40 @@ function Modal({ title, onClose, children }) {
   )
 }
 
+function AssistantActions({ text, onSave, onNotion, onToast }) {
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text)
+      onToast('تم النسخ ✓')
+    } catch {
+      onToast('تعذر النسخ.')
+    }
+  }
+
+  function speak() {
+    if (!('speechSynthesis' in window)) {
+      onToast('المتصفح لا يدعم القراءة الصوتية.')
+      return
+    }
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel()
+      return
+    }
+    const utter = new SpeechSynthesisUtterance(String(text).replace(/[*#`]/g, ''))
+    utter.lang = 'ar-SA'
+    window.speechSynthesis.speak(utter)
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-2 border-t border-[var(--line)] pt-2">
+      <button onClick={onSave} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">حفظ في ملاحظاتي</button>
+      <button onClick={onNotion} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">إلى Notion</button>
+      <button onClick={copy} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">نسخ</button>
+      <button onClick={speak} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">🔊 استماع</button>
+    </div>
+  )
+}
+
 /* ============================== الصفحة ============================== */
 export default function Dashboard() {
   const nav = useNavigate()
@@ -245,6 +502,7 @@ export default function Dashboard() {
   const [studentClass, setStudentClass] = useState('')
   const [studentSection, setStudentSection] = useState('')
   const [toast, setToast] = useState('')
+  const toastTimer = useRef(null)
 
   const [messages, setMessages] = useState(() => readLS(STORAGE.messages, []))
   const [input, setInput] = useState('')
@@ -259,7 +517,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState('')
 
   /* الكتب */
-  const [booksView, setBooksView] = useState('site') // site | mine
+  const [booksView, setBooksView] = useState('site') // site | web | mine
   const [catalog, setCatalog] = useState(() => readLS(STORAGE.catalog, { at: 0, books: [] }).books)
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [catalogError, setCatalogError] = useState('')
@@ -268,23 +526,32 @@ export default function Dashboard() {
   const [library, setLibrary] = useState([])
   const [downloads, setDownloads] = useState({}) // id -> progress %
   const [indexing, setIndexing] = useState({}) // id -> progress %
+  const [uploading, setUploading] = useState({}) // id -> { name, progress }
+  const [dragOver, setDragOver] = useState(false)
+  const fileRef = useRef(null)
 
   /* دفتر رفيق */
-  const [nbSelected, setNbSelected] = useState([])
+  const [nbSelected, setNbSelected] = useState(() => readLS(STORAGE.nbSelected, []))
   const [nbMessages, setNbMessages] = useState(() => readLS(STORAGE.nbMessages, []))
   const [nbInput, setNbInput] = useState('')
   const [nbLoading, setNbLoading] = useState(false)
-  const nbBottomRef = useRef(null)
+  const nbBoxRef = useRef(null)
+  const chatBoxRef = useRef(null)
 
   /* Notion */
   const [notion, setNotion] = useState({ connected: false, workspace: '', loading: true })
   const [notionError, setNotionError] = useState('')
 
   /* القوائم والإعدادات */
-  const [menu, setMenu] = useState(null) // user | settings | notion
+  const [menu, setMenu] = useState(null) // user | settings | notion | paste | cite
   const [form, setForm] = useState({ name: '', class: '', section: '' })
+  const [pasteForm, setPasteForm] = useState({ title: '', text: '' })
+  const [citeView, setCiteView] = useState(null)
   const [storageInfo, setStorageInfo] = useState(null)
   const [linkInput, setLinkInput] = useState('')
+
+  /* سجل الدراسة */
+  const [studyLog, setStudyLog] = useState(() => readLS(STORAGE.study, {}))
 
   useEffect(() => {
     if (menu !== 'settings') return
@@ -295,15 +562,17 @@ export default function Dashboard() {
 
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef(null)
-  const bottomRef = useRef(null)
 
   const [pomoMode, setPomoMode] = useState('study')
   const [pomoRunning, setPomoRunning] = useState(false)
   const [pomoTime, setPomoTime] = useState(25 * 60)
+  const pomoDoneRef = useRef(false)
 
+  // الإصلاح: المؤقت القديم كان يمسح الإشعار الجديد قبل وقته إذا ظهر إشعاران متتاليان
   function showToast(text) {
     setToast(text)
-    window.setTimeout(() => setToast(''), 3200)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(''), 3600)
   }
 
   /* ---------- المصادقة وبيانات الطالب ---------- */
@@ -362,9 +631,12 @@ export default function Dashboard() {
     }
   }, [])
 
-  useEffect(() => { writeLS(STORAGE.messages, messages) }, [messages])
+  // نحتفظ بآخر رسائل فقط حتى لا تمتلئ مساحة localStorage فيتوقف الحفظ بصمت
+  useEffect(() => { writeLS(STORAGE.messages, messages.slice(-80)) }, [messages])
   useEffect(() => { writeLS(STORAGE.notes, notes) }, [notes])
-  useEffect(() => { writeLS(STORAGE.nbMessages, nbMessages) }, [nbMessages])
+  useEffect(() => { writeLS(STORAGE.nbMessages, nbMessages.slice(-60)) }, [nbMessages])
+  useEffect(() => { writeLS(STORAGE.nbSelected, nbSelected) }, [nbSelected])
+  useEffect(() => { writeLS(STORAGE.study, studyLog) }, [studyLog])
 
   useEffect(() => {
     writeLS(STORAGE.chances, chances)
@@ -387,6 +659,22 @@ export default function Dashboard() {
 
     return () => window.clearInterval(timer)
   }, [pomoRunning])
+
+  // عند انتهاء الجلسة: صوت + إشعار + تسجيل الدقائق في سجل الدراسة
+  useEffect(() => {
+    if (pomoTime !== 0 || pomoDoneRef.current) return
+    pomoDoneRef.current = true
+    beep()
+
+    if (pomoMode === 'break') {
+      showToast('انتهت الراحة، يلا نكمل 💪')
+    } else {
+      const mins = pomoMode === 'deep' ? 50 : 25
+      setStudyLog((c) => ({ ...c, [todayKey()]: (c[todayKey()] || 0) + mins }))
+      showToast(`أحسنت! أنجزت ${mins} دقيقة تركيز ✓`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pomoTime, pomoMode])
 
   /* ---------- الإدخال الصوتي ---------- */
   useEffect(() => {
@@ -418,19 +706,39 @@ export default function Dashboard() {
     }
   }, [])
 
+  /* ---------- التمرير داخل صندوق المحادثة فقط (بدل scrollIntoView الذي كان يحرك الصفحة كلها) ---------- */
+  function scrollBox(ref, smooth = true) {
+    const el = ref.current
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+  }
+
   useEffect(() => {
-    if (tab === 'ai') bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (tab === 'ai') scrollBox(chatBoxRef)
   }, [messages, aiLoading, tab])
 
   useEffect(() => {
-    if (tab === 'notebook') nbBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (tab === 'notebook') scrollBox(nbBoxRef)
   }, [nbMessages, nbLoading, tab])
+
+  // عند تبديل التبويب ينتظر العنصر حتى ينتهي أنيميشن الخروج ثم ينزل لآخر رسالة
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      if (tab === 'ai') scrollBox(chatBoxRef, false)
+      if (tab === 'notebook') scrollBox(nbBoxRef, false)
+    }, 380)
+    return () => window.clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
 
   /* ---------- مكتبة الجهاز ---------- */
   async function loadLibrary() {
     try {
-      const items = await dbAll('meta')
-      setLibrary(items.sort((a, b) => b.addedAt - a.addedAt))
+      const items = (await dbAll('meta')).sort((a, b) => b.addedAt - a.addedAt)
+      setLibrary(items)
+      // نزيل من المصادر المحددة أي كتاب لم يعد موجوداً أو غير مجهز
+      setNbSelected((c) =>
+        c.filter((id) => id.startsWith('note:') || items.some((b) => b.id === id && b.indexed))
+      )
     } catch {
       setLibrary([])
     }
@@ -468,7 +776,7 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    if (tab === 'books' || tab === 'notebook') loadCatalog()
+    if (tab === 'books') loadCatalog()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
 
@@ -557,8 +865,9 @@ export default function Dashboard() {
       const file = await dbGet('files', book.id)
       if (!file?.blob) throw new Error('NO_FILE')
 
-      const chunks = await extractPdfText(file.blob, (p) =>
-        setIndexing((c) => ({ ...c, [book.id]: p }))
+      const chunks = await extractAnyText(
+        Object.assign(file.blob, { name: `${book.title}.pdf` }), // الكتب المحمّلة من الموقع كلها PDF
+        (p) => setIndexing((c) => ({ ...c, [book.id]: p }))
       )
 
       if (!chunks.length) {
@@ -573,7 +882,7 @@ export default function Dashboard() {
       showToast('تم تجهيز الكتاب لدفتر رفيق ✓')
     } catch (error) {
       console.error('Index error:', error)
-      showToast('تعذر قراءة نص الكتاب.')
+      showToast(explainError(error, book.title))
     } finally {
       setIndexing((c) => {
         const next = { ...c }
@@ -583,8 +892,120 @@ export default function Dashboard() {
     }
   }
 
+  /* ---------- رفع المستندات (جديد: مثل NotebookLM) ---------- */
+  async function addFiles(fileList) {
+    const files = Array.from(fileList || [])
+    if (!files.length) return
+
+    for (const file of files) {
+      const id = `f${hashStr(`${file.name}|${file.size}|${file.lastModified}`)}`
+
+      try {
+        if (await dbGet('meta', id)) {
+          showToast(`"${file.name}" موجود في مكتبتك مسبقاً.`)
+          continue
+        }
+      } catch {
+        /* نكمل */
+      }
+
+      setUploading((c) => ({ ...c, [id]: { name: file.name, progress: 0 } }))
+
+      try {
+        const chunks = await extractAnyText(file, (p) =>
+          setUploading((c) => (c[id] ? { ...c, [id]: { ...c[id], progress: p } } : c))
+        )
+
+        if (!chunks.length) {
+          showToast(`"${file.name}" لا يحتوي نصاً قابلاً للقراءة (ربما صور ممسوحة).`)
+          continue
+        }
+
+        await navigator.storage?.persist?.()
+        await dbPut('files', { id, blob: file })
+        await dbPut('texts', { id, chunks })
+        await dbPut('meta', {
+          id,
+          title: file.name.replace(/\.[^.]+$/, '') || 'مستند',
+          subject: '',
+          grade: '',
+          source: 'رفع من جهازك',
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          addedAt: Date.now(),
+          indexed: true,
+        })
+
+        await loadLibrary()
+        setNbSelected((c) => (c.includes(id) ? c : [...c, id]))
+        showToast(`تمت إضافة "${file.name}" كمصدر ✓`)
+      } catch (error) {
+        console.error('Upload error:', error)
+        showToast(explainError(error, file.name))
+      } finally {
+        setUploading((c) => {
+          const next = { ...c }
+          delete next[id]
+          return next
+        })
+      }
+    }
+  }
+
+  function onPickFiles(e) {
+    addFiles(e.target.files)
+    e.target.value = ''
+  }
+
+  function onDropFiles(e) {
+    e.preventDefault()
+    setDragOver(false)
+    addFiles(e.dataTransfer?.files)
+  }
+
+  async function savePastedText() {
+    const text = pasteForm.text.trim()
+    if (text.length < 30) {
+      showToast('النص قصير جداً. الصق فقرة أو أكثر.')
+      return
+    }
+
+    const title = pasteForm.title.trim() || `نص ${formatDate()}`
+    const id = `p${hashStr(`${title}|${Date.now()}`)}`
+
+    try {
+      const chunks = chunkText(text)
+      if (!chunks.length) {
+        showToast('لم أستطع قراءة النص.')
+        return
+      }
+      const blob = new Blob([text], { type: 'text/plain' })
+      await dbPut('files', { id, blob })
+      await dbPut('texts', { id, chunks })
+      await dbPut('meta', {
+        id,
+        title,
+        subject: '',
+        grade: '',
+        source: 'نص ملصوق',
+        size: blob.size,
+        type: 'text/plain',
+        addedAt: Date.now(),
+        indexed: true,
+      })
+      await loadLibrary()
+      setNbSelected((c) => [...c, id])
+      setPasteForm({ title: '', text: '' })
+      setMenu(null)
+      showToast('تمت إضافة النص كمصدر ✓')
+    } catch (error) {
+      console.error('Paste error:', error)
+      showToast(explainError(error, title))
+    }
+  }
+
   /* ---------- استدعاء الذكاء الاصطناعي ---------- */
-  async function callAI({ message, mode, context }) {
+  async function callAI({ message, mode, context, history }) {
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
@@ -593,6 +1014,7 @@ export default function Dashboard() {
         mode,
         role: 'student',
         context,
+        history,
         student: { name: user, class: studentClass, section: studentSection },
       }),
     })
@@ -609,6 +1031,13 @@ export default function Dashboard() {
     const reply = data?.reply || data?.text
     if (!reply) throw new Error('EMPTY_AI_RESPONSE')
     return reply
+  }
+
+  function toHistory(list, n) {
+    return list
+      .filter((m) => !m.error && m.text)
+      .slice(-n)
+      .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text.slice(0, 1500) }))
   }
 
   function toggleVoice() {
@@ -650,16 +1079,20 @@ export default function Dashboard() {
       return
     }
 
+    const history = toHistory(messages, 8)
+
     setMessages((current) => [...current, { id: uid(), role: 'user', text: question }])
     setInput('')
     setAiLoading(true)
     setChances((current) => Math.max(0, current - 1))
 
     try {
-      const reply = await callAI({ message: question, mode })
+      const reply = await callAI({ message: question, mode, history })
       setMessages((current) => [...current, { id: uid(), role: 'assistant', text: reply }])
     } catch (error) {
       console.error('Rafeeq AI error:', error)
+      // لا نخصم رسالة من الطالب إذا فشل الخادم
+      setChances((current) => Math.min(DAILY_LIMIT, current + 1))
 
       setMessages((current) => [
         ...current,
@@ -689,37 +1122,57 @@ export default function Dashboard() {
     cards: 'اصنع 8 بطاقات مراجعة (سؤال ← جواب) من المصادر.',
   }
 
+  function pushNb(message) {
+    setNbMessages((c) => [...c, { id: uid(), ...message }])
+  }
+
   async function askNotebook(customQuestion = null) {
     const question = (customQuestion ?? nbInput).trim()
     if (!question || nbLoading) return
 
-    if (!nbSelected.length) {
-      showToast('اختر مصدراً واحداً على الأقل من اليسار.')
+    // إذا لم يحدد الطالب شيئاً نستخدم كل المصادر الجاهزة تلقائياً
+    const readyBooks = library.filter((b) => b.indexed).map((b) => b.id)
+    const ids = nbSelected.length ? nbSelected : readyBooks
+
+    if (!ids.length) {
+      pushNb({ role: 'user', text: question })
+      pushNb({
+        role: 'assistant',
+        error: true,
+        text: 'ما عندي مصادر أقرأ منها بعد. اضغط "＋ رفع مستند" وارفع PDF أو Word أو نص، أو الصق نصاً، أو نزّل كتاباً من "كتب ودروس" ثم اضغط "تجهيز للدفتر".',
+      })
+      setNbInput('')
       return
     }
 
     if (chances <= 0) {
-      showToast('انتهت رسائلك اليوم، ستتجدد غداً.')
+      pushNb({ role: 'user', text: question })
+      pushNb({ role: 'assistant', error: true, text: 'انتهت رسائلك اليوم، ستتجدد غداً.' })
+      setNbInput('')
       return
     }
 
-    setNbMessages((c) => [...c, { id: uid(), role: 'user', text: question }])
+    pushNb({ role: 'user', text: question })
+    const history = toHistory(nbMessages, 4)
     setNbInput('')
     setNbLoading(true)
     setChances((c) => Math.max(0, c - 1))
+    const refund = () => setChances((c) => Math.min(DAILY_LIMIT, c + 1))
 
     try {
       const pool = []
 
-      for (const id of nbSelected) {
+      for (const id of ids) {
         if (id.startsWith('note:')) {
           const note = notes.find((n) => `note:${n.id}` === id)
-          if (note) pool.push({ title: `ملاحظة: ${note.title}`, page: null, text: note.content })
+          if (note) pool.push({ title: `ملاحظة: ${note.title}`, page: null, text: String(note.content).slice(0, 1500) })
           continue
         }
         const book = library.find((b) => b.id === id)
         const record = await dbGet('texts', id)
-        record?.chunks?.forEach((ch) => pool.push({ title: book?.title || 'كتاب', page: ch.page, text: ch.text }))
+        record?.chunks?.forEach((ch) =>
+          pool.push({ title: book?.title || 'مصدر', page: ch.page ?? null, text: ch.text })
+        )
       }
 
       if (!pool.length) throw new Error('NO_TEXT')
@@ -728,40 +1181,30 @@ export default function Dashboard() {
       const picked = isTask ? spreadChunks(pool, 8) : topChunks(question, pool, 6)
 
       if (!picked.length) {
-        setNbMessages((c) => [
-          ...c,
-          {
-            id: uid(),
-            role: 'assistant',
-            text: 'لم أجد في المصادر المحددة ما يتعلق بسؤالك. جرّب صياغة مختلفة أو أضف مصدراً آخر.',
-          },
-        ])
+        refund()
+        pushNb({
+          role: 'assistant',
+          text: 'لم أجد في المصادر المحددة ما يتعلق بسؤالك. جرّب صياغة مختلفة أو أضف مصدراً آخر.',
+        })
         return
       }
 
       const context = picked.map((p, i) => ({ n: i + 1, title: p.title, page: p.page, text: p.text }))
-      const reply = await callAI({ message: question, mode: 'notebook', context })
+      const reply = await callAI({ message: question, mode: 'notebook', context, history })
 
-      setNbMessages((c) => [
-        ...c,
-        {
-          id: uid(),
-          role: 'assistant',
-          text: reply,
-          cites: context.map(({ n, title, page }) => ({ n, title, page })),
-        },
-      ])
+      pushNb({
+        role: 'assistant',
+        text: reply,
+        cites: context.map(({ n, title, page, text }) => ({ n, title, page, text: text.slice(0, 450) })),
+      })
     } catch (error) {
       console.error('Notebook error:', error)
-      setNbMessages((c) => [
-        ...c,
-        {
-          id: uid(),
-          role: 'assistant',
-          error: true,
-          text: 'تعذر الحصول على إجابة من دفتر رفيق. تأكد أن الكتب مجهزة وأن الخادم يعمل.',
-        },
-      ])
+      refund()
+      pushNb({
+        role: 'assistant',
+        error: true,
+        text: 'تعذر الحصول على إجابة من دفتر رفيق. تأكد أن المصادر مجهزة وأن الخادم يعمل.',
+      })
     } finally {
       setNbLoading(false)
     }
@@ -769,6 +1212,12 @@ export default function Dashboard() {
 
   function toggleSource(id) {
     setNbSelected((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]))
+  }
+
+  function toggleAllSources() {
+    const readyIds = library.filter((b) => b.indexed).map((b) => b.id)
+    const allOn = readyIds.length > 0 && readyIds.every((id) => nbSelected.includes(id))
+    setNbSelected(allOn ? [] : [...new Set([...nbSelected, ...readyIds])])
   }
 
   function saveToNotes(text, title = 'من دفتر رفيق') {
@@ -797,6 +1246,7 @@ export default function Dashboard() {
       showToast('تم ربط Notion بنجاح ✓')
       window.history.replaceState({}, '', window.location.pathname)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function connectNotion() {
@@ -879,7 +1329,7 @@ export default function Dashboard() {
   }
 
   async function wipeLibrary() {
-    if (!window.confirm('حذف كل الكتب المحفوظة من جهازك؟')) return
+    if (!window.confirm('حذف كل الكتب والمستندات المحفوظة من جهازك؟')) return
     await Promise.all(library.flatMap((b) => [dbDel('files', b.id), dbDel('meta', b.id), dbDel('texts', b.id)]))
     setNbSelected([])
     await loadLibrary()
@@ -918,9 +1368,11 @@ export default function Dashboard() {
 
   function deleteNote(id) {
     setNotes((current) => current.filter((note) => note.id !== id))
+    setNbSelected((c) => c.filter((x) => x !== `note:${id}`))
   }
 
   function resetTimer(mode = pomoMode) {
+    pomoDoneRef.current = false
     setPomoRunning(false)
     setPomoTime(mode === 'study' ? 25 * 60 : mode === 'deep' ? 50 * 60 : 5 * 60)
   }
@@ -972,6 +1424,35 @@ export default function Dashboard() {
     )
   }, [notes, search])
 
+  /* ---------- نشاط الدراسة ---------- */
+  const weekDays = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) => {
+        const d = new Date()
+        d.setDate(d.getDate() - (6 - i))
+        const key = dateKey(d)
+        return {
+          key,
+          label: new Intl.DateTimeFormat('ar-LY', { weekday: 'short' }).format(d),
+          mins: studyLog[key] || 0,
+        }
+      }),
+    [studyLog]
+  )
+
+  const streak = useMemo(() => {
+    let n = 0
+    const d = new Date()
+    if (!studyLog[dateKey(d)]) d.setDate(d.getDate() - 1)
+    while (studyLog[dateKey(d)] > 0) {
+      n += 1
+      d.setDate(d.getDate() - 1)
+    }
+    return n
+  }, [studyLog])
+
+  const todayMins = studyLog[todayKey()] || 0
+
   const navigation = [
     { id: 'home', label: 'الرئيسية', icon: '⌂' },
     { id: 'ai', label: 'رفيق AI', icon: '✦' },
@@ -981,7 +1462,8 @@ export default function Dashboard() {
     { id: 'timer', label: 'مؤقت الدراسة', icon: '◷' },
   ]
 
-  const nbIndexedBooks = library.filter((b) => b.indexed)
+  const readySources = library.filter((b) => b.indexed)
+  const uploadingList = Object.entries(uploading)
 
   /* ============================== الواجهة ============================== */
   return (
@@ -1075,9 +1557,17 @@ export default function Dashboard() {
         @keyframes shim { to { background-position: -200% 0; } }
 
         .timer-ring { background: conic-gradient(var(--brand) var(--deg), #E7E3FF 0); }
+
+        .typing-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--brand); animation: bounce 1.1s infinite ease-in-out; }
+        .typing-dot:nth-child(2) { animation-delay: .15s; }
+        .typing-dot:nth-child(3) { animation-delay: .3s; }
+        @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity: .4; } 40% { transform: translateY(-5px); opacity: 1; } }
       `}</style>
 
       <div className="bg-stage" />
+
+      {/* حقل رفع الملفات المشترك */}
+      <input ref={fileRef} type="file" multiple accept={ACCEPT_FILES} onChange={onPickFiles} className="hidden" />
 
       {/* ============ الشريط الجانبي ============ */}
       <aside className="glass fixed right-0 top-0 z-40 hidden h-screen w-[256px] flex-col border-y-0 border-r-0 lg:flex">
@@ -1272,8 +1762,8 @@ export default function Dashboard() {
                       </h1>
 
                       <p className="mt-3 max-w-[560px] text-[12px] leading-6 text-white/80 sm:text-[13px]">
-                        حمّل كتبك على جهازك، وخلّي دفتر رفيق يقرأها معاك ويجاوب من داخلها، وصدّر
-                        ملخصاتك إلى Notion بضغطة وحدة.
+                        ارفع مستنداتك أو حمّل كتبك على جهازك، وخلّي دفتر رفيق يقرأها معاك ويجاوب من داخلها،
+                        وصدّر ملخصاتك إلى Notion بضغطة وحدة.
                       </p>
 
                       <div className="mt-6 flex flex-wrap gap-2">
@@ -1296,7 +1786,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                     {[
                       { id: 'ai', title: 'رفيق AI', value: `${chances}/${DAILY_LIMIT}`, caption: 'رسائل متبقية اليوم', icon: '✦', tone: 'var(--brand)' },
-                      { id: 'books', title: 'مكتبتي', value: library.length, caption: 'كتاب على جهازك', icon: '▤', tone: 'var(--cyan)' },
+                      { id: 'books', title: 'مكتبتي', value: library.length, caption: 'مصدر على جهازك', icon: '▤', tone: 'var(--cyan)' },
                       { id: 'notes', title: 'ملاحظاتي', value: notes.length, caption: 'ملاحظة محفوظة', icon: '▢', tone: 'var(--coral)' },
                       { id: 'timer', title: 'مؤقت الدراسة', value: formatTime(pomoTime), caption: pomoRunning ? 'جلسة تعمل الآن' : 'جاهز للدراسة', icon: '◷', tone: 'var(--mint)' },
                     ].map((card) => (
@@ -1323,10 +1813,11 @@ export default function Dashboard() {
                       <h2 className="text-[14px] font-bold">ابدأ بسرعة</h2>
                       <p className="mt-1 text-[10px] text-[var(--muted)]">أدوات مصممة للدراسة فقط</p>
 
-                      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                         {[
                           { icon: '✦', t: 'شرح درس', d: 'فهم الفكرة خطوة بخطوة', fn: () => { goTo('ai'); setInput('اشرح لي هذا الدرس بطريقة بسيطة') } },
-                          { icon: '❖', t: 'اسأل كتبك', d: 'إجابات من داخل كتبك', fn: () => goTo('notebook') },
+                          { icon: '＋', t: 'ارفع مستنداً', d: 'PDF أو Word أو نص', fn: () => { goTo('notebook'); window.setTimeout(() => fileRef.current?.click(), 400) } },
+                          { icon: '❖', t: 'اسأل كتبك', d: 'إجابات من داخل مصادرك', fn: () => goTo('notebook') },
                           { icon: '◷', t: 'جلسة دراسة', d: '25 دقيقة تركيز', fn: () => goTo('timer') },
                         ].map((a) => (
                           <button
@@ -1342,22 +1833,55 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="glass rounded-[22px] p-5">
-                      <div className="text-[13px] font-bold">حالتك اليوم</div>
+                    <div className="space-y-4">
+                      <div className="glass rounded-[22px] p-5">
+                        <div className="text-[13px] font-bold">حالتك اليوم</div>
 
-                      <div className="mt-4 rounded-[15px] bg-[var(--soft)] p-4">
-                        <div className="flex items-center justify-between text-[10px] text-[var(--muted)]">
-                          <span>رسائل رفيق</span>
-                          <strong className="text-[var(--ink)]">{chances} / {DAILY_LIMIT}</strong>
+                        <div className="mt-4 rounded-[15px] bg-[var(--soft)] p-4">
+                          <div className="flex items-center justify-between text-[10px] text-[var(--muted)]">
+                            <span>رسائل رفيق</span>
+                            <strong className="text-[var(--ink)]">{chances} / {DAILY_LIMIT}</strong>
+                          </div>
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${(chances / DAILY_LIMIT) * 100}%`, background: 'var(--grad)' }}
+                            />
+                          </div>
+                          <p className="mt-3 text-[9px] leading-5 text-[var(--muted)]">
+                            يتجدد الحد اليومي تلقائياً مع بداية يوم جديد.
+                          </p>
                         </div>
-                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{ width: `${(chances / DAILY_LIMIT) * 100}%`, background: 'var(--grad)' }}
-                          />
+                      </div>
+
+                      <div className="glass rounded-[22px] p-5">
+                        <div className="flex items-center justify-between">
+                          <div className="text-[13px] font-bold">نشاط الدراسة</div>
+                          <div className="rounded-full bg-[#FFF1EA] px-2.5 py-1 text-[9px] font-bold text-[var(--coral)]">
+                            🔥 {streak} {streak === 1 ? 'يوم متتالي' : 'أيام متتالية'}
+                          </div>
                         </div>
+
+                        <div className="mt-4 flex h-[70px] items-end gap-1.5">
+                          {weekDays.map((d) => (
+                            <div key={d.key} className="flex flex-1 flex-col items-center gap-1">
+                              <div className="flex h-[52px] w-full items-end rounded-[8px] bg-[var(--soft)]">
+                                <div
+                                  className="w-full rounded-[8px] transition-all"
+                                  style={{
+                                    height: d.mins ? `${Math.max(14, Math.min(100, (d.mins / 60) * 100))}%` : '0%',
+                                    background: 'var(--grad)',
+                                  }}
+                                  title={`${d.mins} دقيقة`}
+                                />
+                              </div>
+                              <div className="text-[8px] text-[var(--muted)]">{d.label}</div>
+                            </div>
+                          ))}
+                        </div>
+
                         <p className="mt-3 text-[9px] leading-5 text-[var(--muted)]">
-                          يتجدد الحد اليومي تلقائياً مع بداية يوم جديد.
+                          اليوم: {todayMins} دقيقة تركيز. أكمل جلسة في المؤقت لتُسجَّل هنا تلقائياً.
                         </p>
                       </div>
                     </div>
@@ -1383,7 +1907,7 @@ export default function Dashboard() {
                       </button>
                     </div>
 
-                    <div className="thin-scroll h-[58vh] min-h-[430px] overflow-y-auto bg-white/40 p-4 sm:p-6">
+                    <div ref={chatBoxRef} className="thin-scroll h-[58vh] min-h-[430px] overflow-y-auto bg-white/40 p-4 sm:p-6">
                       {messages.length === 0 ? (
                         <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
                           <div className="btn-grad float grid h-16 w-16 place-items-center rounded-[22px] text-[23px]">✦</div>
@@ -1414,24 +1938,22 @@ export default function Dashboard() {
                           {messages.map((message) => (
                             <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}>
                               <div
-                                className={`max-w-[88%] whitespace-pre-wrap rounded-[18px] px-4 py-3 text-[12px] leading-7 sm:max-w-[76%] ${
+                                className={`max-w-[88%] rounded-[18px] px-4 py-3 text-[12px] leading-7 sm:max-w-[76%] ${
                                   message.role === 'user'
-                                    ? 'btn-grad rounded-tl-[5px] !shadow-none'
+                                    ? 'btn-grad whitespace-pre-wrap rounded-tl-[5px] !shadow-none'
                                     : message.error
                                       ? 'rounded-tr-[5px] border border-[#F6CFCF] bg-[#FFF5F5] text-[#9B3A3A]'
                                       : 'rounded-tr-[5px] border border-[var(--line)] bg-white shadow-[0_4px_14px_rgba(109,94,245,.07)]'
                                 }`}
                               >
-                                {message.text}
+                                {message.role === 'assistant' ? <RichText text={message.text} /> : message.text}
                                 {message.role === 'assistant' && !message.error && (
-                                  <div className="mt-2 flex gap-2 border-t border-[var(--line)] pt-2">
-                                    <button onClick={() => saveToNotes(message.text, 'رفيق')} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">
-                                      حفظ في ملاحظاتي
-                                    </button>
-                                    <button onClick={() => exportToNotion('رد من رفيق', message.text)} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">
-                                      إلى Notion
-                                    </button>
-                                  </div>
+                                  <AssistantActions
+                                    text={message.text}
+                                    onSave={() => saveToNotes(message.text, 'رفيق')}
+                                    onNotion={() => exportToNotion('رد من رفيق', message.text)}
+                                    onToast={showToast}
+                                  />
                                 )}
                               </div>
                             </div>
@@ -1440,13 +1962,11 @@ export default function Dashboard() {
                           {aiLoading && (
                             <div className="flex justify-end">
                               <div className="flex items-center gap-2 rounded-[16px] border border-[var(--line)] bg-white px-4 py-3 text-[10px] text-[var(--muted)]">
-                                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--soft)] border-t-[var(--brand)]" />
+                                <span className="flex gap-1"><i className="typing-dot" /><i className="typing-dot" /><i className="typing-dot" /></span>
                                 رفيق يجهز الإجابة...
                               </div>
                             </div>
                           )}
-
-                          <div ref={bottomRef} />
                         </div>
                       )}
                     </div>
@@ -1501,7 +2021,7 @@ export default function Dashboard() {
                   <SectionHero
                     eyebrow="❖ شبيه NotebookLM"
                     title="دفتر رفيق"
-                    text="اختر كتبك وملاحظاتك كمصادر، واسأل. الإجابات تُبنى من داخل مصادرك فقط مع ذكر رقم الصفحة."
+                    text="ارفع مستنداتك أو اختر كتبك وملاحظاتك كمصادر، واسأل. الإجابات تُبنى من داخل مصادرك فقط مع ذكر المصدر والصفحة."
                     right={
                       <div className="rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-[10px] backdrop-blur">
                         {nbSelected.length} مصدر محدد
@@ -1511,13 +2031,57 @@ export default function Dashboard() {
 
                   <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
                     {/* المصادر */}
-                    <div className="glass rounded-[22px] p-4 lg:sticky lg:top-[80px] lg:self-start">
-                      <div className="text-[12px] font-bold">المصادر</div>
+                    <div
+                      className={`glass rounded-[22px] p-4 transition lg:sticky lg:top-[80px] lg:self-start ${
+                        dragOver ? 'ring-2 ring-[var(--brand)]' : ''
+                      }`}
+                      onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={onDropFiles}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-[12px] font-bold">المصادر</div>
+                        {readySources.length + notes.length > 1 && (
+                          <button onClick={toggleAllSources} className="text-[9px] font-semibold text-[var(--brand)]">
+                            تحديد / إلغاء الكل
+                          </button>
+                        )}
+                      </div>
 
-                      <div className="thin-scroll mt-3 max-h-[52vh] space-y-2 overflow-y-auto pl-1">
-                        {library.length === 0 && notes.length === 0 && (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button onClick={() => fileRef.current?.click()} className="btn-grad h-9 rounded-full text-[10px] font-semibold">
+                          ＋ رفع مستند
+                        </button>
+                        <button
+                          onClick={() => setMenu('paste')}
+                          className="btn-soft h-9 rounded-full text-[10px] font-semibold"
+                        >
+                          ✎ لصق نص
+                        </button>
+                      </div>
+
+                      <div
+                        className={`mt-2 rounded-[12px] border-2 border-dashed px-3 py-2 text-center text-[9px] leading-5 transition ${
+                          dragOver ? 'border-[var(--brand)] bg-[var(--soft)] text-[var(--brand)]' : 'border-[var(--line)] text-[var(--muted)]'
+                        }`}
+                      >
+                        أو اسحب الملفات وأفلتها هنا<br />PDF • Word • TXT • MD • HTML
+                      </div>
+
+                      <div className="thin-scroll mt-3 max-h-[46vh] space-y-2 overflow-y-auto pl-1">
+                        {uploadingList.map(([id, u]) => (
+                          <div key={id} className="rounded-[14px] border border-[var(--line)] bg-white/70 p-3">
+                            <div className="line-clamp-1 text-[11px] font-semibold">{u.name}</div>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--soft)]">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${u.progress || 6}%`, background: 'var(--grad)' }} />
+                            </div>
+                            <div className="mt-1 text-[8px] text-[var(--muted)]">جاري قراءة الملف... {u.progress}%</div>
+                          </div>
+                        ))}
+
+                        {library.length === 0 && notes.length === 0 && uploadingList.length === 0 && (
                           <p className="rounded-[12px] bg-[var(--soft)] p-3 text-[10px] leading-5 text-[var(--muted)]">
-                            لا توجد مصادر بعد. نزّل كتاباً من قسم "كتب ودروس" أو أضف ملاحظة.
+                            لا توجد مصادر بعد. ارفع مستنداً، أو نزّل كتاباً من قسم "كتب ودروس"، أو أضف ملاحظة.
                           </p>
                         )}
 
@@ -1532,14 +2096,24 @@ export default function Dashboard() {
                               }`}
                             >
                               <div className="line-clamp-2 text-[11px] font-semibold">{book.title}</div>
+                              <div className="mt-0.5 text-[8px] text-[var(--muted)]">{book.source || ''} • {formatSize(book.size)}</div>
 
                               {book.indexed ? (
-                                <button
-                                  onClick={() => toggleSource(book.id)}
-                                  className={`mt-2 h-7 w-full rounded-full text-[9px] font-semibold ${on ? 'btn-grad' : 'btn-soft'}`}
-                                >
-                                  {on ? 'محدد ✓' : 'تحديد كمصدر'}
-                                </button>
+                                <div className="mt-2 flex gap-1.5">
+                                  <button
+                                    onClick={() => toggleSource(book.id)}
+                                    className={`h-7 flex-1 rounded-full text-[9px] font-semibold ${on ? 'btn-grad' : 'btn-soft'}`}
+                                  >
+                                    {on ? 'محدد ✓' : 'تحديد كمصدر'}
+                                  </button>
+                                  <button
+                                    onClick={() => removeBook(book)}
+                                    title="حذف"
+                                    className="h-7 w-7 rounded-full border border-[#F6CFCF] bg-[#FFF5F5] text-[10px] text-[#B34A4A]"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
                               ) : prog !== undefined ? (
                                 <div className="mt-2">
                                   <div className="h-1.5 overflow-hidden rounded-full bg-white">
@@ -1574,7 +2148,7 @@ export default function Dashboard() {
                         })}
                       </div>
 
-                      {nbIndexedBooks.length === 0 && library.length > 0 && (
+                      {readySources.length === 0 && library.length > 0 && (
                         <p className="mt-3 text-[9px] leading-5 text-[var(--muted)]">
                           اضغط "تجهيز للدفتر" ليقرأ رفيق نص الكتاب مرة وحدة ويحفظه على جهازك.
                         </p>
@@ -1609,49 +2183,56 @@ export default function Dashboard() {
                         )}
                       </div>
 
-                      <div className="thin-scroll h-[50vh] min-h-[380px] overflow-y-auto bg-white/40 p-4">
+                      <div ref={nbBoxRef} className="thin-scroll h-[50vh] min-h-[380px] overflow-y-auto bg-white/40 p-4">
                         {nbMessages.length === 0 ? (
                           <div className="flex min-h-[340px] flex-col items-center justify-center text-center">
                             <div className="btn-grad float grid h-16 w-16 place-items-center rounded-[22px] text-[24px]">❖</div>
                             <h2 className="mt-5 text-[18px] font-bold">اسأل مصادرك</h2>
                             <p className="mt-2 max-w-[400px] text-[11px] leading-6 text-[var(--muted)]">
-                              حدّد مصدراً من اليمين ثم اكتب سؤالك، أو اضغط على ملخص / اختبار قصير.
+                              ارفع مستنداً أو حدّد مصدراً من القائمة ثم اكتب سؤالك، أو اضغط على ملخص / اختبار قصير.
+                              إن لم تحدد شيئاً سيستخدم رفيق كل مصادرك الجاهزة.
                             </p>
+                            <button onClick={() => fileRef.current?.click()} className="btn-grad mt-5 h-10 rounded-full px-6 text-[11px] font-semibold">
+                              ＋ ارفع أول مستند
+                            </button>
                           </div>
                         ) : (
                           <div className="space-y-4">
                             {nbMessages.map((m) => (
                               <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
                                 <div
-                                  className={`max-w-[92%] whitespace-pre-wrap rounded-[18px] px-4 py-3 text-[12px] leading-7 sm:max-w-[80%] ${
+                                  className={`max-w-[92%] rounded-[18px] px-4 py-3 text-[12px] leading-7 sm:max-w-[80%] ${
                                     m.role === 'user'
-                                      ? 'btn-grad rounded-tl-[5px] !shadow-none'
+                                      ? 'btn-grad whitespace-pre-wrap rounded-tl-[5px] !shadow-none'
                                       : m.error
                                         ? 'rounded-tr-[5px] border border-[#F6CFCF] bg-[#FFF5F5] text-[#9B3A3A]'
                                         : 'rounded-tr-[5px] border border-[var(--line)] bg-white shadow-[0_4px_14px_rgba(109,94,245,.07)]'
                                   }`}
                                 >
-                                  {m.text}
+                                  {m.role === 'assistant' ? <RichText text={m.text} /> : m.text}
 
                                   {m.cites?.length > 0 && (
                                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--line)] pt-2">
                                       {m.cites.map((c) => (
-                                        <span key={c.n} className="rounded-full bg-[var(--soft)] px-2 py-0.5 text-[8px] text-[var(--brand)]">
+                                        <button
+                                          key={c.n}
+                                          onClick={() => { setCiteView(c); setMenu('cite') }}
+                                          className="rounded-full bg-[var(--soft)] px-2 py-0.5 text-[8px] text-[var(--brand)] transition hover:bg-[#E1DCFF]"
+                                          title="اضغط لعرض المقطع"
+                                        >
                                           [{c.n}] {c.title.slice(0, 22)}{c.page ? ` • ص${c.page}` : ''}
-                                        </span>
+                                        </button>
                                       ))}
                                     </div>
                                   )}
 
                                   {m.role === 'assistant' && !m.error && (
-                                    <div className="mt-2 flex gap-2">
-                                      <button onClick={() => saveToNotes(m.text)} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">
-                                        حفظ في ملاحظاتي
-                                      </button>
-                                      <button onClick={() => exportToNotion('دفتر رفيق', m.text)} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">
-                                        إلى Notion
-                                      </button>
-                                    </div>
+                                    <AssistantActions
+                                      text={m.text}
+                                      onSave={() => saveToNotes(m.text)}
+                                      onNotion={() => exportToNotion('دفتر رفيق', m.text)}
+                                      onToast={showToast}
+                                    />
                                   )}
                                 </div>
                               </div>
@@ -1662,7 +2243,6 @@ export default function Dashboard() {
                                 <div className="shimmer h-10 w-48 rounded-[16px]" />
                               </div>
                             )}
-                            <div ref={nbBottomRef} />
                           </div>
                         )}
                       </div>
@@ -1679,7 +2259,7 @@ export default function Dashboard() {
                               }
                             }}
                             rows={1}
-                            placeholder="اسأل عن شي في مصادرك المحددة..."
+                            placeholder="اسأل عن شي في مصادرك..."
                             className="max-h-28 min-h-9 flex-1 resize-none bg-transparent px-2 py-2 text-[12px] leading-5 outline-none"
                           />
                           <button
@@ -1702,7 +2282,7 @@ export default function Dashboard() {
                   <SectionHero
                     eyebrow="المحتوى الدراسي"
                     title="كتب ودروس"
-                    text="الكتب من موقع الأمجاد. عند التنزيل يُحفظ الكتاب على جهازك أنت (وليس على خوادمنا) وتجده في مكتبتك."
+                    text="الكتب من موقع الأمجاد. عند التنزيل يُحفظ الكتاب على جهازك أنت (وليس على خوادمنا) وتجده في مكتبتك. ويمكنك أيضاً رفع مستنداتك الخاصة."
                     right={
                       <div className="flex gap-1 rounded-full border border-white/30 bg-white/15 p-1 backdrop-blur">
                         {[['site', 'كتب الموقع'], ['web', 'الموقع الأصلي'], ['mine', `مكتبتي (${library.length})`]].map(([id, label]) => (
@@ -1834,46 +2414,63 @@ export default function Dashboard() {
                     </>
                   )}
 
-                  {booksView === 'mine' &&
-                    (filteredLibrary.length === 0 ? (
-                      <EmptyState
-                        icon="▤"
-                        title="مكتبتك فارغة"
-                        text="نزّل كتباً من تبويب كتب الموقع وستظهر هنا. الكتب محفوظة على جهازك ولا تحتاج إنترنت لفتحها."
-                      />
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredLibrary.map((book) => (
-                          <div key={book.id} className="glass card-hover rounded-[20px] p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="btn-grad grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-[19px]">📖</div>
-                              <div className="min-w-0 flex-1">
-                                <div className="line-clamp-2 text-[12px] font-bold">{book.title}</div>
-                                <div className="mt-1 text-[9px] text-[var(--muted)]">
-                                  {formatSize(book.size)}{book.subject ? ` • ${book.subject}` : ''}
-                                  {book.indexed ? ' • جاهز للدفتر ❖' : ''}
+                  {booksView === 'mine' && (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button onClick={() => fileRef.current?.click()} className="btn-grad h-10 rounded-full px-5 text-[11px] font-semibold">
+                          ＋ رفع مستند من جهازك
+                        </button>
+                        <button onClick={() => setMenu('paste')} className="btn-soft h-10 rounded-full px-5 text-[11px] font-semibold">
+                          ✎ لصق نص
+                        </button>
+                      </div>
+
+                      {filteredLibrary.length === 0 ? (
+                        <EmptyState
+                          icon="▤"
+                          title="مكتبتك فارغة"
+                          text="نزّل كتباً من تبويب كتب الموقع أو ارفع مستنداتك الخاصة وستظهر هنا. كل شيء محفوظ على جهازك ولا يحتاج إنترنت لفتحه."
+                        />
+                      ) : (
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {filteredLibrary.map((book) => (
+                            <div key={book.id} className="glass card-hover rounded-[20px] p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="btn-grad grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-[19px]">📖</div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="line-clamp-2 text-[12px] font-bold">{book.title}</div>
+                                  <div className="mt-1 text-[9px] text-[var(--muted)]">
+                                    {formatSize(book.size)}{book.subject ? ` • ${book.subject}` : ''}
+                                    {book.source ? ` • ${book.source}` : ''}
+                                    {book.indexed ? ' • جاهز للدفتر ❖' : ''}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
 
-                            <div className="mt-4 flex items-center gap-2">
-                              <button onClick={() => openBook(book)} className="btn-grad h-9 flex-1 rounded-full text-[10px] font-semibold">
-                                فتح الكتاب
-                              </button>
-                              <button
-                                onClick={() => { goTo('notebook'); if (!book.indexed) indexBook(book); else setNbSelected((c) => (c.includes(book.id) ? c : [...c, book.id])) }}
-                                className="btn-soft h-9 rounded-full px-3 text-[10px] font-semibold"
-                              >
-                                في الدفتر
-                              </button>
-                              <button onClick={() => removeBook(book)} className="h-9 rounded-full border border-[#F6CFCF] bg-[#FFF5F5] px-3 text-[10px] text-[#B34A4A]">
-                                حذف
-                              </button>
+                              <div className="mt-4 flex items-center gap-2">
+                                <button onClick={() => openBook(book)} className="btn-grad h-9 flex-1 rounded-full text-[10px] font-semibold">
+                                  فتح
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    goTo('notebook')
+                                    if (!book.indexed) indexBook(book)
+                                    else setNbSelected((c) => (c.includes(book.id) ? c : [...c, book.id]))
+                                  }}
+                                  className="btn-soft h-9 rounded-full px-3 text-[10px] font-semibold"
+                                >
+                                  في الدفتر
+                                </button>
+                                <button onClick={() => removeBook(book)} className="h-9 rounded-full border border-[#F6CFCF] bg-[#FFF5F5] px-3 text-[10px] text-[#B34A4A]">
+                                  حذف
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </section>
               )}
 
@@ -1884,7 +2481,7 @@ export default function Dashboard() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <h1 className="text-[19px] font-bold">ملاحظاتي</h1>
-                        <p className="mt-1 text-[10px] text-[var(--muted)]">محفوظة محلياً في هذا المتصفح، ويمكنك تصديرها إلى Notion.</p>
+                        <p className="mt-1 text-[10px] text-[var(--muted)]">محفوظة محلياً في هذا المتصفح، ويمكنك تصديرها إلى Notion أو استخدامها كمصدر في دفتر رفيق.</p>
                       </div>
                       {!notion.connected && (
                         <button onClick={connectNotion} className="btn-soft rounded-full px-4 py-2 text-[10px] font-semibold">
@@ -1978,6 +2575,10 @@ export default function Dashboard() {
                         </button>
                       ))}
                     </div>
+
+                    <p className="mt-5 text-[10px] text-[var(--muted)]">
+                      تركيزك اليوم: <strong className="text-[var(--ink)]">{todayMins} دقيقة</strong> • 🔥 {streak} {streak === 1 ? 'يوم' : 'أيام'} متتالية
+                    </p>
                   </div>
 
                   <div className="glass rounded-[22px] p-5">
@@ -2021,7 +2622,7 @@ export default function Dashboard() {
 
       <AnimatePresence>
         {menu === 'settings' && (
-          <Modal title="إعدادات الحساب" onClose={() => setMenu(null)}>
+          <Modal key="settings" title="إعدادات الحساب" onClose={() => setMenu(null)}>
             <div className="space-y-3">
               {[
                 ['name', 'الاسم', 'اسمك كما تريد أن يظهر'],
@@ -2045,7 +2646,7 @@ export default function Dashboard() {
             <div className="mt-5 rounded-[16px] bg-[var(--soft)] p-4">
               <div className="text-[11px] font-bold">التخزين على جهازك</div>
               <div className="mt-1 text-[10px] text-[var(--muted)]">
-                {library.length} كتاب{storageInfo ? ` • ${formatSize(storageInfo.usage)} مستخدم من ${formatSize(storageInfo.quota)}` : ''}
+                {library.length} مصدر{storageInfo ? ` • ${formatSize(storageInfo.usage)} مستخدم من ${formatSize(storageInfo.quota)}` : ''}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button onClick={wipeChatsAndNotes} className="rounded-full border border-[#F6CFCF] bg-white px-3 py-1.5 text-[10px] text-[#B34A4A]">حذف المحادثات والملاحظات</button>
@@ -2060,7 +2661,7 @@ export default function Dashboard() {
         )}
 
         {menu === 'notion' && (
-          <Modal title="Notion" onClose={() => setMenu(null)}>
+          <Modal key="notion" title="Notion" onClose={() => setMenu(null)}>
             <div className="rounded-[16px] bg-[var(--soft)] p-4 text-[11px] leading-6">
               {notion.connected ? (
                 <>
@@ -2094,21 +2695,64 @@ export default function Dashboard() {
             </p>
           </Modal>
         )}
+
+        {menu === 'paste' && (
+          <Modal key="paste" title="لصق نص كمصدر" onClose={() => setMenu(null)}>
+            <div className="space-y-3">
+              <input
+                value={pasteForm.title}
+                onChange={(e) => setPasteForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="عنوان المصدر (اختياري)"
+                className="h-11 w-full rounded-[13px] border border-[var(--line)] bg-[var(--soft)] px-3 text-[12px] outline-none focus:border-[var(--brand)] focus:bg-white"
+              />
+              <textarea
+                value={pasteForm.text}
+                onChange={(e) => setPasteForm((f) => ({ ...f, text: e.target.value }))}
+                rows={9}
+                placeholder="الصق هنا نص الدرس أو الملخص أو أي مقال تريد أن يقرأه رفيق..."
+                className="w-full resize-none rounded-[13px] border border-[var(--line)] bg-[var(--soft)] p-3 text-[12px] leading-6 outline-none focus:border-[var(--brand)] focus:bg-white"
+              />
+              <button
+                onClick={savePastedText}
+                disabled={pasteForm.text.trim().length < 30}
+                className="btn-grad h-11 w-full rounded-full text-[12px] font-semibold"
+              >
+                إضافة كمصدر
+              </button>
+            </div>
+          </Modal>
+        )}
+
+        {menu === 'cite' && citeView && (
+          <Modal key="cite" title={`المصدر [${citeView.n}]`} onClose={() => setMenu(null)}>
+            <div className="text-[11px] font-bold">{citeView.title}</div>
+            {citeView.page && <div className="mt-0.5 text-[9px] text-[var(--muted)]">صفحة {citeView.page}</div>}
+            <p className="mt-3 whitespace-pre-wrap rounded-[14px] bg-[var(--soft)] p-3 text-[11px] leading-7">
+              {citeView.text}
+              {citeView.text?.length >= 450 ? '…' : ''}
+            </p>
+          </Modal>
+        )}
       </AnimatePresence>
 
       {/* ============ Toast ============ */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="btn-grad fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-full px-5 py-3 text-[11px] font-semibold lg:bottom-8"
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* الإصلاح: كان الإشعار يستخدم -translate-x-1/2 مع framer-motion، فيستبدل framer التحويل ويخرج الإشعار عن الشاشة فلا تظهر الرسائل.
+          الآن حاوية ثابتة تتوسط الشاشة والإشعار داخلها. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[80] flex justify-center px-4 lg:bottom-8">
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              key={toast}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="btn-grad pointer-events-auto max-w-[92vw] rounded-full px-5 py-3 text-center text-[11px] font-semibold leading-5"
+            >
+              {toast}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
