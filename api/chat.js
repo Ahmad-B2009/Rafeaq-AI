@@ -22,7 +22,6 @@ export default async function handler(req, res) {
     }
 
     const GROQ_KEY = process.env.GROQ_API_KEY
-    // الموديل الجديد الشغال - Groq توصي به
     const MODEL = (process.env.GROQ_MODEL || 'openai/gpt-oss-120b').trim()
 
     if (!GROQ_KEY) return res.json({ reply: 'GROQ_API_KEY غير موجود - جيبه من console.groq.com' })
