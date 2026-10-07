@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { X, Lightbulb, Check } from 'lucide-react'
 import { saveItem } from '../lib/studyStore'
 import FlashcardDeck from './FlashcardDeck'
+
+// بدائل lucide-react بدون مكتبة - نفس الاسم باش ما نغيرش باقي الكود
+const X = ({ size = 16 }) => <span style={{ fontSize: size, lineHeight: 1 }}>✕</span>
+const Check = ({ size = 14 }) => <span style={{ fontSize: size, lineHeight: 1 }}>✓</span>
+const Lightbulb = ({ size = 16 }) => <span style={{ fontSize: size, lineHeight: 1 }}>💡</span>
 
 const LETTERS = ['أ', 'ب', 'جـ', 'د']
 
@@ -10,7 +14,7 @@ function Chip({ active, onClick, children }) {
     <button
       onClick={onClick}
       className={`px-4 py-2 rounded-full text-sm flex items-center gap-1 ${
-        active ? 'bg-sky-200 text-sky-900' : 'bg-gray-100 text-gray-700'
+        active? 'bg-sky-200 text-sky-900' : 'bg-gray-100 text-gray-700'
       }`}
     >
       {active && <Check size={14} />}
@@ -35,13 +39,13 @@ export default function QuizCard({ data, topic, onClose }) {
   const done = i >= total
   const q = questions[i]
   const right = questions.filter((x, k) => picked[k] === x.answer).length
-  const wrong = questions.filter((x, k) => picked[k] !== undefined && picked[k] !== x.answer).length
+  const wrong = questions.filter((x, k) => picked[k]!== undefined && picked[k]!== x.answer).length
 
   async function callApi(extra) {
     const r = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: topic, topic, ...extra })
+      body: JSON.stringify({ message: topic, topic,...extra })
     })
     return r.json()
   }
@@ -51,11 +55,11 @@ export default function QuizCard({ data, topic, onClose }) {
     setError('')
     try {
       const weakTopics = questions
-        .filter((x, k) => picked[k] !== undefined && picked[k] !== x.answer)
-        .map((x) => x.question.slice(0, 80))
-      const d = await callApi({ mode: 'quiz', ...opts, weakTopics })
+       .filter((x, k) => picked[k]!== undefined && picked[k]!== x.answer)
+       .map((x) => x.question.slice(0, 80))
+      const d = await callApi({ mode: 'quiz',...opts, weakTopics })
       if (!d.questions?.length) throw new Error(d.reply || 'تعذر إنشاء أسئلة')
-      setQuestions((old) => [...old, ...d.questions])
+      setQuestions((old) => [...old,...d.questions])
       setDialog(false)
     } catch (e) {
       setError(e.message)
@@ -92,7 +96,7 @@ export default function QuizCard({ data, topic, onClose }) {
           <button onClick={onClose} className="p-2"><X /></button>
           <div className="flex-1 flex gap-1">
             {questions.map((_, k) => (
-              <div key={k} className={`h-1 flex-1 rounded ${k < i || done ? 'bg-gray-600' : k === i ? 'bg-gray-400' : 'bg-gray-200'}`} />
+              <div key={k} className={`h-1 flex-1 rounded ${k < i || done? 'bg-gray-600' : k === i? 'bg-gray-400' : 'bg-gray-200'}`} />
             ))}
           </div>
           <span className="text-sm text-gray-600">{Math.min(i + 1, total)}/{total}</span>
@@ -100,7 +104,7 @@ export default function QuizCard({ data, topic, onClose }) {
           <span className="px-3 py-1 rounded-full bg-green-300 text-sm">✓ {right}</span>
         </div>
 
-        {!done ? (
+        {!done? (
           <>
             <p className="text-sm font-bold mb-2">السؤال {i + 1}</p>
             <p className="text-lg mb-6 leading-8">{q.question}</p>
@@ -108,7 +112,7 @@ export default function QuizCard({ data, topic, onClose }) {
             <div className="space-y-3">
               {q.options.map((opt, k) => {
                 const chosen = picked[i]
-                const answered = chosen !== undefined
+                const answered = chosen!== undefined
                 let style = 'bg-gray-100'
                 if (answered && k === q.answer) style = 'bg-green-200'
                 else if (answered && k === chosen) style = 'bg-red-200'
@@ -116,7 +120,7 @@ export default function QuizCard({ data, topic, onClose }) {
                   <button
                     key={k}
                     disabled={answered}
-                    onClick={() => setPicked({ ...picked, [i]: k })}
+                    onClick={() => setPicked({...picked, [i]: k })}
                     className={`w-full text-right p-4 rounded-2xl ${style}`}
                   >
                     <span className="font-bold ml-2">{LETTERS[k]}.</span> {opt}
@@ -125,7 +129,7 @@ export default function QuizCard({ data, topic, onClose }) {
               })}
             </div>
 
-            {picked[i] !== undefined && q.explanation && (
+            {picked[i]!== undefined && q.explanation && (
               <div className="mt-4 p-4 rounded-2xl bg-indigo-50 text-sm leading-7">{q.explanation}</div>
             )}
 
@@ -151,7 +155,7 @@ export default function QuizCard({ data, topic, onClose }) {
                 disabled={picked[i] === undefined}
                 className="px-6 py-3 rounded-full bg-sky-200 disabled:opacity-40"
               >
-                {i === total - 1 ? 'إنهاء' : 'التالي'}
+                {i === total - 1? 'إنهاء' : 'التالي'}
               </button>
             </div>
           </>
@@ -162,10 +166,10 @@ export default function QuizCard({ data, topic, onClose }) {
             <div className="grid gap-3 max-w-sm mx-auto">
               <button onClick={() => setDialog(true)} className="p-4 rounded-2xl bg-sky-200">إضافة أسئلة أخرى</button>
               <button onClick={openFlashcards} disabled={loading} className="p-4 rounded-2xl bg-indigo-100">
-                {loading ? 'جاري التجهيز...' : 'مراجعة بالبطاقات (Flashcards)'}
+                {loading? 'جاري التجهيز...' : 'مراجعة بالبطاقات (Flashcards)'}
               </button>
               <button onClick={save} className="p-4 rounded-2xl bg-gray-100">
-                {saved ? 'تم الحفظ على جهازك ✓' : 'حفظ على جهازي'}
+                {saved? 'تم الحفظ على جهازك ✓' : 'حفظ على جهازي'}
               </button>
               <button onClick={() => { setI(0); setPicked({}) }} className="p-4 rounded-2xl bg-gray-100">إعادة الاختبار</button>
             </div>
@@ -182,34 +186,34 @@ export default function QuizCard({ data, topic, onClose }) {
 
             <p className="text-sm mb-2">التركيز</p>
             <div className="flex gap-2 mb-5">
-              <Chip active={opts.focus === 'all'} onClick={() => setOpts({ ...opts, focus: 'all' })}>كل المحاور</Chip>
-              <Chip active={opts.focus === 'growth'} onClick={() => setOpts({ ...opts, focus: 'growth' })}>نقاط الضعف</Chip>
+              <Chip active={opts.focus === 'all'} onClick={() => setOpts({...opts, focus: 'all' })}>كل المحاور</Chip>
+              <Chip active={opts.focus === 'growth'} onClick={() => setOpts({...opts, focus: 'growth' })}>نقاط الضعف</Chip>
             </div>
 
             <p className="text-sm mb-2">عدد الأسئلة</p>
             <div className="flex gap-2 mb-5 items-center">
               {[5, 10, 20].map((n) => (
-                <Chip key={n} active={opts.count === n} onClick={() => setOpts({ ...opts, count: n })}>{n}</Chip>
+                <Chip key={n} active={opts.count === n} onClick={() => setOpts({...opts, count: n })}>{n}</Chip>
               ))}
               <input
                 type="number" min="3" max="30" placeholder="مخصص"
-                onChange={(e) => setOpts({ ...opts, count: Number(e.target.value) || 10 })}
+                onChange={(e) => setOpts({...opts, count: Number(e.target.value) || 10 })}
                 className="w-20 px-3 py-2 rounded-full bg-gray-100 text-sm"
               />
             </div>
 
             <p className="text-sm mb-2">الصعوبة</p>
             <div className="flex gap-2 mb-6">
-              <Chip active={opts.difficulty === 'easier'} onClick={() => setOpts({ ...opts, difficulty: 'easier' })}>أسهل</Chip>
-              <Chip active={opts.difficulty === 'same'} onClick={() => setOpts({ ...opts, difficulty: 'same' })}>نفس المستوى</Chip>
-              <Chip active={opts.difficulty === 'harder'} onClick={() => setOpts({ ...opts, difficulty: 'harder' })}>أصعب</Chip>
+              <Chip active={opts.difficulty === 'easier'} onClick={() => setOpts({...opts, difficulty: 'easier' })}>أسهل</Chip>
+              <Chip active={opts.difficulty === 'same'} onClick={() => setOpts({...opts, difficulty: 'same' })}>نفس المستوى</Chip>
+              <Chip active={opts.difficulty === 'harder'} onClick={() => setOpts({...opts, difficulty: 'harder' })}>أصعب</Chip>
             </div>
 
             {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
             <div className="flex justify-end gap-3">
               <button onClick={() => setDialog(false)} className="px-4 py-2">إلغاء</button>
               <button onClick={addMore} disabled={loading} className="px-5 py-2 rounded-full bg-sky-200">
-                {loading ? 'جاري الإنشاء...' : 'أضف الأسئلة'}
+                {loading? 'جاري الإنشاء...' : 'أضف الأسئلة'}
               </button>
             </div>
           </div>
