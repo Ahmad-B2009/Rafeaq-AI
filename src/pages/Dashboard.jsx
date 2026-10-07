@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import QuizCard from '../components/QuizCard'
+import FlashcardDeck from '../components/FlashcardDeck'
 
 /* ============================== الثوابت ============================== */
 const DAILY_LIMIT = 25
@@ -624,7 +626,8 @@ export default function Dashboard() {
   const [citeView, setCiteView] = useState(null)
   const [storageInfo, setStorageInfo] = useState(null)
   const [linkInput, setLinkInput] = useState('')
-
+const [activeQuiz, setActiveQuiz] = useState(null)
+  const [activeDeck, setActiveDeck] = useState(null)
   /* سجل الدراسة */
   const [studyLog, setStudyLog] = useState(() => readLS(STORAGE.study, {}))
 
@@ -2872,6 +2875,9 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
       </div>
+      {/* نوافذ الاختبار والبطاقات التفاعلية */}
+      {activeQuiz && <QuizCard data={activeQuiz} topic={activeQuiz.topic || 'اختبار دراسي'} onClose={() => setActiveQuiz(null)} />}
+      {activeDeck && <FlashcardDeck data={activeDeck} onClose={() => setActiveDeck(null)} />}
     </div>
   )
 }
