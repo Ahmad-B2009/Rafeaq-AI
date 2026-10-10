@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { X, Lightbulb, Check } from 'lucide-react'
 import { saveItem } from '../lib/studyStore'
 import FlashcardDeck from './FlashcardDeck'
 
@@ -13,7 +12,7 @@ function Chip({ active, onClick, children }) {
         active ? 'bg-sky-200 text-sky-900' : 'bg-gray-100 text-gray-700'
       }`}
     >
-      {active && <Check size={14} />}
+      {active && <span>✓</span>}
       {children}
     </button>
   )
@@ -83,7 +82,7 @@ export default function QuizCard({ data, topic, request, onClose }) {
       <div className="max-w-2xl mx-auto p-4">
         {/* الشريط العلوي */}
         <div className="flex items-center gap-2 mb-6">
-          <button onClick={onClose} className="p-2"><X /></button>
+          <button onClick={onClose} className="p-2"><span className="text-lg">✕</span></button>
           <div className="flex-1 flex gap-1">
             {questions.map((_, k) => (
               <div key={k} className={`h-1 flex-1 rounded ${k < i || done ? 'bg-gray-600' : k === i ? 'bg-gray-400' : 'bg-gray-200'}`} />
@@ -126,7 +125,7 @@ export default function QuizCard({ data, topic, request, onClose }) {
             {q.hint && picked[i] === undefined && (
               <div className="mt-6">
                 <button onClick={() => setShowHint(!showHint)} className="flex items-center gap-1 text-sm">
-                  <Lightbulb size={16} /> تلميح
+                  <span>💡</span> تلميح
                 </button>
                 {showHint && <p className="mt-2 text-sm text-gray-600">{q.hint}</p>}
               </div>

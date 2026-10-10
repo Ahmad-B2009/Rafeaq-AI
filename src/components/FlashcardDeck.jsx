@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
 import { saveItem } from '../lib/studyStore'
 
 export default function FlashcardDeck({ data, onClose }) {
@@ -14,7 +13,7 @@ export default function FlashcardDeck({ data, onClose }) {
     <div dir="rtl" className="fixed inset-0 z-[60] bg-white overflow-y-auto">
       <div className="max-w-xl mx-auto p-4">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={onClose} className="p-2"><X /></button>
+          <button onClick={onClose} className="p-2"><span className="text-lg">✕</span></button>
           <span className="text-sm text-gray-600">{i + 1}/{data.cards.length}</span>
         </div>
 
