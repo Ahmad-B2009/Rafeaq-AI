@@ -1,47 +1,34 @@
-import { useState } from 'react'
-import { X } from 'lucide-react'
-import { saveItem } from '../lib/studyStore'
+// تخزين الامتحانات والبطاقات على جهاز الطالب (localStorage)
+const KEY = 'rafeeq_study_v1'
 
-export default function FlashcardDeck({ data, onClose }) {
-  const [i, setI] = useState(0)
-  const [flipped, setFlipped] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const card = data.cards[i]
+function readAll() {
+  try {
+    const data = JSON.parse(localStorage.getItem(KEY))
+    return { quizzes: data?.quizzes || [], decks: data?.decks || [] }
+  } catch {
+    return { quizzes: [], decks: [] }
+  }
+}
 
-  const go = (n) => { setI(n); setFlipped(false) }
+function writeAll(data) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(data))
+    return true
+  } catch {
+    return false // الذاكرة ممتلئة
+  }
+}
 
-  return (
-    <div dir="rtl" className="fixed inset-0 z-[60] bg-white overflow-y-auto">
-      <div className="max-w-xl mx-auto p-4">
-        <div className="flex items-center justify-between mb-6">
-          <button onClick={onClose} className="p-2"><X /></button>
-          <span className="text-sm text-gray-600">{i + 1}/{data.cards.length}</span>
-        </div>
+export function saveItem(kind, item) { // kind: 'quizzes' | 'decks'
+  const all = readAll()
+  all[kind].unshift({ id: Date.now().toString(), savedAt: new Date().toISOString(), ...item })
+  return writeAll(all)
+}
 
-        <h2 className="text-lg font-bold mb-4 text-center">{data.title}</h2>
+export const listItems = (kind) => readAll()[kind]
 
-        <button
-          onClick={() => setFlipped(!flipped)}
-          className={`w-full min-h-[260px] rounded-3xl p-8 text-xl leading-9 flex items-center justify-center ${
-            flipped ? 'bg-green-100' : 'bg-indigo-100'
-          }`}
-        >
-          {flipped ? card.back : card.front}
-        </button>
-        <p className="text-center text-sm text-gray-500 mt-2">اضغط على البطاقة لقلبها</p>
-
-        <div className="flex justify-between mt-8">
-          <button onClick={() => go(i - 1)} disabled={i === 0} className="px-6 py-3 rounded-full bg-gray-100 disabled:opacity-40">السابق</button>
-          <button onClick={() => go(i + 1)} disabled={i === data.cards.length - 1} className="px-6 py-3 rounded-full bg-sky-200 disabled:opacity-40">التالي</button>
-        </div>
-
-        <button
-          onClick={() => setSaved(saveItem('decks', data))}
-          className="w-full mt-6 p-3 rounded-2xl bg-gray-100"
-        >
-          {saved ? 'تم الحفظ على جهازك ✓' : 'حفظ البطاقات على جهازي'}
-        </button>
-      </div>
-    </div>
-  )
+export function deleteItem(kind, id) {
+  const all = readAll()
+  all[kind] = all[kind].filter((x) => x.id !== id)
+  writeAll(all)
 }
