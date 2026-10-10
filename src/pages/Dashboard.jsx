@@ -568,6 +568,7 @@ export default function Dashboard() {
   const nav = useNavigate()
 
   const [tab, setTab] = useState('home')
+  const [study, setStudy] = useState(null) // { data, topic } نافذة الاختبار / البطاقات
   const [user, setUser] = useState('الطالب')
   const [studentClass, setStudentClass] = useState('')
   const [studentSection, setStudentSection] = useState('')
@@ -626,8 +627,7 @@ export default function Dashboard() {
   const [citeView, setCiteView] = useState(null)
   const [storageInfo, setStorageInfo] = useState(null)
   const [linkInput, setLinkInput] = useState('')
-const [activeQuiz, setActiveQuiz] = useState(null)
-  const [activeDeck, setActiveDeck] = useState(null)
+
   /* سجل الدراسة */
   const [studyLog, setStudyLog] = useState(() => readLS(STORAGE.study, {}))
 
@@ -710,7 +710,8 @@ const [activeQuiz, setActiveQuiz] = useState(null)
   }, [])
 
   // نحتفظ بآخر رسائل فقط حتى لا تمتلئ مساحة localStorage فيتوقف الحفظ بصمت
-  useEffect(() => { writeLS(STORAGE.messages, messages.slice(-80).map(({ images, ...m }) => (images?.length ? { ...m, imageCount: images.length } : m))) }, [messages])
+  // (الصور والاختبارات الكاملة لا تُحفظ هنا؛ الاختبار يُحفظ بزر "حفظ على جهازي" داخل نافذته)
+  useEffect(() => { writeLS(STORAGE.messages, messages.slice(-80).map(({ images, quiz, ...m }) => (images?.length ? { ...m, imageCount: images.length } : m))) }, [messages])
   useEffect(() => { writeLS(STORAGE.notes, notes) }, [notes])
   useEffect(() => { writeLS(STORAGE.nbMessages, nbMessages.slice(-60).map(({ images, ...m }) => (images?.length ? { ...m, imageCount: images.length } : m))) }, [nbMessages])
   useEffect(() => { writeLS(STORAGE.nbSelected, nbSelected) }, [nbSelected])
@@ -1136,9 +1137,35 @@ const [activeQuiz, setActiveQuiz] = useState(null)
 
     if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`)
 
+    // الخادم يرجع كائن اختبار / بطاقات كما هو (type: quiz | flashcards)
+    if (data?.type === 'quiz' || data?.type === 'flashcards') return data
+
     const reply = data?.reply || data?.text
     if (!reply) throw new Error('EMPTY_AI_RESPONSE')
     return reply
+  }
+
+  // طلب مخصص لنافذة الاختبار (إضافة أسئلة / بطاقات): نفس المصادقة ويخصم رسالة من العدّاد
+  async function requestStudy(extra) {
+    if (chances <= 0) throw new Error('انتهت رسائلك اليوم، ستتجدد غداً.')
+    setChances((c) => Math.max(0, c - 1))
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({
+          role: 'student',
+          student: { name: user, class: studentClass, section: studentSection },
+          ...extra,
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data) throw new Error(data?.error || `HTTP ${res.status}`)
+      return data
+    } catch (e) {
+      setChances((c) => Math.min(DAILY_LIMIT, c + 1))
+      throw e
+    }
   }
 
   function toHistory(list, n) {
@@ -1200,8 +1227,27 @@ const [activeQuiz, setActiveQuiz] = useState(null)
     setChances((current) => Math.max(0, current - 1))
 
     try {
-      const reply = await callAI({ message: question, mode, history, images: imgs.map((i) => i.dataUrl) })
-      setMessages((current) => [...current, { id: uid(), role: 'assistant', text: reply }])
+      const result = await callAI({ message: question, mode, history, images: imgs.map((i) => i.dataUrl) })
+
+      if (typeof result === 'object') {
+        // اختبار أو بطاقات: نفتح النافذة مباشرة ونترك رسالة قصيرة مع زر لإعادة الفتح
+        const isQuiz = result.type === 'quiz'
+        setMessages((current) => [
+          ...current,
+          {
+            id: uid(),
+            role: 'assistant',
+            text: isQuiz
+              ? `جهّزت لك اختباراً من ${result.questions.length} سؤالاً ✅`
+              : `جهّزت لك ${result.cards.length} بطاقة مراجعة ✅`,
+            quiz: result,
+            quizTopic: question,
+          },
+        ])
+        setStudy({ data: result, topic: question })
+      } else {
+        setMessages((current) => [...current, { id: uid(), role: 'assistant', text: result }])
+      }
     } catch (error) {
       console.error('Rafeeq AI error:', error)
       // لا نخصم رسالة من الطالب إذا فشل الخادم
@@ -2064,6 +2110,16 @@ const [activeQuiz, setActiveQuiz] = useState(null)
                                 }`}
                               >
                                 {message.role === 'assistant' ? <RichText text={message.text} /> : <UserContent m={message} />}
+
+                                {message.quiz && (
+                                  <button
+                                    onClick={() => setStudy({ data: message.quiz, topic: message.quizTopic })}
+                                    className="btn-grad mt-3 h-9 rounded-full px-5 text-[10px] font-semibold"
+                                  >
+                                    فتح {message.quiz.type === 'quiz' ? 'الاختبار' : 'البطاقات'}
+                                  </button>
+                                )}
+
                                 {message.role === 'assistant' && !message.error && (
                                   <AssistantActions
                                     text={message.text}
@@ -2857,6 +2913,15 @@ const [activeQuiz, setActiveQuiz] = useState(null)
         )}
       </AnimatePresence>
 
+      {/* ============ نافذة الاختبار / البطاقات ============
+          خارج motion.div عمداً: التحويلات داخله تُفسد position: fixed */}
+      {study?.data?.type === 'quiz' && (
+        <QuizCard data={study.data} topic={study.topic} request={requestStudy} onClose={() => setStudy(null)} />
+      )}
+      {study?.data?.type === 'flashcards' && (
+        <FlashcardDeck data={study.data} onClose={() => setStudy(null)} />
+      )}
+
       {/* ============ Toast ============ */}
       {/* الإصلاح: كان الإشعار يستخدم -translate-x-1/2 مع framer-motion، فيستبدل framer التحويل ويخرج الإشعار عن الشاشة فلا تظهر الرسائل.
           الآن حاوية ثابتة تتوسط الشاشة والإشعار داخلها. */}
@@ -2875,9 +2940,6 @@ const [activeQuiz, setActiveQuiz] = useState(null)
           )}
         </AnimatePresence>
       </div>
-      {/* نوافذ الاختبار والبطاقات التفاعلية */}
-      {activeQuiz && <QuizCard data={activeQuiz} topic={activeQuiz.topic || 'اختبار دراسي'} onClose={() => setActiveQuiz(null)} />}
-      {activeDeck && <FlashcardDeck data={activeDeck} onClose={() => setActiveDeck(null)} />}
     </div>
   )
 }

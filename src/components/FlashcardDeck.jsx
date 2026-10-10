@@ -1,7 +1,6 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { saveItem } from '../lib/studyStore'
-
-const X = ({ size = 16 }) => <span style={{ fontSize: size, lineHeight: 1 }}>✕</span>
 
 export default function FlashcardDeck({ data, onClose }) {
   const [i, setI] = useState(0)
@@ -12,7 +11,7 @@ export default function FlashcardDeck({ data, onClose }) {
   const go = (n) => { setI(n); setFlipped(false) }
 
   return (
-    <div dir="rtl" className="fixed inset-0 z-50 bg-white overflow-y-auto">
+    <div dir="rtl" className="fixed inset-0 z-[60] bg-white overflow-y-auto">
       <div className="max-w-xl mx-auto p-4">
         <div className="flex items-center justify-between mb-6">
           <button onClick={onClose} className="p-2"><X /></button>
@@ -23,11 +22,11 @@ export default function FlashcardDeck({ data, onClose }) {
 
         <button
           onClick={() => setFlipped(!flipped)}
-          className={`w-full min-h- rounded-3xl p-8 text-xl leading-9 flex items-center justify-center ${
-            flipped? 'bg-green-100' : 'bg-indigo-100'
+          className={`w-full min-h-[260px] rounded-3xl p-8 text-xl leading-9 flex items-center justify-center ${
+            flipped ? 'bg-green-100' : 'bg-indigo-100'
           }`}
         >
-          {flipped? card.back : card.front}
+          {flipped ? card.back : card.front}
         </button>
         <p className="text-center text-sm text-gray-500 mt-2">اضغط على البطاقة لقلبها</p>
 
@@ -40,7 +39,7 @@ export default function FlashcardDeck({ data, onClose }) {
           onClick={() => setSaved(saveItem('decks', data))}
           className="w-full mt-6 p-3 rounded-2xl bg-gray-100"
         >
-          {saved? 'تم الحفظ على جهازك ✓' : 'حفظ البطاقات على جهازي'}
+          {saved ? 'تم الحفظ على جهازك ✓' : 'حفظ البطاقات على جهازي'}
         </button>
       </div>
     </div>
