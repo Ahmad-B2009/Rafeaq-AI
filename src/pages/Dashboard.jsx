@@ -513,6 +513,18 @@ function ImagePreviews({ images, onRemove }) {
   )
 }
 
+function Chip({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`h-9 rounded-full px-4 text-[11px] font-semibold ${active ? 'btn-grad' : 'btn-soft'}`}
+    >
+      {children}
+    </button>
+  )
+}
+
 function UserContent({ m }) {
   return (
     <>
@@ -569,6 +581,9 @@ export default function Dashboard() {
 
   const [tab, setTab] = useState('home')
   const [study, setStudy] = useState(null) // { data, topic } نافذة الاختبار / البطاقات
+  const [setup, setSetup] = useState(null) // 'quiz' | 'flashcards' نافذة إعداد الاختبار أو البطاقات
+  const [setupForm, setSetupForm] = useState({ topic: '', count: 10, difficulty: 'same' })
+  const [setupLoading, setSetupLoading] = useState(false)
   const [user, setUser] = useState('الطالب')
   const [studentClass, setStudentClass] = useState('')
   const [studentSection, setStudentSection] = useState('')
@@ -1165,6 +1180,50 @@ export default function Dashboard() {
     } catch (e) {
       setChances((c) => Math.min(DAILY_LIMIT, c + 1))
       throw e
+    }
+  }
+
+  function openSetup(kind) {
+    setSetup(kind)
+  }
+
+  async function startStudy() {
+    const kind = setup
+    const topic = setupForm.topic.trim()
+    if (topic.length < 2) {
+      showToast('اكتب اسم الدرس أو الموضوع أولاً.')
+      return
+    }
+    setSetupLoading(true)
+    try {
+      const data = await requestStudy({
+        message: topic,
+        topic,
+        mode: kind,
+        count: setupForm.count,
+        difficulty: setupForm.difficulty,
+        focus: 'all',
+      })
+      if (data.type !== 'quiz' && data.type !== 'flashcards') throw new Error(data.reply || 'تعذر الإنشاء، حاول مرة أخرى.')
+      const isQuiz = data.type === 'quiz'
+      setMessages((current) => [
+        ...current,
+        {
+          id: uid(),
+          role: 'assistant',
+          text: isQuiz
+            ? `جهّزت لك اختباراً من ${data.questions.length} سؤالاً في «${topic}» ✅`
+            : `جهّزت لك ${data.cards.length} بطاقة مراجعة في «${topic}» ✅`,
+          quiz: data,
+          quizTopic: topic,
+        },
+      ])
+      setSetup(null)
+      setStudy({ data, topic })
+    } catch (e) {
+      showToast(e.message && e.message.length < 90 ? e.message : 'تعذر الإنشاء، حاول مرة أخرى.')
+    } finally {
+      setSetupLoading(false)
     }
   }
 
@@ -2065,9 +2124,17 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      <button onClick={clearChat} className="btn-soft rounded-full px-3 py-1.5 text-[9px]">
-                        مسح المحادثة
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => openSetup('quiz')} className="btn-grad rounded-full px-3.5 py-1.5 text-[10px] font-semibold">
+                          📝 اختبار
+                        </button>
+                        <button onClick={() => openSetup('flashcards')} className="btn-grad rounded-full px-3.5 py-1.5 text-[10px] font-semibold">
+                          🗂 بطاقات
+                        </button>
+                        <button onClick={clearChat} className="btn-soft rounded-full px-3 py-1.5 text-[9px]">
+                          مسح المحادثة
+                        </button>
+                      </div>
                     </div>
 
                     <div ref={chatBoxRef} className="thin-scroll h-[58vh] min-h-[430px] overflow-y-auto bg-white/40 p-4 sm:p-6">
@@ -2081,17 +2148,17 @@ export default function Dashboard() {
 
                           <div className="mt-6 grid w-full max-w-[600px] gap-2 sm:grid-cols-2">
                             {[
-                              'اشرح لي درساً بطريقة بسيطة',
-                              'اختبرني في الدرس الحالي',
-                              'لخص أهم النقاط للمراجعة',
-                              'أنشئ لي أسئلة اختيار من متعدد',
-                            ].map((suggestion) => (
+                              ['اشرح لي درساً بطريقة بسيطة', () => sendMessage('اشرح لي درساً بطريقة بسيطة', 'study')],
+                              ['📝 اختبرني في درس', () => openSetup('quiz')],
+                              ['لخص أهم النقاط للمراجعة', () => sendMessage('لخص أهم النقاط للمراجعة', 'study')],
+                              ['🗂 أنشئ لي بطاقات مراجعة', () => openSetup('flashcards')],
+                            ].map(([label, fn]) => (
                               <button
-                                key={suggestion}
-                                onClick={() => sendMessage(suggestion, 'study')}
+                                key={label}
+                                onClick={fn}
                                 className="card-hover rounded-[14px] border border-[var(--line)] bg-white p-3 text-right text-[10px]"
                               >
-                                {suggestion}
+                                {label}
                               </button>
                             ))}
                           </div>
@@ -2896,6 +2963,52 @@ export default function Dashboard() {
                 className="btn-grad h-11 w-full rounded-full text-[12px] font-semibold"
               >
                 إضافة كمصدر
+              </button>
+            </div>
+          </Modal>
+        )}
+
+        {setup && (
+          <Modal key="setup" title={setup === 'quiz' ? 'اختبار جديد' : 'بطاقات مراجعة'} onClose={() => !setupLoading && setSetup(null)}>
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-[10px] font-semibold text-[var(--muted)]">الدرس أو الموضوع</span>
+                <input
+                  value={setupForm.topic}
+                  onChange={(e) => setSetupForm((f) => ({ ...f, topic: e.target.value }))}
+                  placeholder="مثال: المصفوفات والمحددات"
+                  className="mt-1 h-11 w-full rounded-[13px] border border-[var(--line)] bg-[var(--soft)] px-3 text-[12px] outline-none focus:border-[var(--brand)] focus:bg-white"
+                />
+              </label>
+
+              <div>
+                <div className="mb-1.5 text-[10px] font-semibold text-[var(--muted)]">
+                  {setup === 'quiz' ? 'عدد الأسئلة' : 'عدد البطاقات'}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[5, 10, 20].map((n) => (
+                    <Chip key={n} active={setupForm.count === n} onClick={() => setSetupForm((f) => ({ ...f, count: n }))}>{n}</Chip>
+                  ))}
+                </div>
+              </div>
+
+              {setup === 'quiz' && (
+                <div>
+                  <div className="mb-1.5 text-[10px] font-semibold text-[var(--muted)]">الصعوبة</div>
+                  <div className="flex flex-wrap gap-2">
+                    {[['easier', 'أسهل'], ['same', 'متوسطة'], ['harder', 'أصعب']].map(([id, label]) => (
+                      <Chip key={id} active={setupForm.difficulty === id} onClick={() => setSetupForm((f) => ({ ...f, difficulty: id }))}>{label}</Chip>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={startStudy}
+                disabled={setupLoading || setupForm.topic.trim().length < 2}
+                className="btn-grad h-11 w-full rounded-full text-[12px] font-semibold"
+              >
+                {setupLoading ? 'جاري التجهيز...' : setup === 'quiz' ? 'ابدأ الاختبار' : 'أنشئ البطاقات'}
               </button>
             </div>
           </Modal>
