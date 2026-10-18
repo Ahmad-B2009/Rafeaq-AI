@@ -579,7 +579,7 @@ function AssistantActions({ text, onSave, onNotion, onToast }) {
 export default function Dashboard() {
   const nav = useNavigate()
 
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(() => { const requested = new URLSearchParams(window.location.search).get('tab'); return ['home','ai','notebook','books','notes','timer'].includes(requested) ? requested : 'home' })
   const [study, setStudy] = useState(null) // { data, topic } نافذة الاختبار / البطاقات
   const [setup, setSetup] = useState(null) // 'quiz' | 'flashcards' نافذة إعداد الاختبار أو البطاقات
   const [setupForm, setSetupForm] = useState({ topic: '', count: 10, difficulty: 'same' })
