@@ -45,11 +45,12 @@ export default function RafeeqOS() {
   function log(title,kind='فتح تطبيق'){setHistory(h=>[{id:Date.now()+Math.random(),title,kind,time:Date.now()},...h].slice(0,80))}
   function launch(app){
     const a=APPS.find(x=>x.id===(app.id||app));if(!a)return
-    setWindows(ws=>{if(ws.some(w=>w.id===a.id))return ws;const o=(ws.length%4)*24;return [...ws,{...a,x:mobile?0:115+o,y:mobile?0:72+o,width:Math.min(940,Math.max(560,innerWidth-290)),height:Math.min(680,Math.max(400,innerHeight-145)),min:false}]})
+    setWindows(ws=>{if(ws.some(w=>w.id===a.id))return ws;const o=(ws.length%4)*24;return [...ws,{...a,x:mobile?0:115+o,y:mobile?0:72+o,width:Math.min(940,Math.max(560,innerWidth-290)),height:Math.min(680,Math.max(400,innerHeight-145)),min:false,max:false,prev:null}]})
     setWindows(ws=>ws.map(w=>w.id===a.id?{...w,min:false}:w));setActive(a.id);setStart(false);setQuery('');setPanel('');log(a.title)
   }
   function close(id){setWindows(ws=>ws.filter(w=>w.id!==id));if(active===id)setActive(null)}
   function minimize(id){setWindows(ws=>ws.map(w=>w.id===id?{...w,min:true}:w));if(active===id)setActive(null)}
+  function toggleMaximize(id){setWindows(ws=>ws.map(w=>{if(w.id!==id)return w;if(w.max)return {...w,...(w.prev||{}),max:false,prev:null};return {...w,prev:{x:w.x,y:w.y,width:w.width,height:w.height},x:0,y:0,width:innerWidth,height:innerHeight-64,max:true,min:false}}));setActive(id)}
   function beginDrag(e,w){if(mobile||e.button!==0)return;drag.current={id:w.id,px:e.clientX,py:e.clientY,x:w.x,y:w.y};setActive(w.id);e.preventDefault()}
   const background=WALLS[settings.wallpaper]||WALLS.aurora
   return <div className="rafeeq-os" dir="rtl" style={{backgroundImage:background,'--os-accent':settings.accent}}>
@@ -60,7 +61,7 @@ export default function RafeeqOS() {
       </div>
       {!mobile&&settings.icons&&<div className="os-desktop-icons">{APPS.map(a=><button key={a.id} onClick={()=>launch(a)}><span style={{background:a.color}}>{a.icon}</span><b>{a.title}</b></button>)}<button onClick={()=>setPanel('settings')}><span className="os-gear">⚙</span><b>الإعدادات</b></button></div>}
       {windows.map(w=>!w.min&&<section key={w.id} className={'os-window '+(active===w.id?'active':'')} style={{left:mobile?0:w.x,top:mobile?0:w.y,width:mobile?'100%':w.width,height:mobile?'calc(100% - 64px)':w.height,zIndex:active===w.id?30:20}} onPointerDown={()=>setActive(w.id)}>
-        <header className="os-window-bar" onPointerDown={e=>beginDrag(e,w)}><div className="os-window-label"><span style={{background:w.color}}>{w.icon}</span><b>{w.title}</b></div><div className="os-controls"><button onPointerDown={e=>e.stopPropagation()} onClick={()=>minimize(w.id)} aria-label="تصغير">−</button><button className="close" onPointerDown={e=>e.stopPropagation()} onClick={()=>close(w.id)} aria-label="إغلاق">×</button></div></header>
+        <header className="os-window-bar" onPointerDown={e=>beginDrag(e,w)}><div className="os-window-label"><span style={{background:w.color}}>{w.icon}</span><b>{w.title}</b></div><div className="os-controls"><button onPointerDown={e=>e.stopPropagation()} onClick={()=>minimize(w.id)} aria-label="تصغير" title="تصغير">−</button><button onPointerDown={e=>e.stopPropagation()} onClick={()=>toggleMaximize(w.id)} aria-label={w.max?'استعادة الحجم':'ملء الشاشة'} title={w.max?'استعادة الحجم':'ملء الشاشة'}>{w.max?'❐':'□'}</button><button className="close" onPointerDown={e=>e.stopPropagation()} onClick={()=>close(w.id)} aria-label="إغلاق" title="إغلاق">×</button></div></header>
         <iframe title={w.title} className="os-frame" src={'/workspace?tab='+w.tab}/>
       </section>)}
       {start&&<section className="os-start"><div className="os-start-heading"><span className="os-logo">ر</span><div><b>رفيق OS</b><small>ماذا تريد أن تتعلم اليوم؟</small></div></div><label className="os-search"><span>⌕</span><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث عن تطبيق..."/></label><small className="os-section-label">التطبيقات</small><div className="os-app-list">{filtered.map(a=><button key={a.id} onClick={()=>launch(a)}><span style={{background:a.color}}>{a.icon}</span><b>{a.title}</b><small>{a.hint}</small></button>)}</div>{!filtered.length&&<p className="os-empty">لا توجد تطبيقات بهذا الاسم.</p>}<footer><span>رفيق OS · نسخة تجريبية</span><button onClick={()=>{setStart(false);setPanel('settings')}}>⚙ الإعدادات</button></footer></section>}
