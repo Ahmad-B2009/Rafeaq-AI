@@ -578,6 +578,7 @@ function AssistantActions({ text, onSave, onNotion, onToast }) {
 /* ============================== الصفحة ============================== */
 export default function Dashboard() {
   const nav = useNavigate()
+  const embedded = new URLSearchParams(window.location.search).get('embedded') === '1'
 
   const [tab, setTab] = useState(() => { const requested = new URLSearchParams(window.location.search).get('tab'); return ['home','ai','notebook','books','notes','timer'].includes(requested) ? requested : 'home' })
   const [study, setStudy] = useState(null) // { data, topic } نافذة الاختبار / البطاقات
@@ -1792,7 +1793,7 @@ export default function Dashboard() {
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={onPickImages} className="hidden" />
 
       {/* ============ الشريط الجانبي ============ */}
-      <aside className="glass fixed right-0 top-0 z-40 hidden h-screen w-[256px] flex-col border-y-0 border-r-0 lg:flex">
+      <aside className={embedded ? 'hidden' : 'glass fixed right-0 top-0 z-40 hidden h-screen w-[256px] flex-col border-y-0 border-r-0 lg:flex'}>
         <div className="p-5">
           <div className="flex items-center gap-3">
             <div className="btn-grad grid h-11 w-11 place-items-center rounded-[14px]">
@@ -2845,7 +2846,7 @@ export default function Dashboard() {
       </main>
 
       {/* ============ التنقل السفلي (جوال) ============ */}
-      <nav className="glass fixed bottom-0 left-0 right-0 z-50 border-x-0 border-b-0 px-2 py-2 lg:hidden">
+      <nav className={embedded ? 'hidden' : 'glass fixed bottom-0 left-0 right-0 z-50 border-x-0 border-b-0 px-2 py-2 lg:hidden'}>
         <div className="mx-auto flex max-w-[640px] gap-1 overflow-x-auto">
           {navigation.map((item) => (
             <button
