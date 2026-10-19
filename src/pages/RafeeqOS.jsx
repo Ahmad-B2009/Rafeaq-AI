@@ -4,6 +4,7 @@ import './RafeeqOS.css'
 
 const APPS = [
   { id: 'ai', title: 'رفيق AI', icon: '✦', color: '#7968f6', tab: 'ai', hint: 'مساعدك الدراسي' },
+  { id: 'board', title: 'سبورة رفيق', icon: '▱', color: '#8b78ee', tab: 'board', hint: 'شرح ورسم على سبورة كاملة' },
   { id: 'notebook', title: 'دفتر رفيق', icon: '▤', color: '#16a6b6', tab: 'notebook', hint: 'مصادرك وملاحظاتك' },
   { id: 'books', title: 'مكتبة رفيق', icon: '▥', color: '#e9a23b', tab: 'books', hint: 'الكتب والدروس' },
   { id: 'notes', title: 'ملاحظاتي', icon: '▧', color: '#dd7d9d', tab: 'notes', hint: 'ملاحظاتك المحفوظة' },
