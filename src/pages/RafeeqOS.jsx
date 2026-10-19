@@ -10,9 +10,9 @@ const APPS = [
   { id: 'timer', title: 'مؤقت الدراسة', icon: '◷', color: '#3caa80', tab: 'timer', hint: 'جلسات التركيز' },
 ]
 const WALLS = {
-  aurora: 'radial-gradient(ellipse at 18% 18%,#42d0e688,transparent 32%),radial-gradient(ellipse at 82% 14%,#af71ffbb,transparent 34%),radial-gradient(ellipse at 70% 86%,#387eeebb,transparent 38%),linear-gradient(135deg,#101e49,#263a75 52%,#171d46)',
-  violet: 'radial-gradient(ellipse at 80% 12%,#e1beffaa,transparent 34%),radial-gradient(ellipse at 15% 85%,#6f66facc,transparent 40%),linear-gradient(135deg,#24134d,#4b3c92 55%,#18264f)',
-  sky: 'radial-gradient(ellipse at 15% 20%,#94ebffcc,transparent 36%),radial-gradient(ellipse at 85% 80%,#68b1ffcc,transparent 38%),linear-gradient(135deg,#123b64,#287db0 55%,#19365c)'
+  aurora: 'radial-gradient(ellipse at 12% 18%,#d8f7ff 0,transparent 36%),radial-gradient(ellipse at 82% 12%,#e8ddff 0,transparent 35%),radial-gradient(ellipse at 72% 86%,#d8f2ff 0,transparent 40%),linear-gradient(135deg,#fffefa,#f5f1ff 52%,#eefaff)',
+  violet: 'radial-gradient(ellipse at 80% 12%,#e9ddff 0,transparent 38%),radial-gradient(ellipse at 15% 85%,#d8d0ff 0,transparent 42%),linear-gradient(135deg,#fffdfb,#f1edff 55%,#f7f5ff)',
+  sky: 'radial-gradient(ellipse at 15% 20%,#d4f7ff 0,transparent 38%),radial-gradient(ellipse at 85% 80%,#cfeeff 0,transparent 40%),linear-gradient(135deg,#fbffff,#edfaff 55%,#f2f3ff)'
 }
 const defaults = { wallpaper: 'aurora', accent: '#7567f8', icons: true }
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
