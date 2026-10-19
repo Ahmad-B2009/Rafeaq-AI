@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuizCard from '../components/QuizCard'
 import FlashcardDeck from '../components/FlashcardDeck'
+import RafeeqBoard from '../components/RafeeqBoard'
 
 /* ============================== الثوابت ============================== */
 const DAILY_LIMIT = 25
@@ -580,7 +581,7 @@ export default function Dashboard() {
   const nav = useNavigate()
   const embedded = new URLSearchParams(window.location.search).get('embedded') === '1'
 
-  const [tab, setTab] = useState(() => { const requested = new URLSearchParams(window.location.search).get('tab'); return ['home','ai','notebook','books','notes','timer'].includes(requested) ? requested : 'home' })
+  const [tab, setTab] = useState(() => { const requested = new URLSearchParams(window.location.search).get('tab'); return ['home','ai','notebook','books','notes','timer','board'].includes(requested) ? requested : 'home' })
   const [study, setStudy] = useState(null) // { data, topic } نافذة الاختبار / البطاقات
   const [setup, setSetup] = useState(null) // 'quiz' | 'flashcards' نافذة إعداد الاختبار أو البطاقات
   const [setupForm, setSetupForm] = useState({ topic: '', count: 10, difficulty: 'same' })
@@ -1677,6 +1678,7 @@ export default function Dashboard() {
   const navigation = [
     { id: 'home', label: 'الرئيسية', icon: '⌂' },
     { id: 'ai', label: 'رفيق AI', icon: '✦' },
+    { id: 'board', label: 'سبورة رفيق', icon: '▱' },
     { id: 'notebook', label: 'دفتر رفيق', icon: '❖' },
     { id: 'books', label: 'كتب ودروس', icon: '▤' },
     { id: 'notes', label: 'ملاحظاتي', icon: '▢' },
@@ -2258,6 +2260,9 @@ export default function Dashboard() {
                   </div>
                 </section>
               )}
+
+              {/* ================= سبورة رفيق ================= */}
+              {tab === 'board' && <RafeeqBoard />}
 
               {/* ================= دفتر رفيق ================= */}
               {tab === 'notebook' && (
