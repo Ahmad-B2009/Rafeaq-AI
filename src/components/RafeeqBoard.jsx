@@ -134,7 +134,7 @@ export default function RafeeqBoard() {
       <div className="rf-board-status"><span className={speaking ? 'rf-speaking-dot live' : 'rf-speaking-dot'}/>{speaking ? 'الأستاذ يشرح الآن' : 'السبورة جاهزة'}</div>
       <div className="rf-board-top-actions">
         <button onClick={() => { setLesson((lesson + 1) % LESSON.length); setCaption(LESSON[(lesson + 1) % LESSON.length].body) }}>درس آخر ↻</button>
-        <button className="rf-board-exit" onClick={() => { window.speechSynthesis?.cancel(); setSpeaking(false); window.history.back() }}>رجوع</button>
+        <button className="rf-board-exit" onClick={() => { window.speechSynthesis?.cancel(); setSpeaking(false); if (window.parent !== window) window.parent.postMessage({ type: 'rafeeq-board-exit' }, '*'); else window.history.back() }}>رجوع</button>
       </div>
     </header>
     <section className="rf-board-stage">
