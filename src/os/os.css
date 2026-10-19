@@ -1,0 +1,188 @@
+/* src/os/os.css — Rafeeq OS (Aero) — كل الأصناف تبدأ بـ ros- حتى لا تتعارض مع بقية المشروع */
+
+.ros-root, .ros-root * { font-family: 'IBM Plex Sans Arabic', 'Tajawal', 'Segoe UI', system-ui, sans-serif; box-sizing: border-box; }
+.ros-root { position: fixed; inset: 0; overflow: hidden; color: #10243f; background-size: cover; user-select: none; -webkit-user-select: none; }
+.ros-root button { cursor: pointer; font: inherit; }
+.ros-root input { font: inherit; user-select: text; -webkit-user-select: text; }
+.ros-dragging, .ros-dragging * { cursor: grabbing !important; }
+.ros-dragging .ros-wbody { pointer-events: none; }
+
+/* ---------- الخلفيات ---------- */
+.ros-wp-aero { background:
+  radial-gradient(ellipse 80% 55% at 50% 108%, rgba(255,255,255,.6), transparent 62%),
+  radial-gradient(ellipse 45% 38% at 22% 28%, rgba(130,210,255,.6), transparent 70%),
+  radial-gradient(ellipse 40% 34% at 80% 38%, rgba(70,150,255,.55), transparent 70%),
+  linear-gradient(160deg, #082f63 0%, #1670c2 46%, #62bdf2 100%); }
+.ros-wp-rafeeq { background:
+  radial-gradient(ellipse 80% 55% at 50% 108%, rgba(255,255,255,.5), transparent 62%),
+  radial-gradient(ellipse 45% 38% at 22% 28%, rgba(200,150,255,.6), transparent 70%),
+  radial-gradient(ellipse 40% 34% at 80% 38%, rgba(100,120,255,.55), transparent 70%),
+  linear-gradient(160deg, #2a1466 0%, #6d3fd8 46%, #a98cf5 100%); }
+.ros-wp-aurora { background:
+  radial-gradient(ellipse 60% 40% at 30% 30%, rgba(80,255,190,.5), transparent 70%),
+  radial-gradient(ellipse 50% 40% at 75% 45%, rgba(60,200,255,.45), transparent 70%),
+  linear-gradient(170deg, #04202c 0%, #0b5a5e 55%, #2fb58f 100%); }
+.ros-wp-sunset { background:
+  radial-gradient(ellipse 70% 45% at 50% 105%, rgba(255,220,150,.7), transparent 62%),
+  linear-gradient(170deg, #2b1055 0%, #a8326b 52%, #ff9a5b 100%); }
+.ros-wp-graphite { background:
+  radial-gradient(ellipse 60% 40% at 35% 25%, rgba(120,150,200,.35), transparent 70%),
+  linear-gradient(165deg, #10151f 0%, #26303f 55%, #46556b 100%); }
+.ros-wp-light { background:
+  radial-gradient(ellipse 60% 40% at 30% 25%, rgba(255,255,255,.9), transparent 70%),
+  linear-gradient(165deg, #dfe6ff 0%, #cdbdff 55%, #a6dcf5 100%); }
+
+/* ---------- سطح المكتب والأيقونات ---------- */
+.ros-desktop { position: absolute; inset: 0 0 var(--tb) 0; overflow: hidden; }
+.ros-icons { position: absolute; top: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; flex-wrap: wrap; align-content: flex-start; gap: 6px; z-index: 1; }
+.ros-icon { width: 92px; padding: 8px 4px 6px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #fff; display: flex; flex-direction: column; align-items: center; gap: 6px; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+.ros-icon:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); }
+.ros-icon.sel, .ros-icon:focus-visible { background: rgba(120,180,255,.32); border-color: rgba(190,225,255,.75); outline: none; }
+.ros-icon-img { width: 52px; height: 52px; border-radius: 13px; display: grid; place-items: center; font-size: 26px; color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -10px 18px rgba(0,0,0,.16), 0 4px 12px rgba(0,0,0,.4); }
+.ros-icon-label { font-size: 12px; line-height: 1.3; text-align: center; }
+
+/* ---------- النوافذ (زجاج Aero) ---------- */
+.ros-win { position: absolute; display: flex; flex-direction: column; padding: 0 7px 7px; border-radius: 9px 9px 6px 6px; border: 1px solid rgba(0,0,0,.5);
+  background: linear-gradient(180deg, rgba(255,255,255,.62), rgba(176,208,238,.55) 60%, rgba(150,190,230,.55));
+  backdrop-filter: blur(14px) saturate(1.6); -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 6px 20px rgba(0,0,0,.35); animation: ros-pop .16s ease-out; }
+.ros-win.active { box-shadow: inset 0 0 0 1px rgba(255,255,255,.8), 0 10px 34px rgba(0,0,0,.55); background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(160,200,240,.62) 60%, rgba(130,180,230,.62)); }
+.ros-win.inactive { filter: saturate(.8); }
+.ros-win.max { border-radius: 0; }
+@keyframes ros-pop { from { opacity: 0; transform: scale(.965); } to { opacity: 1; transform: none; } }
+
+.ros-titlebar { height: 32px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 2px; cursor: default; touch-action: none; }
+.ros-wicon { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; font-size: 11px; color: #fff; flex: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+.ros-wtitle { flex: 1; font-size: 13px; font-weight: 600; color: #0b2545; text-shadow: 0 0 8px #fff, 0 0 2px #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ros-caps { display: flex; gap: 2px; margin-inline-start: auto; }
+.ros-cap { width: 28px; height: 20px; border: 1px solid rgba(0,0,0,.4); border-radius: 4px; color: #0b2545; font-size: 11px; line-height: 1;
+  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(190,215,240,.7) 50%, rgba(150,185,225,.75)); box-shadow: inset 0 1px 0 rgba(255,255,255,.9); }
+.ros-cap:hover { background: linear-gradient(180deg, #fff, #cfe6fb 50%, #a5cdf3); }
+.ros-cap.ros-close { width: 42px; color: #fff; border-color: #5b0f0f; background: linear-gradient(180deg, #e9a5a0, #d0463b 50%, #b71f14); }
+.ros-cap.ros-close:hover { background: linear-gradient(180deg, #ffb7b0, #ef5b4e 50%, #d52a1c); }
+.ros-cap:focus-visible, .ros-tbtn:focus-visible, .ros-orb:focus-visible, .ros-sitem:focus-visible, .ros-slink:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+
+.ros-wbody { flex: 1; min-height: 0; position: relative; background: #fff; border: 1px solid rgba(0,0,0,.4); border-radius: 3px; overflow: hidden;
+  transform: translateZ(0); /* يجعل أي عنصر fixed داخل التطبيق (نوافذ منبثقة، اختبارات) محصوراً داخل النافذة */ }
+.ros-wscroll { position: absolute; inset: 0; overflow: auto; }
+
+.ros-h { position: absolute; z-index: 2; touch-action: none; }
+.ros-h-n { top: -3px; left: 10px; right: 10px; height: 7px; cursor: ns-resize; }
+.ros-h-s { bottom: -3px; left: 10px; right: 10px; height: 7px; cursor: ns-resize; }
+.ros-h-e { right: -3px; top: 10px; bottom: 10px; width: 7px; cursor: ew-resize; }
+.ros-h-w { left: -3px; top: 10px; bottom: 10px; width: 7px; cursor: ew-resize; }
+.ros-h-ne { top: -3px; right: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+.ros-h-nw { top: -3px; left: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+.ros-h-se { bottom: -3px; right: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+.ros-h-sw { bottom: -3px; left: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+
+.ros-snap { position: absolute; z-index: 9999; background: rgba(120,190,255,.28); border: 2px solid rgba(190,225,255,.9); border-radius: 8px; pointer-events: none; }
+.ros-snap-left { left: 0; top: 0; bottom: 0; width: 50%; }
+.ros-snap-right { right: 0; top: 0; bottom: 0; width: 50%; }
+.ros-snap-top { inset: 0; }
+
+/* ---------- شريط المهام ---------- */
+.ros-taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tb); z-index: 10000; display: flex; align-items: center; gap: 8px; padding: 0 6px;
+  background: linear-gradient(180deg, rgba(150,190,235,.6) 0%, rgba(40,80,135,.8) 48%, rgba(12,28,60,.92) 100%);
+  backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border-top: 1px solid rgba(255,255,255,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+.ros-orb { position: relative; width: 44px; height: 44px; margin-top: -4px; flex: none; border-radius: 50%; border: 1px solid rgba(255,255,255,.55); display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(circle at 35% 25%, #bfe6ff 0%, #3b9be8 45%, #0f4c9c 100%); box-shadow: 0 0 10px rgba(80,170,255,.7), inset 0 2px 3px rgba(255,255,255,.7); transition: filter .15s, box-shadow .15s; }
+.ros-orb:hover, .ros-orb.on { filter: brightness(1.15); box-shadow: 0 0 16px rgba(120,200,255,.95), inset 0 2px 3px rgba(255,255,255,.8); }
+.ros-orb img { position: absolute; width: 28px; height: 28px; object-fit: contain; z-index: 1; }
+.ros-orb-fallback { color: #fff; font-weight: 800; font-size: 18px; }
+.ros-tasks-strip { flex: 1; min-width: 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.ros-tasks-strip::-webkit-scrollbar { display: none; }
+.ros-tbtn { height: 34px; min-width: 46px; max-width: 168px; padding: 0 9px; flex: none; display: flex; align-items: center; gap: 7px; color: #fff; border-radius: 5px; border: 1px solid rgba(255,255,255,.28);
+  background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.06)); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.ros-tbtn:hover { background: linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.14)); }
+.ros-tbtn.active { background: linear-gradient(180deg, rgba(190,225,255,.55), rgba(90,150,220,.4)); border-color: rgba(220,240,255,.8); box-shadow: 0 0 10px rgba(130,200,255,.7); }
+.ros-tbtn.min { opacity: .7; }
+.ros-tglyph { width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; font-size: 12px; color: #fff; flex: none; }
+.ros-tlabel { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ros-tray { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; color: #fff; flex: none; }
+.ros-clock { display: flex; flex-direction: column; align-items: center; line-height: 1.15; text-shadow: 0 1px 2px rgba(0,0,0,.7); padding: 0 6px; }
+.ros-clock strong { font-size: 13px; font-weight: 600; }
+.ros-clock small { font-size: 10px; opacity: .9; }
+.ros-showdesk { width: 12px; height: 100%; margin: 0; border: 0; border-inline-end: 1px solid rgba(255,255,255,.45); background: rgba(255,255,255,.12); }
+.ros-showdesk:hover { background: rgba(255,255,255,.32); }
+.ros-homebtn { min-width: 44px; justify-content: center; font-size: 18px; }
+
+/* ---------- قائمة Start ---------- */
+.ros-start { position: absolute; right: 6px; bottom: calc(var(--tb) + 4px); width: 580px; max-width: calc(100vw - 12px); z-index: 10001; border-radius: 10px 10px 4px 4px; padding: 6px;
+  background: linear-gradient(180deg, rgba(190,220,250,.7), rgba(70,120,185,.75)); border: 1px solid rgba(0,0,0,.55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.55), 0 14px 40px rgba(0,0,0,.55);
+  backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); animation: ros-pop .14s ease-out; }
+.ros-start-cols { display: flex; gap: 6px; height: 430px; max-height: calc(100vh - var(--tb) - 90px); }
+.ros-start-main { flex: 1.35; background: rgba(255,255,255,.93); border: 1px solid rgba(0,0,0,.3); border-radius: 5px; padding: 6px; overflow: auto; }
+.ros-start-side { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 5px; background: linear-gradient(180deg, rgba(20,50,100,.65), rgba(10,28,64,.8)); border: 1px solid rgba(255,255,255,.25); overflow: auto; }
+.ros-sgroup { font-size: 11px; font-weight: 700; color: #3b5b85; padding: 8px 6px 4px; border-bottom: 1px solid rgba(60,100,160,.25); margin-bottom: 2px; }
+.ros-sgroup.light { color: #bcd7ff; border-color: rgba(255,255,255,.25); }
+.ros-sgrow { flex: 1; }
+.ros-sitem { width: 100%; display: flex; align-items: center; gap: 9px; padding: 6px 8px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #10243f; font-size: 13px; text-align: right; }
+.ros-sitem:hover { background: linear-gradient(180deg, #e6f3ff, #c8e2fb); border-color: #8fbdf0; }
+.ros-sglyph { width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 7px; color: #fff; background: #5b8fd6; font-size: 14px; }
+.ros-user { display: flex; align-items: center; gap: 10px; padding: 6px 4px 10px; color: #fff; border-bottom: 1px solid rgba(255,255,255,.25); margin-bottom: 6px; }
+.ros-user strong { display: block; font-size: 14px; }
+.ros-user small { opacity: .8; font-size: 11px; }
+.ros-avatar { width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; font-weight: 700; font-size: 17px; background: linear-gradient(135deg, #7c6cff, #1fc8e3); border: 2px solid rgba(255,255,255,.7); }
+.ros-slink { width: 100%; padding: 7px 8px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: #fff; text-align: right; font-size: 12.5px; }
+.ros-slink:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.35); }
+.ros-slink.danger { color: #ffd0cc; }
+.ros-start-search { margin-top: 6px; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 18px; background: rgba(255,255,255,.95); border: 1px solid rgba(0,0,0,.35); box-shadow: inset 0 1px 3px rgba(0,0,0,.2); color: #4a6a95; }
+.ros-start-search input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 13px; color: #10243f; }
+
+/* ---------- قائمة السياق والإشعار ---------- */
+.ros-ctx { position: fixed; z-index: 10002; min-width: 220px; padding: 4px; border-radius: 6px; background: rgba(245,249,255,.97); border: 1px solid rgba(0,0,0,.35); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.ros-ctx button { display: block; width: 100%; padding: 8px 12px; border: 0; background: transparent; text-align: right; font-size: 13px; color: #10243f; border-radius: 4px; }
+.ros-ctx button:hover { background: #cfe5fb; }
+.ros-bubble { position: absolute; left: 12px; bottom: calc(var(--tb) + 10px); z-index: 10003; padding: 10px 14px; max-width: 280px; border-radius: 8px; font-size: 13px; color: #10243f; background: rgba(255,255,255,.96); border: 1px solid rgba(0,0,0,.3); box-shadow: 0 8px 24px rgba(0,0,0,.4); animation: ros-pop .16s ease-out; }
+
+/* ---------- التطبيقات الصغيرة (مهامي، الإعدادات، السبورة) ---------- */
+.ros-pad { padding: 16px; color: #10243f; font-size: 14px; min-height: 100%; background: #f7faff; user-select: text; }
+.ros-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.ros-input { flex: 1; min-width: 0; height: 38px; padding: 0 12px; border: 1px solid #b9cde6; border-radius: 6px; background: #fff; font-size: 14px; outline: 0; }
+.ros-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+.ros-btn { height: 36px; padding: 0 16px; border: 1px solid #9db8d8; border-radius: 6px; background: linear-gradient(180deg, #fff, #dbe9f8); color: #10243f; font-size: 13px; }
+.ros-btn:hover:not(:disabled) { background: linear-gradient(180deg, #fff, #c6dcf5); }
+.ros-btn:disabled { opacity: .45; cursor: not-allowed; }
+.ros-btn.primary { color: #fff; border-color: #2a55b0; background: linear-gradient(180deg, #6aa0ff, #2f62d8); }
+.ros-btn.danger { color: #a01c12; border-color: #e0a7a2; background: linear-gradient(180deg, #fff, #fbe1de); }
+.ros-chip { height: 30px; padding: 0 14px; border-radius: 15px; border: 1px solid #b9cde6; background: #fff; font-size: 12.5px; color: #35527a; }
+.ros-chip.on { background: #2f62d8; color: #fff; border-color: #2a55b0; }
+.ros-muted { color: #6b829f; font-size: 12px; }
+.ros-empty { text-align: center; color: #6b829f; padding: 26px 8px; }
+.ros-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ros-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: #fff; border: 1px solid #d3e1f2; border-radius: 8px; }
+.ros-list li.done .ros-ttext { text-decoration: line-through; color: #8aa0bb; }
+.ros-ttext { flex: 1; word-break: break-word; }
+.ros-mini { width: 28px; height: 28px; border: 1px solid #c3d5ea; border-radius: 6px; background: #f3f8ff; color: #35527a; }
+.ros-mini.danger { color: #b3261e; }
+.ros-settings section { background: #fff; border: 1px solid #d3e1f2; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+.ros-settings h3 { margin: 0 0 10px; font-size: 14px; color: #1d4f9a; }
+.ros-field { display: block; margin-bottom: 10px; }
+.ros-field span { display: block; font-size: 12px; color: #4b6584; margin-bottom: 4px; }
+.ros-wp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.ros-wp-tile { height: 74px; border-radius: 8px; border: 2px solid transparent; display: flex; align-items: flex-end; justify-content: center; padding: 4px; color: #fff; font-size: 12px; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+.ros-wp-tile.on { border-color: #2f62d8; box-shadow: 0 0 0 2px #fff inset; }
+.ros-board-card { position: relative; border-radius: 14px; padding: 26px; text-align: center; background: #0f1b33; color: #e8f0ff; overflow: hidden; box-shadow: 0 0 0 2px #2dd4a0, 0 0 30px rgba(45,212,160,.35); }
+.ros-board-card h2 { margin: 0 0 8px; font-size: 22px; }
+.ros-board-card ul { text-align: right; margin: 14px auto; max-width: 340px; line-height: 2; padding-inline-start: 18px; }
+.ros-board-card .ros-muted { color: #9db4d6; }
+.ros-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; background: rgba(255,200,80,.18); color: #ffd98a; font-size: 12px; }
+
+/* ---------- الهاتف: التطبيق يملأ الشاشة، والتنقل بالأزرار ---------- */
+.ros-mobile .ros-icons { inset: 18px 16px calc(var(--tb) + 18px) 16px; display: grid; grid-template-columns: repeat(3, 1fr); align-content: start; gap: 18px 8px; justify-items: center; }
+.ros-mobile .ros-icon { width: 100%; max-width: 110px; }
+.ros-mobile .ros-icon-img { width: 62px; height: 62px; font-size: 30px; border-radius: 16px; }
+.ros-mobile .ros-win { inset: 0; width: auto; height: auto; left: 0 !important; top: 0 !important; padding: 0; border-radius: 0; border: 0; background: #fff; backdrop-filter: none; }
+.ros-mobile .ros-titlebar { height: 44px; padding: 0 8px; background: linear-gradient(180deg, rgba(190,220,250,.95), rgba(120,170,225,.95)); }
+.ros-mobile .ros-cap { width: 40px; height: 32px; font-size: 16px; }
+.ros-mobile .ros-cap.ros-close { width: 44px; }
+.ros-mobile .ros-wbody { border: 0; border-radius: 0; }
+.ros-mobile .ros-tlabel { display: none; }
+.ros-mobile .ros-tbtn { min-width: 44px; height: 40px; justify-content: center; }
+.ros-mobile .ros-start { inset: auto 6px calc(var(--tb) + 6px) 6px; width: auto; max-width: none; }
+.ros-mobile .ros-start-cols { flex-direction: column; height: min(70vh, 520px); }
+.ros-mobile .ros-start-side { flex: none; max-height: 40%; }
+.ros-mobile .ros-snap { display: none; }
+@media (prefers-reduced-motion: reduce) { .ros-win, .ros-start, .ros-bubble { animation: none; } }

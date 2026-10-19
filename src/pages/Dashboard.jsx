@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuizCard from '../components/QuizCard'
 import FlashcardDeck from '../components/FlashcardDeck'
+import RafeeqBoard from '../components/RafeeqBoard'
 
 /* ============================== الثوابت ============================== */
 const DAILY_LIMIT = 25
@@ -1677,6 +1678,7 @@ export default function Dashboard() {
     { id: 'home', label: 'الرئيسية', icon: '⌂' },
     { id: 'ai', label: 'رفيق AI', icon: '✦' },
     { id: 'notebook', label: 'دفتر رفيق', icon: '❖' },
+    { id: 'board', label: 'سبورة رفيق', icon: '▱' },
     { id: 'books', label: 'كتب ودروس', icon: '▤' },
     { id: 'notes', label: 'ملاحظاتي', icon: '▢' },
     { id: 'timer', label: 'مؤقت الدراسة', icon: '◷' },
@@ -1692,96 +1694,117 @@ export default function Dashboard() {
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
 
         :root {
-          --bg: #F4F2FF;
-          --ink: #1D1A45;
-          --muted: #6F6C94;
-          --brand: #6D5EF5;
-          --brand2: #A15CF6;
-          --cyan: #1FC8E3;
-          --mint: #2DD4A0;
-          --coral: #FF8A5B;
-          --soft: #ECE9FF;
-          --line: rgba(109, 94, 245, .14);
-          --grad: linear-gradient(135deg, #6D5EF5 0%, #A15CF6 48%, #1FC8E3 100%);
+          color-scheme: dark;
+          --bg: #070B16;
+          --ink: #F2F5FF;
+          --muted: #9AA8C7;
+          --brand: #6684FF;
+          --brand2: #A36BFF;
+          --cyan: #45D7F5;
+          --mint: #62E8BC;
+          --coral: #FFAD86;
+          --soft: #121B31;
+          --line: rgba(133, 157, 224, .19);
+          --grad: linear-gradient(125deg, #496DFF 0%, #8058ED 52%, #2DBBDE 100%);
         }
 
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
-        html { scroll-behavior: smooth; }
-        body { background: var(--bg); }
+        html { scroll-behavior: smooth; background: var(--bg); }
+        body { background: var(--bg); color: var(--ink); }
         button, input, textarea, select { font: inherit; }
-        ::selection { background: var(--brand); color: white; }
+        button { -webkit-tap-highlight-color: transparent; }
+        :focus-visible { outline: 2px solid rgba(89, 160, 255, .9); outline-offset: 3px; }
+        ::selection { background: #536FFF; color: white; }
 
+        .thin-scroll { scrollbar-width: thin; scrollbar-color: #354773 transparent; }
         .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .thin-scroll::-webkit-scrollbar-thumb { background: #CFC9FF; border-radius: 999px; }
+        .thin-scroll::-webkit-scrollbar-thumb { background: #354773; border-radius: 999px; }
 
         .bg-stage {
           position: fixed; inset: 0; z-index: -1; overflow: hidden;
           background:
-            radial-gradient(900px 500px at 85% -10%, rgba(161,92,246,.22), transparent 60%),
-            radial-gradient(800px 520px at -10% 20%, rgba(31,200,227,.20), transparent 60%),
-            radial-gradient(700px 500px at 60% 110%, rgba(255,138,91,.16), transparent 60%),
+            radial-gradient(900px 540px at 90% -10%, rgba(86, 94, 255, .22), transparent 62%),
+            radial-gradient(780px 560px at -10% 25%, rgba(34, 177, 222, .13), transparent 62%),
+            radial-gradient(720px 520px at 55% 115%, rgba(131, 72, 235, .14), transparent 62%),
             var(--bg);
         }
         .bg-stage::after {
-          content: ''; position: absolute; inset: 0; opacity: .5;
-          background-image: radial-gradient(rgba(109,94,245,.12) 1px, transparent 1px);
-          background-size: 26px 26px;
-          mask-image: linear-gradient(to bottom, #000, transparent 70%);
+          content: ''; position: absolute; inset: 0; opacity: .24;
+          background-image: radial-gradient(rgba(146, 170, 255, .4) .7px, transparent .7px);
+          background-size: 28px 28px;
+          mask-image: linear-gradient(to bottom, #000, transparent 78%);
         }
 
         .glass {
-          background: rgba(255,255,255,.72);
-          backdrop-filter: blur(18px) saturate(160%);
+          background: rgba(13, 21, 40, .78);
+          backdrop-filter: blur(22px) saturate(135%);
+          -webkit-backdrop-filter: blur(22px) saturate(135%);
           border: 1px solid var(--line);
-          box-shadow: 0 10px 40px rgba(109,94,245,.08);
+          box-shadow: 0 14px 42px rgba(0, 0, 0, .19), inset 0 1px 0 rgba(255,255,255,.025);
         }
 
-        .aurora-card { background: var(--grad); background-size: 200% 200%; animation: flow 12s ease infinite; box-shadow: 0 24px 60px rgba(109,94,245,.32); }
+        .aurora-card {
+          background: linear-gradient(118deg, #172A58 0%, #35296D 48%, #124B66 100%);
+          background-size: 200% 200%; animation: flow 15s ease infinite;
+          border: 1px solid rgba(150, 174, 255, .24);
+          box-shadow: 0 26px 70px rgba(0, 0, 0, .26), inset 0 1px 0 rgba(255,255,255,.08);
+        }
         @keyframes flow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
-        .blob { position: absolute; border-radius: 999px; filter: blur(46px); opacity: .55; pointer-events: none; }
-        .blob-a { width: 260px; height: 260px; background: #fff; top: -90px; left: -60px; opacity: .22; animation: drift 9s ease-in-out infinite; }
-        .blob-b { width: 300px; height: 300px; background: var(--coral); bottom: -150px; right: 25%; opacity: .35; animation: drift 11s ease-in-out infinite reverse; }
+        .blob { position: absolute; border-radius: 999px; filter: blur(52px); opacity: .42; pointer-events: none; }
+        .blob-a { width: 260px; height: 260px; background: #607BFF; top: -90px; left: -60px; opacity: .2; animation: drift 9s ease-in-out infinite; }
+        .blob-b { width: 300px; height: 300px; background: #2CBCE0; bottom: -150px; right: 25%; opacity: .18; animation: drift 11s ease-in-out infinite reverse; }
         @keyframes drift { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,22px) scale(1.12); } }
 
         .float { animation: float 4.5s ease-in-out infinite; }
-        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-
-        .gtext { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .gtext { background: linear-gradient(110deg, #E5ECFF, #AFC3FF 48%, #7CE8F5); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
         .btn-grad {
           position: relative; overflow: hidden; color: #fff; background: var(--grad); background-size: 160% 160%;
-          box-shadow: 0 8px 22px rgba(109,94,245,.35); transition: transform .2s, box-shadow .2s;
+          border: 1px solid rgba(194, 211, 255, .2);
+          box-shadow: 0 8px 24px rgba(50, 78, 190, .27); transition: transform .2s, box-shadow .2s, filter .2s;
         }
-        .btn-grad:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(109,94,245,.45); }
+        .btn-grad:hover { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 14px 32px rgba(50, 78, 190, .36); }
         .btn-grad::after {
           content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
-          background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent);
-          transform: skewX(-20deg); transition: left .6s;
+          background: linear-gradient(100deg, transparent, rgba(255,255,255,.3), transparent);
+          transform: skewX(-20deg); transition: left .6s; pointer-events: none;
         }
         .btn-grad:hover::after { left: 140%; }
-        .btn-grad:disabled { opacity: .4; transform: none; box-shadow: none; cursor: not-allowed; }
+        .btn-grad:disabled { opacity: .42; transform: none; box-shadow: none; cursor: not-allowed; }
 
-        .btn-soft { background: var(--soft); color: var(--brand); transition: background .2s, transform .2s; }
-        .btn-soft:hover { background: #E1DCFF; transform: translateY(-1px); }
-
-        .card-hover { transition: transform .25s, box-shadow .25s, border-color .25s; }
-        .card-hover:hover { transform: translateY(-4px); border-color: rgba(109,94,245,.4); box-shadow: 0 18px 44px rgba(109,94,245,.18); }
-
-        .nav-active { background: var(--grad); color: #fff; box-shadow: 0 8px 20px rgba(109,94,245,.35); }
+        .btn-soft { background: #17233F; color: #C8D5FF; border: 1px solid rgba(133,157,224,.2); transition: background .2s, transform .2s; }
+        .btn-soft:hover { background: #202F54; transform: translateY(-1px); }
+        .card-hover { transition: transform .25s, box-shadow .25s, border-color .25s, background .25s; }
+        .card-hover:hover { transform: translateY(-3px); border-color: rgba(109, 145, 255, .46); background-color: rgba(23, 35, 65, .9); box-shadow: 0 18px 44px rgba(0,0,0,.23); }
+        .nav-active { background: linear-gradient(135deg, rgba(74,109,255,.28), rgba(128,88,237,.25)); color: #fff; border: 1px solid rgba(132,159,255,.28); box-shadow: inset 0 0 22px rgba(81,111,255,.09), 0 8px 20px rgba(0,0,0,.15); }
 
         .pulse-ring { animation: ring 1.8s ease-out infinite; }
-        @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(45,212,160,.55); } 100% { box-shadow: 0 0 0 10px rgba(45,212,160,0); } }
-
-        .shimmer { background: linear-gradient(90deg, #ECE9FF 25%, #F8F6FF 50%, #ECE9FF 75%); background-size: 200% 100%; animation: shim 1.4s infinite; }
+        @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(98,232,188,.45); } 100% { box-shadow: 0 0 0 10px rgba(98,232,188,0); } }
+        .shimmer { background: linear-gradient(90deg, #121B31 25%, #1B2948 50%, #121B31 75%); background-size: 200% 100%; animation: shim 1.4s infinite; }
         @keyframes shim { to { background-position: -200% 0; } }
-
-        .timer-ring { background: conic-gradient(var(--brand) var(--deg), #E7E3FF 0); }
-
-        .typing-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--brand); animation: bounce 1.1s infinite ease-in-out; }
+        .timer-ring { background: conic-gradient(var(--brand) var(--deg), #1C2A49 0); }
+        .typing-dot { width: 6px; height: 6px; border-radius: 999px; background: #7F9AFF; animation: bounce 1.1s infinite ease-in-out; }
         .typing-dot:nth-child(2) { animation-delay: .15s; }
         .typing-dot:nth-child(3) { animation-delay: .3s; }
         @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity: .4; } 40% { transform: translateY(-5px); opacity: 1; } }
+
+        /* Keep the original utility classes and all page logic, but tune light surfaces for the PS5-inspired dark UI. */
+        [class~="bg-white"], [class*="bg-white/"] { background-color: rgba(17, 27, 49, .92) !important; }
+        [class*="bg-[var(--soft)]"] { background-color: #111B31 !important; }
+        [class*="border-[var(--line)]"] { border-color: var(--line) !important; }
+        [class*="text-[var(--muted)]"] { color: var(--muted) !important; }
+        [class~="text-black"], [class~="text-gray-900"], [class~="text-slate-900"] { color: var(--ink) !important; }
+        [class*="focus:bg-white"]:focus { background-color: #17233F !important; }
+        input, textarea, select { color: var(--ink); }
+        input::placeholder, textarea::placeholder { color: #7181A5; opacity: 1; }
+        input[type="file"] { color: var(--muted); }
+        ::-webkit-calendar-picker-indicator { filter: invert(.8); }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+        }
       `}</style>
 
       <div className="bg-stage" />
@@ -2035,9 +2058,10 @@ export default function Dashboard() {
                       <h2 className="text-[14px] font-bold">ابدأ بسرعة</h2>
                       <p className="mt-1 text-[10px] text-[var(--muted)]">أدوات مصممة للدراسة فقط</p>
 
-                      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                         {[
                           { icon: '✦', t: 'شرح درس', d: 'فهم الفكرة خطوة بخطوة', fn: () => { goTo('ai'); setInput('اشرح لي هذا الدرس بطريقة بسيطة') } },
+                          { icon: '▱', t: 'سبورة رفيق', d: 'اكتب وارسم مع الأستاذ', fn: () => goTo('board') },
                           { icon: '＋', t: 'ارفع مستنداً', d: 'PDF أو Word أو نص', fn: () => { goTo('notebook'); window.setTimeout(() => fileRef.current?.click(), 400) } },
                           { icon: '❖', t: 'اسأل كتبك', d: 'إجابات من داخل مصادرك', fn: () => goTo('notebook') },
                           { icon: '◷', t: 'جلسة دراسة', d: '25 دقيقة تركيز', fn: () => goTo('timer') },
@@ -2110,6 +2134,9 @@ export default function Dashboard() {
                   </div>
                 </section>
               )}
+
+              {/* ================= سبورة رفيق ================= */}
+              {tab === 'board' && <RafeeqBoard onToast={showToast} />}
 
               {/* ================= رفيق AI ================= */}
               {tab === 'ai' && (
