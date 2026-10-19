@@ -2,3 +2,93 @@
 .rafeeq-os,.rafeeq-os *{box-sizing:border-box;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}.rafeeq-os{position:fixed;inset:0;overflow:hidden;color:#fff;background-size:cover;background-position:center}.os-desktop{position:absolute;inset:0 0 64px;overflow:hidden}.os-top{position:absolute;top:22px;right:28px;left:28px;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none;text-shadow:0 2px 18px #10173570}.os-brand{display:flex;align-items:center;gap:11px}.os-brand b,.os-start-heading b{display:block;font-size:18px}.os-brand small,.os-start-heading small{display:block;margin-top:2px;color:#e0e5ffb8;font-size:11px}.os-logo{display:grid;place-items:center;width:38px;height:38px;border:1px solid #ffffff68;border-radius:13px;background:linear-gradient(145deg,#ffffff54,#ffffff10);box-shadow:inset 0 1px #ffffff80,0 6px 22px #070d2c30;font-size:21px;font-weight:800}.os-big-clock{display:flex;flex-direction:column;gap:4px;text-align:left}.os-big-clock b{font-size:28px;font-weight:600}.os-big-clock span{font-size:11px;color:#e3e8ff}.os-desktop-icons{position:absolute;top:120px;right:22px;display:flex;flex-direction:column;gap:8px}.os-desktop-icons button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:96px;min-height:78px;border:1px solid transparent;border-radius:13px;background:transparent;color:white;text-shadow:0 2px 5px #0a143c;cursor:pointer}.os-desktop-icons button:hover{background:#ffffff1a;border-color:#ffffff40}.os-desktop-icons button span,.os-app-list button>span,.os-task-apps button>span,.os-window-label span,.os-mobile-apps button span{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;color:white;box-shadow:inset 0 1px #ffffff5c,0 5px 15px #0a143c30;font-size:20px}.os-desktop-icons button b{font-size:10px;font-weight:500}.os-gear{background:linear-gradient(145deg,#a6b7d8,#4b5b7d)}.os-window{position:absolute;min-width:320px;min-height:240px;display:flex;flex-direction:column;overflow:hidden;resize:both;border:1px solid #ffffffb0;border-radius:13px;background:#f8f8ff;box-shadow:0 24px 70px #050a266b,0 2px 8px #111a3b40;color:#252446}.os-window.active{box-shadow:0 28px 85px #03082080,0 0 0 1px #ffffffb0}.os-window-bar{height:47px;min-height:47px;display:flex;align-items:center;justify-content:space-between;padding:0 9px 0 15px;background:linear-gradient(#fff,#eeeff9);border-bottom:1px solid #dedff0;cursor:grab;user-select:none}.os-window-bar:active{cursor:grabbing}.os-window-label{display:flex;align-items:center;gap:9px;min-width:0}.os-window-label span{width:29px;height:29px;border-radius:9px;font-size:16px}.os-window-label b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.os-controls{display:flex;gap:5px;direction:ltr}.os-controls button{width:29px;height:27px;border:0;border-radius:7px;background:#e8e9f3;color:#464760;font-size:20px;cursor:pointer}.os-controls .close:hover{background:#e45267;color:#fff}.os-frame{width:100%;height:100%;min-height:0;border:0;background:#fbfaff}.os-taskbar{position:absolute;z-index:60;inset:auto 0 0;height:64px;display:flex;align-items:center;gap:10px;padding:7px 12px;border-top:1px solid #ffffff52;background:linear-gradient(180deg,#ffffff2a,#d9e5ff20),#17244888;backdrop-filter:blur(24px) saturate(160%);box-shadow:0 -10px 35px #06102d25}.os-start-button{display:flex;align-items:center;gap:8px;height:46px;padding:0 12px;border:1px solid #ffffff50;border-radius:11px;color:white;background:#ffffff14;cursor:pointer;white-space:nowrap}.os-start-button .os-logo{width:31px;height:31px;border-radius:10px;font-size:17px}.os-start-button b{font-size:12px}.os-start-button:hover,.os-start-button.selected{background:#ffffff28}.os-task-apps{display:flex;flex:1;min-width:0;gap:5px;overflow-x:auto}.os-task-apps button{display:flex;align-items:center;gap:8px;min-width:44px;max-width:170px;height:46px;padding:0 9px;border:1px solid transparent;border-radius:10px;color:white;background:transparent;cursor:pointer}.os-task-apps button:hover,.os-task-apps button.selected{background:#ffffff20;border-color:#ffffff38}.os-task-apps button>span{width:30px;height:30px;flex-shrink:0;border-radius:9px;font-size:15px}.os-task-apps button b{font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.os-tray{display:flex;align-items:center;gap:2px}.os-tray>button{position:relative;width:33px;height:37px;border:0;border-radius:9px;background:transparent;color:white;font-size:18px;cursor:pointer}.os-tray>button:hover{background:#ffffff1c}.os-tray i{position:absolute;top:0;right:0;display:grid;place-items:center;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:#ffb65c;color:#2b2344;font-size:9px;font-style:normal}.os-tray-clock{min-width:78px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 6px;font-size:11px}.os-tray-clock small{font-size:9px;color:#e4e8ff}.os-start{position:absolute;z-index:70;right:12px;bottom:73px;width:min(410px,calc(100vw - 24px));padding:18px;border:1px solid #ffffffb5;border-radius:18px;color:#252446;background:linear-gradient(140deg,#ffffffed,#f1f2ffeb);box-shadow:0 22px 70px #07102f70;backdrop-filter:blur(25px)}.os-start-heading{display:flex;align-items:center;gap:10px;padding-bottom:15px;border-bottom:1px solid #e4e5f2;color:#252446}.os-start-heading .os-logo{color:white;background:linear-gradient(145deg,#8f83ff,#3b9dd8)}.os-start-heading small{color:#737491}.os-search{display:flex;align-items:center;gap:9px;height:42px;margin:14px 0;padding:0 12px;border:1px solid #d9d9ee;border-radius:10px;background:white;color:#77768d}.os-search span{font-size:23px}.os-search input{flex:1;width:100%;border:0;outline:0;background:transparent;color:#272647;font-size:12px}.os-section-label{display:block;margin:12px 3px 8px;color:#85849e;font-size:10px;font-weight:700}.os-app-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:310px;overflow:auto}.os-app-list button{display:grid;grid-template-columns:39px 1fr;grid-template-rows:auto auto;align-items:center;gap:0 10px;min-width:0;padding:10px;border:1px solid transparent;border-radius:11px;text-align:right;background:transparent;cursor:pointer}.os-app-list button:hover{background:#ecebff;border-color:#dedbff}.os-app-list button>span{grid-row:span 2}.os-app-list button b{font-size:11px;color:#292746}.os-app-list button small{font-size:9px;color:#81809a}.os-start footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #e4e5f2;color:#85849e;font-size:10px}.os-start footer button{border:0;border-radius:8px;padding:7px 10px;background:#ecebff;color:#5d51cf;cursor:pointer}.os-panel{position:absolute;z-index:65;left:12px;bottom:74px;width:min(360px,calc(100vw - 24px));max-height:75vh;overflow:auto;padding:17px;border:1px solid #ffffffa8;border-radius:18px;color:#252446;background:#f6f7ffef;box-shadow:0 20px 60px #06102d66;backdrop-filter:blur(24px)}.os-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}.os-panel-heading b{display:block;font-size:14px}.os-panel-heading small{display:block;margin-top:3px;color:#85849e;font-size:10px}.os-panel-heading>button{width:30px;height:30px;border:0;border-radius:9px;background:#e8e8f7;color:#474664;font-size:21px;cursor:pointer}.os-notice{display:flex;gap:11px;padding:12px 8px;border-bottom:1px solid #e7e7f3;border-radius:10px}.os-notice.unread{background:#ecebff}.os-notice>span{display:grid;place-items:center;flex-shrink:0;width:31px;height:31px;border-radius:10px;background:#7968f6;color:white}.os-notice b,.os-history-item b{display:block;font-size:11px}.os-notice p{margin:4px 0;color:#72718b;font-size:10px;line-height:1.6}.os-notice small,.os-history-item small{color:#8a89a3;font-size:9px}.os-history-item{padding:10px 4px;border-bottom:1px solid #e7e7f3}.os-history-item b{margin-bottom:3px}.os-empty{padding:18px 5px;color:#85849e;text-align:center;font-size:11px}.os-panel-action{width:100%;margin-top:12px;padding:10px;border:0;border-radius:10px;color:#5d51cf;background:#e9e8ff;font-size:11px;font-weight:700;cursor:pointer}.os-panel-action.danger{color:#b64253;background:#ffebee}.os-backdrop{position:absolute;z-index:90;inset:0;display:grid;place-items:center;padding:18px;background:#080f2f80;backdrop-filter:blur(8px)}.os-settings{width:min(470px,100%);max-height:90%;overflow:auto;padding:20px;border:1px solid #ffffffa8;border-radius:20px;color:#292746;background:#f8f8ff;box-shadow:0 25px 80px #070d2c80}.os-setting{margin:18px 0;font-size:12px}.os-wall-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:10px}.os-wall-options button{height:75px;border:2px solid transparent;border-radius:11px;background-size:cover;color:white;font-size:10px;cursor:pointer}.os-wall-options button.chosen{border-color:var(--os-accent);box-shadow:0 0 0 2px white inset}.os-colors{display:flex;gap:10px;margin-top:10px}.os-colors button{width:28px;height:28px;border:3px solid white;border-radius:50%;box-shadow:0 0 0 1px #ddd;cursor:pointer}.os-colors button.chosen{box-shadow:0 0 0 2px #3b376a}.os-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 0;border-top:1px solid #e6e6f1}.os-toggle b,.os-toggle small{display:block}.os-toggle b{font-size:11px}.os-toggle small{margin-top:3px;color:#85849e;font-size:9px}.os-toggle input{width:17px;height:17px;accent-color:var(--os-accent)}.os-settings-note{margin:10px 0;padding:11px;border-radius:10px;color:#77768d;background:#eeeff9;font-size:10px;line-height:1.7}.os-primary{width:100%;height:42px;border:0;border-radius:11px;color:white;background:var(--os-accent);font-size:12px;font-weight:700;cursor:pointer}.os-mobile-apps{display:none}
 @media(max-width:720px){.os-top{top:17px;right:16px;left:16px}.os-brand b{font-size:15px}.os-brand small{font-size:9px}.os-logo{width:34px;height:34px}.os-big-clock b{font-size:22px}.os-big-clock span{max-width:135px;font-size:9px}.os-desktop-icons{display:none}.os-window{border-radius:0;border-left:0;border-right:0}.os-taskbar{height:64px;gap:4px;padding:5px 6px}.os-start-button{width:44px;justify-content:center;padding:0}.os-start-button b{display:none}.os-start-button .os-logo{width:32px;height:32px}.os-task-apps{gap:2px}.os-task-apps button{justify-content:center;padding:0 5px}.os-task-apps button b{display:none}.os-tray>button{width:28px;font-size:16px}.os-tray-clock{min-width:46px;padding:0 2px;font-size:10px}.os-tray-clock small{font-size:8px}.os-mobile-apps{position:absolute;display:block;top:118px;right:16px;left:16px;color:white;text-shadow:0 2px 8px #0b143a}.os-mobile-apps>b{font-size:12px}.os-mobile-apps>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}.os-mobile-apps button{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 3px;border:1px solid #ffffff26;border-radius:13px;background:#ffffff12;color:white}.os-mobile-apps button b{font-size:9px;font-weight:500;text-align:center}.os-panel{bottom:72px}}
 @media(prefers-reduced-motion:reduce){.rafeeq-os *{animation:none!important;transition:none!important}}
+
+/* Rafeeq Atelier — pearl white, violet and sky-cyan visual refresh */
+.rafeeq-os,.rafeeq-os *{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+.rafeeq-os{color:#292544;background-size:cover;background-position:center}
+.os-desktop{inset:0 0 64px}
+.os-top{top:24px;right:30px;left:30px;text-shadow:none}
+.os-brand b,.os-start-heading b{color:#30284e}
+.os-brand small{color:#77728f}
+.os-logo{border:1px solid #ffffff;background:linear-gradient(145deg,#8b78ec,#6c9fe8);color:#fff;box-shadow:0 7px 20px #8472d526,inset 0 1px #ffffff80}
+.os-big-clock b{color:#40365f;font-size:30px;letter-spacing:-.5px}
+.os-big-clock span{color:#77728f}
+.os-desktop-icons{top:128px;right:25px;gap:10px}
+.os-desktop-icons button{color:#373052;text-shadow:none;border-color:transparent;transition:background .18s,border-color .18s,transform .18s}
+.os-desktop-icons button:hover{background:#ffffffb8;border-color:#ded7f8;transform:translateY(-2px)}
+.os-desktop-icons button span,.os-app-list button>span,.os-task-apps button>span,.os-window-label span,.os-mobile-apps button span{box-shadow:0 5px 13px #6256a51c,inset 0 1px #ffffff70}
+.os-window{border:1px solid #e2dcf3;border-radius:16px;background:#fffefa;box-shadow:0 22px 60px #6c5ca51b,0 4px 16px #4b47720d;color:#30294d}
+.os-window.active{box-shadow:0 25px 70px #6555a526,0 0 0 1px #cfc4f7}
+.os-window-bar{height:49px;min-height:49px;background:linear-gradient(110deg,#fffefa,#f5f2ff);border-bottom:1px solid #ebe6f7;cursor:grab}
+.os-window-label b{color:#332c50;font-size:12px}
+.os-controls{gap:6px}
+.os-controls button{background:#f0edfa;color:#696181;border:1px solid #e9e3f5}
+.os-controls button:hover{background:#e5e0f9}
+.os-controls .close:hover{background:#e66b83;color:#fff}
+.os-frame{background:#fffefa}
+.os-taskbar{height:64px;padding:7px 14px;border-top:1px solid #e7e1f4;background:#ffffffd9;backdrop-filter:blur(24px) saturate(145%);box-shadow:0 -8px 30px #6b5a9b0d}
+.os-start-button{border:1px solid #e4ddf4;border-radius:12px;color:#554879;background:#f8f5ff}
+.os-start-button:hover,.os-start-button.selected{background:#eee8ff;border-color:#d6cafb}
+.os-start-button .os-logo{border:0}
+.os-task-apps button{color:#554c70}
+.os-task-apps button:hover,.os-task-apps button.selected{background:#f0ecfb;border-color:#e4dcf7}
+.os-tray>button{color:#716789}
+.os-tray>button:hover{background:#f1edfb}
+.os-tray-clock{color:#49405f}
+.os-tray-clock small{color:#8b84a1}
+.os-start{right:14px;bottom:74px;border:1px solid #e4dcf5;border-radius:20px;color:#30294d;background:#fffefcf2;box-shadow:0 22px 60px #6655a51a;backdrop-filter:blur(22px)}
+.os-start-heading{color:#30294d;border-bottom-color:#eee9f7}
+.os-start-heading .os-logo{color:#fff}
+.os-start-heading small{color:#827b99}
+.os-search{border-color:#e5def4;background:#fff;color:#817894}
+.os-search:focus-within{border-color:#9b8be9;box-shadow:0 0 0 3px #9b8be91a}
+.os-search input{color:#30294d}
+.os-app-list button:hover{background:#f2efff;border-color:#e6dfff}
+.os-app-list button b{color:#30294d}
+.os-app-list button small{color:#837c9a}
+.os-start footer{border-top-color:#eee9f7;color:#8c85a0}
+.os-start footer button{background:#eee9ff;color:#6653c9}
+.os-panel{border:1px solid #e4dcf5;border-radius:19px;color:#30294d;background:#fffefcf5;box-shadow:0 20px 55px #6655a51a;backdrop-filter:blur(22px)}
+.os-panel-heading b{color:#30294d}
+.os-panel-heading small,.os-notice p,.os-history-item small{color:#817a98}
+.os-panel-heading>button{background:#f1edfa;color:#655b80}
+.os-notice{border-bottom-color:#eee9f7}
+.os-notice.unread{background:#f1edff}
+.os-notice>span{background:linear-gradient(145deg,#8b78ec,#6daee5)}
+.os-history-item{border-bottom-color:#eee9f7}
+.os-panel-action{background:#eee9ff;color:#6553c8}
+.os-backdrop{background:#e9e5f7a8;backdrop-filter:blur(8px)}
+.os-settings{border:1px solid #e4dcf5;border-radius:21px;color:#30294d;background:#fffefa;box-shadow:0 25px 70px #6655a51c}
+.os-setting{color:#49405f}
+.os-wall-options button{box-shadow:inset 0 0 0 1px #ffffff75}
+.os-toggle{border-top-color:#eee9f7}
+.os-toggle b{color:#403657}
+.os-toggle small,.os-settings-note{color:#817a98}
+.os-settings-note{background:#f5f2fc}
+.os-primary{box-shadow:0 8px 18px color-mix(in srgb,var(--os-accent) 18%,transparent)}
+.os-mobile-apps{color:#403657;text-shadow:none}
+.os-mobile-apps>b{display:inline-flex;padding:8px 12px;border:1px solid #e6e0f4;border-radius:12px;background:#ffffffc9;color:#554879}
+.os-mobile-apps>div{gap:10px}
+.os-mobile-apps button{border:1px solid #e7e0f5;border-radius:16px;background:#ffffffbd;color:#453b63;box-shadow:0 8px 20px #7162a00b;transition:transform .18s,background .18s}
+.os-mobile-apps button:active{transform:scale(.97);background:#f1edff}
+.os-mobile-apps button b{color:#51466f;font-size:10px}
+@media(max-width:720px){
+ .os-top{top:16px;right:16px;left:16px}
+ .os-big-clock b{font-size:23px}
+ .os-big-clock span{color:#817a98}
+ .os-mobile-apps{top:112px;right:14px;left:14px}
+ .os-mobile-apps>div{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .os-mobile-apps button{min-height:94px;padding:12px 4px}
+ .os-window{border-radius:15px;border:1px solid #e3dcf3;box-shadow:0 12px 35px #6c5ca51c}
+ .os-window-bar{padding-inline:10px}
+ .os-taskbar{gap:5px;padding:5px 7px;background:#fffef2e8}
+ .os-tray-clock{color:#49405f}
+ .os-tray>button{color:#716789}
+ .os-start{right:8px;bottom:70px;width:min(410px,calc(100vw - 16px))}
+ .os-panel{left:8px;bottom:70px;width:min(360px,calc(100vw - 16px))}
+}
+@media(prefers-reduced-motion:no-preference){
+ .os-window,.os-start,.os-panel,.os-settings{animation:atelier-enter .18s ease-out}
+ .os-desktop-icons button,.os-mobile-apps button,.os-task-apps button{transition:all .18s ease}
+}
+@keyframes atelier-enter{from{opacity:.6;transform:translateY(5px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
