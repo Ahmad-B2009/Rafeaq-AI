@@ -25,6 +25,53 @@ const STORAGE = {
   study: 'rafeaq_study_log',
 }
 
+/* ============ ثيم النافذة (فاتح) عند تشغيل Dashboard داخل Rafeeq OS ============
+   كل القواعد محصورة تحت .dash-embed حتى لا تتسرب إلى الواجهة الخارجية. */
+const EMBED_CSS = `
+  .dash-embed {
+    --bg: #F7F6FF; --ink: #24214F; --muted: #6E6A99; --brand: #6D5EF5; --brand2: #A36BFF;
+    --cyan: #2DB7DD; --mint: #22C7A0; --coral: #FF9F7A; --soft: #F1EFFF; --line: #E2DEF8;
+    --grad: linear-gradient(125deg, #6D5EF5 0%, #9B6BFF 55%, #4FB4F0 100%);
+    background: var(--bg); color: var(--ink); color-scheme: light;
+  }
+  .dash-embed, .dash-embed * { font-family: 'IBM Plex Sans Arabic', 'Tajawal', system-ui, sans-serif; }
+  .dash-embed :focus-visible { outline: 2px solid rgba(109, 94, 245, .8); outline-offset: 2px; }
+  .dash-embed ::selection { background: #6D5EF5; color: #fff; }
+  .dash-embed .thin-scroll { scrollbar-width: thin; scrollbar-color: #CFC9F5 transparent; }
+  .dash-embed .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+  .dash-embed .thin-scroll::-webkit-scrollbar-thumb { background: #CFC9F5; border-radius: 999px; }
+  .dash-embed .glass { background: rgba(255,255,255,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: 0 6px 22px rgba(109,94,245,.08); }
+  .dash-embed .dash-embed-head { box-shadow: 0 2px 10px rgba(109,94,245,.06); }
+  .dash-embed .aurora-card { background: linear-gradient(118deg, #7B6CFF 0%, #9E7BFF 50%, #5CB6F2 100%); background-size: 200% 200%; animation: dflow 15s ease infinite; border: 1px solid rgba(255,255,255,.5); box-shadow: 0 14px 36px rgba(109,94,245,.25); color: #fff; }
+  @keyframes dflow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .dash-embed .blob { position: absolute; border-radius: 999px; filter: blur(48px); opacity: .35; pointer-events: none; }
+  .dash-embed .blob-a { width: 220px; height: 220px; background: #fff; top: -80px; left: -50px; opacity: .25; animation: ddrift 9s ease-in-out infinite; }
+  .dash-embed .blob-b { width: 240px; height: 240px; background: #4FB4F0; bottom: -130px; right: 25%; opacity: .3; animation: ddrift 11s ease-in-out infinite reverse; }
+  @keyframes ddrift { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(26px,18px) scale(1.1); } }
+  .dash-embed .float { animation: dfloat 4.5s ease-in-out infinite; }
+  @keyframes dfloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .dash-embed .gtext { background: linear-gradient(110deg, #5B4BE0, #8B5CF6 55%, #2AA8D8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .dash-embed .btn-grad { position: relative; overflow: hidden; color: #fff; background: var(--grad); background-size: 160% 160%; border: 1px solid rgba(255,255,255,.35); box-shadow: 0 6px 18px rgba(109,94,245,.28); transition: transform .2s, box-shadow .2s, filter .2s; }
+  .dash-embed .btn-grad:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 10px 24px rgba(109,94,245,.34); }
+  .dash-embed .btn-grad:disabled { opacity: .45; transform: none; box-shadow: none; cursor: not-allowed; }
+  .dash-embed .btn-soft { background: #EFEBFF; color: #4B3FC4; border: 1px solid #DDD7FA; transition: background .2s, transform .2s; }
+  .dash-embed .btn-soft:hover { background: #E4DEFF; transform: translateY(-1px); }
+  .dash-embed .card-hover { transition: transform .25s, box-shadow .25s, border-color .25s; }
+  .dash-embed .card-hover:hover { transform: translateY(-2px); border-color: #B9AEFF; box-shadow: 0 12px 28px rgba(109,94,245,.16); }
+  .dash-embed .nav-active { background: #EDE9FF; color: #4B3FC4; border: 1px solid #CFC7FF; }
+  .dash-embed .pulse-ring { animation: dring 1.8s ease-out infinite; }
+  @keyframes dring { 0% { box-shadow: 0 0 0 0 rgba(34,199,160,.45); } 100% { box-shadow: 0 0 0 9px rgba(34,199,160,0); } }
+  .dash-embed .shimmer { background: linear-gradient(90deg, #EFEBFF 25%, #F8F6FF 50%, #EFEBFF 75%); background-size: 200% 100%; animation: dshim 1.4s infinite; }
+  @keyframes dshim { to { background-position: -200% 0; } }
+  .dash-embed .timer-ring { background: conic-gradient(var(--brand) var(--deg), #E6E1FB 0); }
+  .dash-embed .typing-dot { width: 6px; height: 6px; border-radius: 999px; background: #8B7BFF; animation: dbounce 1.1s infinite ease-in-out; }
+  .dash-embed .typing-dot:nth-child(2) { animation-delay: .15s; }
+  .dash-embed .typing-dot:nth-child(3) { animation-delay: .3s; }
+  @keyframes dbounce { 0%,80%,100% { transform: translateY(0); opacity: .4; } 40% { transform: translateY(-5px); opacity: 1; } }
+  .dash-embed input::placeholder, .dash-embed textarea::placeholder { color: #A29ECB; opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .dash-embed *, .dash-embed *::before, .dash-embed *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+`
+
 /* ============================== LocalStorage ============================== */
 function readLS(key, fallback) {
   try {
@@ -577,10 +624,10 @@ function AssistantActions({ text, onSave, onNotion, onToast }) {
 }
 
 /* ============================== الصفحة ============================== */
-export default function Dashboard() {
+export default function Dashboard({ embedded = false, forcedTab = null, launch = null, onNavigate = null } = {}) {
   const nav = useNavigate()
 
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(forcedTab || 'home')
   const [study, setStudy] = useState(null) // { data, topic } نافذة الاختبار / البطاقات
   const [setup, setSetup] = useState(null) // 'quiz' | 'flashcards' نافذة إعداد الاختبار أو البطاقات
   const [setupForm, setSetupForm] = useState({ topic: '', count: 10, difficulty: 'same' })
@@ -1604,8 +1651,13 @@ export default function Dashboard() {
   }
 
   function goTo(nextTab) {
+    // داخل نافذة في Rafeeq OS: كل تبويب تطبيق مستقل، فنفتحه في نافذته بدل تبديل هذه النافذة
+    if (embedded && onNavigate && nextTab !== tab) {
+      onNavigate(nextTab)
+      return
+    }
     setTab(nextTab)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (!embedded) window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function logout() {
@@ -1674,6 +1726,22 @@ export default function Dashboard() {
 
   const todayMins = studyLog[todayKey()] || 0
 
+  // وضع النافذة: تبويب ثابت + استقبال أوامر الفتح من Rafeeq OS (بحث / عرض المكتبة)
+  useEffect(() => {
+    if (embedded && forcedTab) setTab(forcedTab)
+  }, [embedded, forcedTab])
+
+  useEffect(() => {
+    if (!embedded || !launch) return
+    if (launch.view) setBooksView(launch.view)
+    if (typeof launch.query === 'string') setSearch(launch.query)
+    if (launch.pickImage) {
+      showToast('اختر صورة لتحليلها من زر الإرفاق في المحادثة.')
+      window.setTimeout(() => galleryRef.current?.click(), 60)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embedded, launch?.nonce])
+
   const navigation = [
     { id: 'home', label: 'الرئيسية', icon: '⌂' },
     { id: 'ai', label: 'رفيق AI', icon: '✦' },
@@ -1689,8 +1757,9 @@ export default function Dashboard() {
 
   /* ============================== الواجهة ============================== */
   return (
-    <div dir="rtl" className="relative min-h-screen overflow-x-hidden text-[var(--ink)]">
-      <style>{`
+    <div dir="rtl" className={embedded ? 'dash-embed relative min-h-full overflow-x-hidden text-[var(--ink)]' : 'relative min-h-screen overflow-x-hidden text-[var(--ink)]'}>
+      {embedded && <style>{EMBED_CSS}</style>}
+      {!embedded && <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
 
         :root {
@@ -1805,9 +1874,9 @@ export default function Dashboard() {
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
         }
-      `}</style>
+      `}</style>}
 
-      <div className="bg-stage" />
+      {!embedded && <div className="bg-stage" />}
 
       {/* حقل رفع الملفات المشترك */}
       <input ref={fileRef} type="file" multiple accept={ACCEPT_FILES} onChange={onPickFiles} className="hidden" />
@@ -1815,7 +1884,7 @@ export default function Dashboard() {
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={onPickImages} className="hidden" />
 
       {/* ============ الشريط الجانبي ============ */}
-      <aside className="glass fixed right-0 top-0 z-40 hidden h-screen w-[256px] flex-col border-y-0 border-r-0 lg:flex">
+      {!embedded && <aside className="glass fixed right-0 top-0 z-40 hidden h-screen w-[256px] flex-col border-y-0 border-r-0 lg:flex">
         <div className="p-5">
           <div className="flex items-center gap-3">
             <div className="btn-grad grid h-11 w-11 place-items-center rounded-[14px]">
@@ -1897,16 +1966,16 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-      </aside>
+      </aside>}
 
-      <main className="lg:mr-[256px]">
+      <main className={embedded ? '' : 'lg:mr-[256px]'}>
         {/* ============ الشريط العلوي ============ */}
-        <header className="glass sticky top-0 z-40 border-x-0 border-t-0">
+        <header className={`glass sticky top-0 z-40 border-x-0 border-t-0 ${embedded ? 'dash-embed-head' : ''}`}>
           <div className="flex h-[64px] items-center justify-between gap-3 px-4 sm:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
                 onClick={() => goTo('home')}
-                className="btn-grad grid h-9 w-9 shrink-0 place-items-center rounded-[11px] lg:hidden"
+                className={`btn-grad grid h-9 w-9 shrink-0 place-items-center rounded-[11px] ${embedded ? 'hidden' : 'lg:hidden'}`}
               >
                 ر
               </button>
@@ -1932,9 +2001,9 @@ export default function Dashboard() {
                 <span>{notion.connected ? 'Notion متصل' : 'Notion'}</span>
               </button>
 
-              <div className="hidden text-left text-[10px] leading-4 text-[var(--muted)] md:block">{formatDate()}</div>
+              <div className={`hidden text-left text-[10px] leading-4 text-[var(--muted)] ${embedded ? '' : 'md:block'}`}>{formatDate()}</div>
 
-              <div className="relative">
+              <div className={embedded ? 'hidden' : 'relative'}>
                 <button
                   onClick={() => setMenu(menu === 'user' ? null : 'user')}
                   className="btn-grad grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold"
@@ -2872,7 +2941,7 @@ export default function Dashboard() {
       </main>
 
       {/* ============ التنقل السفلي (جوال) ============ */}
-      <nav className="glass fixed bottom-0 left-0 right-0 z-50 border-x-0 border-b-0 px-2 py-2 lg:hidden">
+      {!embedded && <nav className="glass fixed bottom-0 left-0 right-0 z-50 border-x-0 border-b-0 px-2 py-2 lg:hidden">
         <div className="mx-auto flex max-w-[640px] gap-1 overflow-x-auto">
           {navigation.map((item) => (
             <button
@@ -2887,7 +2956,7 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-      </nav>
+      </nav>}
 
       {/* ============ إغلاق قائمة المستخدم ============ */}
       {menu === 'user' && <div className="fixed inset-0 z-[35]" onClick={() => setMenu(null)} />}

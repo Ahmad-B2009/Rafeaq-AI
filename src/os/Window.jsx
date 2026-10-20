@@ -2,6 +2,7 @@
 // نافذة Aero: سحب، تغيير حجم، تصغير، تكبير، إغلاق، تثبيت على الحافة.
 import { memo, useRef } from 'react'
 import { MIN_W, MIN_H } from './wm'
+import { Icon, AppIcon } from './icons'
 
 const HANDLES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
 
@@ -105,23 +106,23 @@ function WindowImpl({ win, app, active, area, mobile, dispatch, onSnapHint, onDr
         onPointerCancel={onTitleUp}
         onDoubleClick={(e) => !mobile && !e.target.closest('.ros-cap') && dispatch({ type: 'toggleMax', id: win.id })}
       >
-        {mobile && (
-          <button className="ros-cap ros-home" aria-label="العودة إلى سطح المكتب" onClick={() => dispatch({ type: 'minAll' })}>
-            ⌂
-          </button>
-        )}
-        <span className="ros-wicon" style={{ background: app.grad }} aria-hidden="true">{app.glyph}</span>
+        <AppIcon app={app} size={22} className="ros-wicon" />
         <span className="ros-wtitle">{app.title}</span>
         <div className="ros-caps">
+          {mobile && (
+            <button className="ros-cap ros-home" aria-label="العودة إلى سطح المكتب" onClick={() => dispatch({ type: 'minAll' })}>
+              <Icon name="home" size={17} />
+            </button>
+          )}
           {!mobile && (
             <>
-              <button className="ros-cap" aria-label="تصغير" onClick={() => dispatch({ type: 'min', id: win.id })}>─</button>
+              <button className="ros-cap" aria-label="تصغير" onClick={() => dispatch({ type: 'min', id: win.id })}><Icon name="min" size={16} /></button>
               <button className="ros-cap" aria-label={win.state === 'max' ? 'استعادة' : 'تكبير'} onClick={() => dispatch({ type: 'toggleMax', id: win.id })}>
-                {win.state === 'max' ? '❐' : '□'}
+                <Icon name={win.state === 'max' ? 'restore' : 'max'} size={15} />
               </button>
             </>
           )}
-          <button className="ros-cap ros-close" aria-label="إغلاق" onClick={() => dispatch({ type: 'close', id: win.id })}>✕</button>
+          <button className="ros-cap ros-close" aria-label="إغلاق" onClick={() => dispatch({ type: 'close', id: win.id })}><Icon name="close" size={17} /></button>
         </div>
       </header>
 

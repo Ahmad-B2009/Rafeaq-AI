@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6c7bd4"/>
+      <stop offset=".42" stop-color="#b196e6"/>
+      <stop offset=".7" stop-color="#f2b4c9"/>
+      <stop offset="1" stop-color="#ffd2a6"/>
+    </linearGradient>
+    <radialGradient id="sun" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fff6dc"/>
+      <stop offset=".3" stop-color="#ffdcb4" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#ffdcb4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5c3cb"/>
+      <stop offset=".35" stop-color="#b99bd8"/>
+      <stop offset="1" stop-color="#5d62b4"/>
+    </linearGradient>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9a86d2"/>
+      <stop offset="1" stop-color="#c79ad0"/>
+    </linearGradient>
+    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6a67b8"/>
+      <stop offset="1" stop-color="#8f7cc6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <circle cx="1060" cy="610" r="330" fill="url(#sun)"/>
+  <g fill="#fff" opacity=".28">
+    <ellipse cx="420" cy="170" rx="190" ry="26"/><ellipse cx="560" cy="205" rx="150" ry="20"/>
+    <ellipse cx="1180" cy="250" rx="220" ry="24"/><ellipse cx="1340" cy="290" rx="160" ry="18"/>
+    <ellipse cx="760" cy="430" rx="210" ry="18"/>
+  </g>
+  <path d="M0 640 L130 560 L250 612 L390 520 L520 600 L680 540 L860 626 L1060 640 L1600 640 L1600 700 L0 700 Z" fill="url(#far)"/>
+  <path d="M0 700 L0 470 L95 430 L175 345 L255 305 L340 385 L440 470 L540 560 L650 628 L760 660 L0 700 Z" fill="url(#mid)"/>
+  <path d="M0 700 L0 560 C120 520 220 560 330 610 C430 655 560 690 700 700 Z" fill="#4f5aa6"/>
+  <path d="M1020 640 L1160 585 L1290 612 L1420 560 L1600 610 L1600 660 L1020 660 Z" fill="#7d70bf" opacity=".85"/>
+  <rect y="640" width="1600" height="360" fill="url(#lake)"/>
+  <ellipse cx="1060" cy="700" rx="230" ry="34" fill="#fff0d6" opacity=".55"/>
+  <ellipse cx="1060" cy="760" rx="150" ry="16" fill="#ffe3bd" opacity=".35"/>
+  <g stroke="#fff" stroke-opacity=".16" stroke-width="3" stroke-linecap="round">
+    <path d="M200 760h260M620 820h320M1120 800h300M360 900h280M980 900h360"/>
+  </g>
+  <path d="M0 1000 L0 770 C140 740 280 790 400 860 C520 925 640 960 780 1000 Z" fill="#35417b"/>
+  <path d="M0 1000 L0 850 C110 835 210 880 300 940 C350 972 400 990 440 1000 Z" fill="#232c60"/>
+  <path d="M1080 1000 C1160 920 1290 890 1410 940 C1490 972 1550 950 1600 905 L1600 1000 Z" fill="#3a3d78"/>
+  <path d="M1300 1000 C1360 960 1450 955 1520 985 L1600 1000 Z" fill="#292e66"/>
+</svg>

@@ -23,24 +23,62 @@ function readLS(key, fallback) {
 
 export function loadOS() {
   const s = readLS(OS_KEY, {})
+  // التصميم الجديد (ui: 2): من حفظ الخلفية القديمة الافتراضية «aero» ننتقل للخلفية الجديدة مرة واحدة
+  const wallpaper = s.ui === 2 && s.wallpaper ? s.wallpaper : s.wallpaper && s.wallpaper !== 'aero' ? s.wallpaper : 'sunrise'
   return {
-    wallpaper: s.wallpaper || 'aero',
+    wallpaper,
     recents: Array.isArray(s.recents) ? s.recents.slice(0, 6) : [],
     windows: Array.isArray(s.windows) ? s.windows : [],
+    fresh: !Array.isArray(s.windows) || s.windows.length === 0,
   }
 }
 
 export function saveOS(data) {
   try {
-    localStorage.setItem(OS_KEY, JSON.stringify(data))
+    localStorage.setItem(OS_KEY, JSON.stringify({ ...data, ui: 2 }))
   } catch {
     /* ignore */
   }
 }
 
+// اسم الطالب: من إعدادات الحساب الدراسي أولاً، ثم من بيانات تسجيل الدخول (نفس منطق Dashboard)
+function loginName() {
+  try {
+    const raw = localStorage.getItem('rafeaq_user') || localStorage.getItem('rafeaq_name')
+    if (!raw) return ''
+    try {
+      const parsed = JSON.parse(raw)
+      if (typeof parsed === 'string') return parsed.split('@')[0]
+      return parsed?.name || ''
+    } catch {
+      return String(raw).split('@')[0]
+    }
+  } catch {
+    return ''
+  }
+}
+
 export function readProfile() {
   const p = readLS(K.profile, null) || {}
-  return { name: p.name || 'الطالب', class: p.class || '', section: p.section || '' }
+  return {
+    name: p.name || loginName() || 'الطالب',
+    class: p.class || localStorage.getItem('rafeaq_student_class') || '',
+    section: p.section || localStorage.getItem('rafeaq_student_section') || '',
+  }
+}
+
+// أرقام حقيقية من بيانات الجهاز لودجت «ملخص اليوم»
+export async function readSummary() {
+  const tasks = readLS('rafeaq_tasks_v1', [])
+  const list = Array.isArray(tasks) ? tasks : []
+  const notes = readLS(K.notes, [])
+  const lib = await readLibrary()
+  return {
+    tasksOpen: list.filter((t) => !t?.done).length,
+    tasksTotal: list.length,
+    notes: Array.isArray(notes) ? notes.length : 0,
+    books: lib.length,
+  }
 }
 
 export function normalizeAr(s = '') {
@@ -105,7 +143,7 @@ export async function searchAll(query) {
   const groups = []
 
   const apps = APPS.filter((a) => hit(a.title, a.keywords)).slice(0, 6)
-  if (apps.length) groups.push({ title: 'التطبيقات', items: apps.map((a) => ({ key: `app:${a.id}`, label: a.title, glyph: a.glyph, open: { app: a.id } })) })
+  if (apps.length) groups.push({ title: 'التطبيقات', items: apps.map((a) => ({ key: `app:${a.id}`, label: a.title, icon: a.icon, grad: a.grad, open: { app: a.id } })) })
 
   const lib = (await readLibrary()).filter((b) => hit(b.title, b.subject, b.grade)).slice(0, 5)
   if (lib.length) groups.push({ title: 'كتبي', items: lib.map((b) => ({ key: `lib:${b.id}`, label: b.title, glyph: '📖', open: { app: 'books', payload: { query: b.title, view: 'mine' } } })) })
