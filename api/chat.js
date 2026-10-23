@@ -161,7 +161,8 @@ function deepConvert(v) {
 // ============ سبورة رفيق: شرح بخطوات (كلام + رسم) ============
 const BOARD_COLORS = ['#26304A', '#2563EB', '#DC2626', '#16A34A', '#9333EA', '#EA580C']
 
-function buildBoardPrompt(topic, teacher = {}, previous = '', hasImage = false) {
+function buildBoardPrompt(topic, teacher = {}, previous = '', hasImage = false, W = 1600, H = 900) {
+  const portrait = H > W
   const name = String(teacher.name || 'رفيق').slice(0, 30)
   const subject = String(teacher.subject || 'المواد الدراسية').slice(0, 40)
   return `أنت الأستاذ «${name}» معلم ${subject}، تشرح للطالب على سبورة بيضاء بصوتك وبالرسم، وفق المنهج الليبي الرسمي.
@@ -169,9 +170,9 @@ function buildBoardPrompt(topic, teacher = {}, previous = '', hasImage = false) 
 ${previous ? `ما شُرح سابقاً على السبورة (للمتابعة وليس للتكرار): ${String(previous).slice(0, 600)}\n` : ''}أرجع JSON فقط بهذا الشكل:
 {"title":"عنوان قصير","steps":[{"say":"ما يقوله الأستاذ بصوته","draw":[عناصر الرسم]}]}
 
-مساحة السبورة 1600 عرضاً × 900 ارتفاعاً (x من 0 إلى 1600، y من 0 إلى 900).
+مساحة السبورة ${W} عرضاً × ${H} ارتفاعاً (x من 0 إلى ${W}، y من 0 إلى ${H}).${portrait ? ' الشاشة طولية (هاتف): رتّب المحتوى عمودياً من الأعلى إلى الأسفل، واجعل الخط كبيراً مقروءاً (s بين 40 و64)، ولا تضع شيئاً فوق y = 180 لأن اسم الأستاذ يظهر هناك.' : ''}
 أنواع عناصر الرسم:
-{"t":"text","x":800,"y":120,"s":44,"c":"#26304A","text":"..."}   (x هو منتصف النص، s حجم الخط بين 28 و64)
+{"t":"text","x":${Math.round(W / 2)},"y":120,"s":44,"c":"#26304A","text":"..."}   (x هو منتصف النص، s حجم الخط بين 28 و64)
 {"t":"line","x1":0,"y1":0,"x2":0,"y2":0,"c":"#2563EB"}
 {"t":"arrow","x1":0,"y1":0,"x2":0,"y2":0,"c":"#DC2626"}
 {"t":"rect","x":0,"y":0,"w":0,"h":0,"c":"#16A34A"}
@@ -180,16 +181,16 @@ ${previous ? `ما شُرح سابقاً على السبورة (للمتابعة
 الألوان المسموحة فقط: ${BOARD_COLORS.join(' ')}
 
 القواعد:
-${hasImage ? '- الصورة موضوعة على الجانب الأيسر (x أقل من 700). ارسم واكتب فقط في الجانب الأيمن: x بين 740 و1560، وتمركز النصوص حول x = 1150، ولا تضع أي عنصر فوق الصورة.\n' : ''}- من 4 إلى 7 خطوات، وكل خطوة من 1 إلى 5 عناصر.
+${hasImage ? (portrait ? `- الصورة موضوعة في أعلى السبورة (y أقل من ${Math.round(H * 0.38) + 130}). ارسم واكتب أسفلها فقط: y بين ${Math.round(H * 0.38) + 170} و${H - 60}، وتمركز النصوص حول x = ${Math.round(W / 2)}، ولا تضع أي عنصر فوق الصورة.\n` : '- الصورة موضوعة على الجانب الأيسر (x أقل من 700). ارسم واكتب فقط في الجانب الأيمن: x بين 740 و1560، وتمركز النصوص حول x = 1150، ولا تضع أي عنصر فوق الصورة.\n') : ''}- من 4 إلى 7 خطوات، وكل خطوة من 1 إلى 5 عناصر.
 - "say": جملة أو جملتان بالفصحى المبسطة تُنطق بصوت عالٍ، فلا تكتب فيها رموزاً رياضية ولا معادلات، بل اشرحها بالكلمات.
-- النصوص على السبورة قصيرة (حتى 36 حرفاً)، كل معادلة أو جملة في عنصر text مستقل.
+- النصوص على السبورة قصيرة (حتى ${portrait ? 26 : 36} حرفاً)، كل معادلة أو جملة في عنصر text مستقل.
 - رتّب النصوص من الأعلى إلى الأسفل بفارق لا يقل عن 90 في y، ولا تجعل العناصر تتداخل، ولا تخرج عن حدود السبورة (اترك هامشاً 60).
 - أول خطوة عنوان الدرس وفكرته، وآخر خطوة خلاصة قصيرة.
 - المعادلات والرموز على السبورة بالأرقام الغربية 0-9 والمتغيرات بحروف عربية (س، ص).
 - تحقق من صحة كل عملية حسابية قبل كتابتها.`
 }
 
-function normalizeBoard(raw) {
+function normalizeBoard(raw, W = 1600, H = 900) {
   const num = (v, lo, hi, d = lo) => {
     const n = Number(v)
     return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d
@@ -203,20 +204,20 @@ function normalizeBoard(raw) {
     switch (d.t) {
       case 'text': {
         const text = str(d.text, 60)
-        return text ? { t: 'text', x: num(d.x, 0, 1600, 800), y: num(d.y, 0, 900, 450), s: num(d.s, 24, 72, 40), c, text } : null
+        return text ? { t: 'text', x: num(d.x, 0, W, Math.round(W / 2)), y: num(d.y, 0, H, Math.round(H / 2)), s: num(d.s, 24, 72, 40), c, text } : null
       }
       case 'line':
       case 'arrow':
-        return { t: d.t, x1: num(d.x1, 0, 1600), y1: num(d.y1, 0, 900), x2: num(d.x2, 0, 1600), y2: num(d.y2, 0, 900), c }
+        return { t: d.t, x1: num(d.x1, 0, W), y1: num(d.y1, 0, H), x2: num(d.x2, 0, W), y2: num(d.y2, 0, H), c }
       case 'rect':
-        return { t: 'rect', x: num(d.x, 0, 1600), y: num(d.y, 0, 900), w: num(d.w, 10, 1600, 100), h: num(d.h, 10, 900, 60), c }
+        return { t: 'rect', x: num(d.x, 0, W), y: num(d.y, 0, H), w: num(d.w, 10, W, 100), h: num(d.h, 10, H, 60), c }
       case 'circle':
-        return { t: 'circle', x: num(d.x, 0, 1600), y: num(d.y, 0, 900), r: num(d.r, 6, 450, 40), c }
+        return { t: 'circle', x: num(d.x, 0, W), y: num(d.y, 0, H), r: num(d.r, 6, Math.round(Math.min(W, H) / 2), 40), c }
       case 'poly': {
         const pts = (Array.isArray(d.pts) ? d.pts : [])
           .filter((p) => Array.isArray(p) && p.length >= 2)
           .slice(0, 24)
-          .map((p) => [num(p[0], 0, 1600), num(p[1], 0, 900)])
+          .map((p) => [num(p[0], 0, W), num(p[1], 0, H)])
         return pts.length >= 2 ? { t: 'poly', pts, c } : null
       }
       default:
@@ -459,6 +460,8 @@ export default async function handler(req, res) {
 
     // ---------- سبورة رفيق: شرح بالصوت والرسم ----------
     if (ui === 'board') {
+      const bw = Math.min(2000, Math.max(600, Math.round(Number(body.board?.w) || 1600)))
+      const bh = Math.min(2000, Math.max(500, Math.round(Number(body.board?.h) || 900)))
       let topicText = String(body.topic || message || '')
       // صورة مرفقة: نستخرج محتواها أولاً (PaliGemma إن وُجد، وإلا نموذج رؤية) ثم يشرحها الأستاذ على السبورة
       if (imageList.length) {
@@ -485,12 +488,12 @@ export default async function handler(req, res) {
       const { content, provider } = await callLLM({
         messages: [
           { role: 'system', content: SYSTEM },
-          { role: 'user', content: buildBoardPrompt(topicText, body.teacher, body.previous, imageList.length > 0) }
+          { role: 'user', content: buildBoardPrompt(topicText, body.teacher, body.previous, imageList.length > 0, bw, bh) }
         ],
         max_tokens: 3500,
         json: true
       })
-      const board = normalizeBoard(parseJson(content))
+      const board = normalizeBoard(parseJson(content), bw, bh)
       if (!board.steps.length) return res.json({ reply: 'تعذر تجهيز الشرح على السبورة، حاول مرة أخرى.' })
       return res.json({ type: 'board', ...board, provider })
     }

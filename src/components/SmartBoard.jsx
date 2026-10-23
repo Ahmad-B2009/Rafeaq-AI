@@ -5,8 +5,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '../os/icons'
 import { speak, pauseVoice, resumeVoice, voiceAvailable } from '../lib/boardVoice'
 
-const VW = 1600
-const VH = 900
+// مساحة السبورة الافتراضية: أفقية 16:9 على اللابتوب، وطولية على الهاتف حتى لا يصغر الخط
+let VW = 1600
+let VH = 900
+function pickBoardSize() {
+  const w = window.innerWidth
+  const h = window.innerHeight
+  if (w < 700 && h > w) {
+    return { w: 900, h: Math.max(900, Math.min(1500, Math.round((900 * (h - 300)) / Math.max(300, w - 12)))) }
+  }
+  return { w: 1600, h: 900 }
+}
 const STORE = 'rafeaq_smartboard_v1'
 const DAY_KEY = 'rafeaq_smartboard_day_v1'
 const DAILY_LESSONS = 10
@@ -231,6 +240,7 @@ function useLesson() {
 
 /* ---------------------------- المكوّن ---------------------------- */
 export default function SmartBoard({ fullscreen = false, onClose = null }) {
+  useState(() => { const d = pickBoardSize(); VW = d.w; VH = d.h; return d })
   const rootRef = useRef(null)
   const stageRef = useRef(null)
   const canvasRef = useRef(null)
@@ -298,7 +308,7 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
   const sync = useCallback(() => {
     setHist({ u: objectsRef.current.length, r: redoRef.current.length })
     try {
-      const json = JSON.stringify({ objects: objectsRef.current })
+      const json = JSON.stringify({ objects: objectsRef.current, w: VW, h: VH })
       if (json.length < 1_500_000) localStorage.setItem(STORE, json)
     } catch { /* ignore */ }
   }, [])
@@ -306,7 +316,7 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORE) || 'null')
-      if (Array.isArray(saved?.objects)) objectsRef.current = saved.objects
+      if (Array.isArray(saved?.objects) && (saved.w || 1600) === VW && (saved.h || 900) === VH) objectsRef.current = saved.objects
     } catch { /* ignore */ }
     setHist({ u: objectsRef.current.length, r: 0 })
     const stage = stageRef.current
@@ -462,8 +472,27 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
     sync()
   }, [stop, redraw, sync])
 
-  const startLesson = (data, keep = []) => {
+  // الدروس المكتوبة بإحداثيات 1600×900 (الدرس التجريبي) تُحوَّل إلى مساحة الهاتف الطولية
+  const fitLesson = (data) => {
+    if (VW === 1600) return data
+    const k = VW / 1600
+    const mx = (v) => Math.round(v * k)
+    const map = (o) => {
+      switch (o.t) {
+        case 'text': return { ...o, x: mx(o.x), y: o.y + 90 }
+        case 'line': case 'arrow': return { ...o, x1: mx(o.x1), x2: mx(o.x2), y1: o.y1 + 90, y2: o.y2 + 90 }
+        case 'rect': return { ...o, x: mx(o.x), w: mx(o.w), y: o.y + 90 }
+        case 'circle': return { ...o, x: mx(o.x), y: o.y + 90, r: Math.round(o.r * k) }
+        case 'poly': return { ...o, pts: o.pts.map(([x, y]) => [mx(x), y + 90]) }
+        default: return o
+      }
+    }
+    return { ...data, steps: data.steps.map((st) => ({ ...st, draw: (st.draw || []).map(map) })) }
+  }
+
+  const startLesson = (rawData, keep = []) => {
     stop()
+    const data = rawData === DEMO ? fitLesson(rawData) : rawData
     objectsRef.current = [...keep]
     redoRef.current = []
     sync()
@@ -496,6 +525,7 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
           message: topic,
           topic,
           mode: 'board',
+          board: { w: VW, h: VH },
           role: 'student',
           ...(img ? { images: [img.src] } : {}),
           teacher: { name: teacherRef.current.name, subject: teacherRef.current.subject },
@@ -622,7 +652,7 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
     try {
       const { src, w, h } = await readImageFile(file)
       // الصورة في الجانب الأيسر من السبورة، والأستاذ يكتب في الجانب الأيمن
-      const box = { x: 40, y: 110, w: 640, h: 680 }
+      const box = VW < VH ? { x: 40, y: 110, w: VW - 80, h: Math.round(VH * 0.38) } : { x: 40, y: 110, w: 640, h: 680 }
       const k = Math.min(box.w / w, box.h / h)
       const img = { t: 'img', src, w: Math.round(w * k), h: Math.round(h * k), x: box.x + Math.round((box.w - w * k) / 2), y: box.y + Math.round((box.h - h * k) / 2) }
       stop()

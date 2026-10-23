@@ -1726,6 +1726,24 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
 
   const todayMins = studyLog[todayKey()] || 0
 
+  // ارتفاع النافذة الفعلي: يملأ صندوق المحادثة المساحة المتاحة بدل ارتفاع ثابت (مهم للهاتف)
+  const rootRef = useRef(null)
+  const [boxH, setBoxH] = useState(0)
+  useEffect(() => {
+    if (!embedded) return undefined
+    const el = rootRef.current?.parentElement
+    if (!el) return undefined
+    const read = () => setBoxH(el.clientHeight)
+    read()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(read) : null
+    ro?.observe(el)
+    window.addEventListener('resize', read)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener('resize', read)
+    }
+  }, [embedded])
+
   // وضع النافذة: تبويب ثابت + استقبال أوامر الفتح من Rafeeq OS (بحث / عرض المكتبة)
   useEffect(() => {
     if (embedded && forcedTab) setTab(forcedTab)
@@ -1757,7 +1775,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
 
   /* ============================== الواجهة ============================== */
   return (
-    <div dir="rtl" className={embedded ? 'dash-embed relative min-h-full overflow-x-hidden text-[var(--ink)]' : 'relative min-h-screen overflow-x-hidden text-[var(--ink)]'}>
+    <div ref={rootRef} dir="rtl" className={embedded ? 'dash-embed relative min-h-full overflow-x-hidden text-[var(--ink)]' : 'relative min-h-screen overflow-x-hidden text-[var(--ink)]'}>
       {embedded && <style>{EMBED_CSS}</style>}
       {!embedded && <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
@@ -1970,7 +1988,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
 
       <main className={embedded ? '' : 'lg:mr-[256px]'}>
         {/* ============ الشريط العلوي ============ */}
-        <header className={`glass sticky top-0 z-40 border-x-0 border-t-0 ${embedded ? 'dash-embed-head' : ''}`}>
+        <header className={`glass sticky top-0 z-40 border-x-0 border-t-0 ${embedded ? 'dash-embed-head' : ''} ${embedded && tab === 'ai' ? 'hidden' : ''}`}>
           <div className="flex h-[64px] items-center justify-between gap-3 px-4 sm:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
@@ -2047,7 +2065,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
           </div>
         </header>
 
-        <div className="mx-auto max-w-[1240px] px-4 py-5 pb-28 sm:px-6 lg:px-8 lg:py-7 lg:pb-8">
+        <div className={embedded ? 'mx-auto max-w-[1240px] px-2 py-2 pb-4 sm:px-4' : 'mx-auto max-w-[1240px] px-4 py-5 pb-28 sm:px-6 lg:px-8 lg:py-7 lg:pb-8'}>
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
@@ -2211,7 +2229,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
               {tab === 'ai' && (
                 <section className="mx-auto max-w-[920px]">
                   <div className="glass overflow-hidden rounded-[24px]">
-                    <div className="flex min-h-[68px] items-center justify-between gap-3 border-b border-[var(--line)] px-4 py-3 sm:px-5">
+                    <div className="flex min-h-[68px] flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] px-3 py-2 sm:gap-3 sm:px-5 sm:py-3">
                       <div className="flex items-center gap-3">
                         <div className="btn-grad grid h-10 w-10 place-items-center rounded-full">✦</div>
                         <div>
@@ -2233,9 +2251,9 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                       </div>
                     </div>
 
-                    <div ref={chatBoxRef} className="thin-scroll h-[58vh] min-h-[430px] overflow-y-auto bg-white/40 p-4 sm:p-6">
+                    <div ref={chatBoxRef} style={embedded && boxH ? { height: Math.max(240, boxH - 250) } : undefined} className={`thin-scroll overflow-y-auto bg-white/40 p-3 sm:p-6 ${embedded ? '' : 'h-[58vh] min-h-[430px]'}`}>
                       {messages.length === 0 ? (
-                        <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
+                        <div className={`flex flex-col items-center justify-center text-center ${embedded ? 'min-h-full' : 'min-h-[420px]'}`}>
                           <div className="btn-grad float grid h-16 w-16 place-items-center rounded-[22px] text-[23px]">✦</div>
                           <h2 className="mt-5 text-[19px] font-bold">شن تبي نراجع معاك؟</h2>
                           <p className="mt-2 max-w-[450px] text-[11px] leading-6 text-[var(--muted)]">
