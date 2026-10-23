@@ -11,7 +11,7 @@ export const APPS = [
   { id: 'books', title: 'المكتبة', desc: 'كتب ومصادر تعليمية', icon: 'book', grad: 'linear-gradient(135deg,#a78bfa,#7c5cf0)', w: 940, h: 660, kind: 'dash', tab: 'books', keywords: 'مكتبة كتب منهج دروس' },
   { id: 'tasks', title: 'المهام', desc: 'نظّم وقتك وإنجازاتك', icon: 'tasks', grad: 'linear-gradient(135deg,#34d3b0,#16b58a)', w: 460, h: 580, kind: 'tasks', keywords: 'مهام قائمة واجبات إنجازات' },
   { id: 'notebook', title: 'دفتر رفيق', desc: 'تلخيص وتحليل ملفاتك', icon: 'notebook', grad: 'linear-gradient(135deg,#6f8dff,#4a62e8)', w: 1000, h: 680, kind: 'dash', tab: 'notebook', keywords: 'دفتر مصادر ملخص تلخيص notebook' },
-  { id: 'board', title: 'السبورة التفاعلية', desc: 'ارسم وتعلّم بسهولة', icon: 'board', grad: 'linear-gradient(135deg,#2fd4c0,#17a9c9)', w: 900, h: 640, kind: 'dash', tab: 'board', keywords: 'سبورة معلم رسم شرح' },
+  { id: 'board', title: 'السبورة التفاعلية', desc: 'ارسم وتعلّم بسهولة', icon: 'board', grad: 'linear-gradient(135deg,#2fd4c0,#17a9c9)', w: 1100, h: 720, max: true, kind: 'board', keywords: 'سبورة معلم رسم شرح' },
   { id: 'vision', title: 'تحليل الصور', desc: 'حل المسائل من الصور', icon: 'image', grad: 'linear-gradient(135deg,#5fb4ff,#3b82f6)', alias: { app: 'ai', payload: { pickImage: true } }, keywords: 'صور تحليل صورة كاميرا مسألة' },
   { id: 'notes', title: 'ملاحظاتي', desc: 'دوّن أفكارك بسرعة', icon: 'notes', grad: 'linear-gradient(135deg,#f9b34c,#f27a3d)', w: 880, h: 620, kind: 'dash', tab: 'notes', keywords: 'ملاحظات دفتر' },
   { id: 'timer', title: 'مؤقت الدراسة', desc: 'ركّز بأسلوب بومودورو', icon: 'timer', grad: 'linear-gradient(135deg,#b49cff,#7a5cf0)', w: 580, h: 660, kind: 'dash', tab: 'timer', keywords: 'مؤقت تركيز بومودورو' },

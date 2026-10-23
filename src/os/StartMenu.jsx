@@ -5,7 +5,7 @@ import { Icon, AppIcon } from './icons'
 import { APPS, getApp } from './apps'
 import { ResultList, useSearch } from './SearchBox'
 
-export default function StartMenu({ recents, profile, subjects, onOpen, onClose, onLogout, onClassic, onTile }) {
+export default function StartMenu({ recents, profile, subjects, onOpen, onClose, onLogout, onTile }) {
   const [q, setQ] = useState('')
   const groups = useSearch(q)
   const inputRef = useRef(null)
@@ -79,7 +79,6 @@ export default function StartMenu({ recents, profile, subjects, onOpen, onClose,
 
       <div className="ros-start-foot">
         <button className="ros-slink" onClick={onTile}><Icon name="grid" size={16} /> ترتيب النوافذ</button>
-        <button className="ros-slink" onClick={onClassic}><Icon name="layout" size={16} /> الكلاسيكية</button>
       </div>
       <button className="ros-power" onClick={onLogout}>
         <Icon name="power" size={18} /> تسجيل الخروج

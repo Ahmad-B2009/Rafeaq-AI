@@ -132,6 +132,52 @@ const P = {
       <path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .8 1.6V16h5.6v-.6c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z" />
     </>
   ),
+  pen: <path d="m4 20 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19zM14.5 6.5l3 3" />,
+  marker: (
+    <>
+      <path d="m9 11 4 4M4 20l3.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11z" />
+      <path d="M13 20h8" />
+    </>
+  ),
+  eraser: (
+    <>
+      <path d="m7 20-4-4a2 2 0 0 1 0-2.8L13.2 3a2 2 0 0 1 2.8 0l5 5a2 2 0 0 1 0 2.8L11 20z" />
+      <path d="M8.5 9.5 15 16M10 20h11" />
+    </>
+  ),
+  line: <path d="M5 19 19 5" />,
+  arrowTool: <path d="M5 19 19 5M10 5h9v9" />,
+  rect: <rect x="4" y="6" width="16" height="12" rx="2" />,
+  circle: <circle cx="12" cy="12" r="8" />,
+  text: <path d="M5 6V4h14v2M12 4v16M9 20h6" />,
+  undo: <path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" />,
+  redo: <path d="m15 14 5-5-5-5M20 9H10a6 6 0 0 0 0 12h3" />,
+  trash: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />,
+  play: <path d="M8 5v14l11-7z" fill="currentColor" />,
+  pause: <path d="M8 5v14M16 5v14" />,
+  stop: <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />,
+  replay: <path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5" />,
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+    </>
+  ),
+  send: <path d="M21 3 10 14M21 3l-7 18-4-7-7-4z" />,
+  volume: (
+    <>
+      <path d="M4 9.5v5h3.5L12 19V5L7.5 9.5z" />
+      <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+    </>
+  ),
+  volumeOff: (
+    <>
+      <path d="M4 9.5v5h3.5L12 19V5L7.5 9.5z" />
+      <path d="m16 9 5 6M21 9l-5 6" />
+    </>
+  ),
+  expand: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
+  shrink: <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />,
   user: (
     <>
       <circle cx="12" cy="8.5" r="3.8" />

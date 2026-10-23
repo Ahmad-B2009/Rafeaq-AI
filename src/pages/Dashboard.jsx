@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import QuizCard from '../components/QuizCard'
 import FlashcardDeck from '../components/FlashcardDeck'
-import RafeeqBoard from '../components/RafeeqBoard'
+import SmartBoard from '../components/SmartBoard'
 
 /* ============================== الثوابت ============================== */
 const DAILY_LIMIT = 25
@@ -2205,7 +2205,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
               )}
 
               {/* ================= سبورة رفيق ================= */}
-              {tab === 'board' && <RafeeqBoard onToast={showToast} />}
+              {tab === 'board' && <SmartBoard fullscreen onClose={embedded ? null : () => goTo('home')} />}
 
               {/* ================= رفيق AI ================= */}
               {tab === 'ai' && (

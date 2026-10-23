@@ -1,7 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Landing from './pages/Landing.jsx'
 import Login from './pages/Login.jsx'
-import Dashboard from './pages/Dashboard.jsx'
 import RafeeqOS from './os/RafeeqOS.jsx'
 
 export default function App(){
@@ -10,8 +9,8 @@ export default function App(){
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/os" element={<RafeeqOS />} />
+        <Route path="/dashboard" element={<RafeeqOS />} />
+        <Route path="/os" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   )

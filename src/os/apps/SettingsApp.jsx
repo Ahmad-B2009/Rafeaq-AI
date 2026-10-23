@@ -61,10 +61,9 @@ export default function SettingsApp({ osRef, wallpaper }) {
       <section>
         <h3>النظام</h3>
         <div className="ros-row">
-          <button className="ros-btn" onClick={os.classic}>العودة للنسخة الكلاسيكية</button>
           <button className="ros-btn danger" onClick={os.logout}>تسجيل الخروج</button>
         </div>
-        <p className="ros-muted">Rafeeq OS — المرحلة الأولى: سطح المكتب والنوافذ والتطبيقات الحالية.</p>
+        <p className="ros-muted">رفيق AI — سطح المكتب والنوافذ والتطبيقات.</p>
       </section>
     </div>
   )

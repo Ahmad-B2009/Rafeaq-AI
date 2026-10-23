@@ -158,6 +158,83 @@ function deepConvert(v) {
   return v
 }
 
+// ============ سبورة رفيق: شرح بخطوات (كلام + رسم) ============
+const BOARD_COLORS = ['#26304A', '#2563EB', '#DC2626', '#16A34A', '#9333EA', '#EA580C']
+
+function buildBoardPrompt(topic, teacher = {}, previous = '', hasImage = false) {
+  const name = String(teacher.name || 'رفيق').slice(0, 30)
+  const subject = String(teacher.subject || 'المواد الدراسية').slice(0, 40)
+  return `أنت الأستاذ «${name}» معلم ${subject}، تشرح للطالب على سبورة بيضاء بصوتك وبالرسم، وفق المنهج الليبي الرسمي.
+الموضوع المطلوب: «${String(topic).slice(0, 2200)}»
+${previous ? `ما شُرح سابقاً على السبورة (للمتابعة وليس للتكرار): ${String(previous).slice(0, 600)}\n` : ''}أرجع JSON فقط بهذا الشكل:
+{"title":"عنوان قصير","steps":[{"say":"ما يقوله الأستاذ بصوته","draw":[عناصر الرسم]}]}
+
+مساحة السبورة 1600 عرضاً × 900 ارتفاعاً (x من 0 إلى 1600، y من 0 إلى 900).
+أنواع عناصر الرسم:
+{"t":"text","x":800,"y":120,"s":44,"c":"#26304A","text":"..."}   (x هو منتصف النص، s حجم الخط بين 28 و64)
+{"t":"line","x1":0,"y1":0,"x2":0,"y2":0,"c":"#2563EB"}
+{"t":"arrow","x1":0,"y1":0,"x2":0,"y2":0,"c":"#DC2626"}
+{"t":"rect","x":0,"y":0,"w":0,"h":0,"c":"#16A34A"}
+{"t":"circle","x":0,"y":0,"r":0,"c":"#9333EA"}
+{"t":"poly","pts":[[x,y],[x,y]],"c":"#EA580C"}   (لمنحنى أو رسم بياني، من 2 إلى 24 نقطة)
+الألوان المسموحة فقط: ${BOARD_COLORS.join(' ')}
+
+القواعد:
+${hasImage ? '- الصورة موضوعة على الجانب الأيسر (x أقل من 700). ارسم واكتب فقط في الجانب الأيمن: x بين 740 و1560، وتمركز النصوص حول x = 1150، ولا تضع أي عنصر فوق الصورة.\n' : ''}- من 4 إلى 7 خطوات، وكل خطوة من 1 إلى 5 عناصر.
+- "say": جملة أو جملتان بالفصحى المبسطة تُنطق بصوت عالٍ، فلا تكتب فيها رموزاً رياضية ولا معادلات، بل اشرحها بالكلمات.
+- النصوص على السبورة قصيرة (حتى 36 حرفاً)، كل معادلة أو جملة في عنصر text مستقل.
+- رتّب النصوص من الأعلى إلى الأسفل بفارق لا يقل عن 90 في y، ولا تجعل العناصر تتداخل، ولا تخرج عن حدود السبورة (اترك هامشاً 60).
+- أول خطوة عنوان الدرس وفكرته، وآخر خطوة خلاصة قصيرة.
+- المعادلات والرموز على السبورة بالأرقام الغربية 0-9 والمتغيرات بحروف عربية (س، ص).
+- تحقق من صحة كل عملية حسابية قبل كتابتها.`
+}
+
+function normalizeBoard(raw) {
+  const num = (v, lo, hi, d = lo) => {
+    const n = Number(v)
+    return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d
+  }
+  const color = (c) => (BOARD_COLORS.includes(String(c).toUpperCase()) ? String(c).toUpperCase() : BOARD_COLORS[0])
+  const str = (t, max) => toArabicMath(String(t ?? '').replace(/\s+/g, ' ').trim().slice(0, max))
+
+  const toItem = (d) => {
+    if (!d || typeof d !== 'object') return null
+    const c = color(d.c)
+    switch (d.t) {
+      case 'text': {
+        const text = str(d.text, 60)
+        return text ? { t: 'text', x: num(d.x, 0, 1600, 800), y: num(d.y, 0, 900, 450), s: num(d.s, 24, 72, 40), c, text } : null
+      }
+      case 'line':
+      case 'arrow':
+        return { t: d.t, x1: num(d.x1, 0, 1600), y1: num(d.y1, 0, 900), x2: num(d.x2, 0, 1600), y2: num(d.y2, 0, 900), c }
+      case 'rect':
+        return { t: 'rect', x: num(d.x, 0, 1600), y: num(d.y, 0, 900), w: num(d.w, 10, 1600, 100), h: num(d.h, 10, 900, 60), c }
+      case 'circle':
+        return { t: 'circle', x: num(d.x, 0, 1600), y: num(d.y, 0, 900), r: num(d.r, 6, 450, 40), c }
+      case 'poly': {
+        const pts = (Array.isArray(d.pts) ? d.pts : [])
+          .filter((p) => Array.isArray(p) && p.length >= 2)
+          .slice(0, 24)
+          .map((p) => [num(p[0], 0, 1600), num(p[1], 0, 900)])
+        return pts.length >= 2 ? { t: 'poly', pts, c } : null
+      }
+      default:
+        return null
+    }
+  }
+
+  const steps = (Array.isArray(raw?.steps) ? raw.steps : [])
+    .slice(0, 8)
+    .map((st) => ({
+      say: str(st?.say, 400),
+      draw: (Array.isArray(st?.draw) ? st.draw : []).slice(0, 6).map(toItem).filter(Boolean)
+    }))
+    .filter((st) => st.say || st.draw.length)
+
+  return { title: str(raw?.title, 80) || 'درس على السبورة', steps }
+}
+
 // ============ سلسلة النماذج (احتياط تلقائي عند نفاد الحصة أو الإيقاف) ============
 const csv = (s) => String(s || '').split(',').map((x) => x.trim()).filter(Boolean)
 
@@ -379,6 +456,44 @@ export default async function handler(req, res) {
       : ui === 'notebook' || imageList.length
         ? 'chat'
         : detectMode(message || '')
+
+    // ---------- سبورة رفيق: شرح بالصوت والرسم ----------
+    if (ui === 'board') {
+      let topicText = String(body.topic || message || '')
+      // صورة مرفقة: نستخرج محتواها أولاً (PaliGemma إن وُجد، وإلا نموذج رؤية) ثم يشرحها الأستاذ على السبورة
+      if (imageList.length) {
+        let seen = ''
+        const paliAll = await Promise.all(imageList.map((u) => readImageWithPaligemma(u))).catch(() => [])
+        if (paliAll.length && paliAll.every(Boolean)) {
+          seen = paliAll.map((x, i) => `صورة ${i + 1}: النص المقروء: ${x.ocr || 'لا يوجد'} | الوصف (بالإنجليزية): ${x.caption || 'لا يوجد'}`).join('\n')
+        } else {
+          const r = await callLLM({
+            vision: true,
+            messages: [
+              { role: 'system', content: SYSTEM },
+              { role: 'user', content: [
+                { type: 'text', text: 'اقرأ هذه الصورة التعليمية: انسخ كل نص أو سؤال أو أرقام فيها حرفياً، ثم صف أي رسم أو شكل أو جدول باختصار. لا تحلّ شيئاً الآن.' },
+                ...imageList.map((url) => ({ type: 'image_url', image_url: { url } }))
+              ] }
+            ],
+            max_tokens: 900
+          })
+          seen = String(r.content || '')
+        }
+        topicText = `${topicText}\n\nمحتوى الصورة المرفقة (قد تحتوي أخطاء قراءة، فإن لم تكن متأكداً فقل ذلك للطالب): ${seen.slice(0, 1500)}`
+      }
+      const { content, provider } = await callLLM({
+        messages: [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: buildBoardPrompt(topicText, body.teacher, body.previous, imageList.length > 0) }
+        ],
+        max_tokens: 3500,
+        json: true
+      })
+      const board = normalizeBoard(parseJson(content))
+      if (!board.steps.length) return res.json({ reply: 'تعذر تجهيز الشرح على السبورة، حاول مرة أخرى.' })
+      return res.json({ type: 'board', ...board, provider })
+    }
 
     // ---------- امتحان / بطاقات ----------
     if (mode === 'quiz' || mode === 'flashcards') {

@@ -59,7 +59,7 @@ export function reducer(st, a) {
       const h = hasTop ? Math.min(app.h, Math.max(MIN_H, area.h - app.top - 12)) : Math.min(app.h, Math.max(MIN_H, area.h - 24))
       const x = clamp(Math.round((area.w - w) / 2) + (hasTop ? 0 : (n % 6) * 28 - 56), 0, Math.max(0, area.w - w))
       const y = hasTop ? app.top : clamp(Math.round((area.h - h) / 2) + (n % 6) * 24 - 40, 0, Math.max(0, area.h - h))
-      const win = { id: app.id, app: app.id, x, y, w, h, state: 'normal', back: 'normal', z, payload: payload ?? null }
+      const win = { id: app.id, app: app.id, x, y, w, h, state: app.max ? 'max' : 'normal', back: 'normal', z, payload: payload ?? null }
       return { z, focus: win.id, wins: [...st.wins, win] }
     }
     case 'close': {

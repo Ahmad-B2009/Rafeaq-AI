@@ -8,6 +8,7 @@ import Window from './Window'
 import TasksApp from './apps/TasksApp'
 import SettingsApp from './apps/SettingsApp'
 import HomeApp from './apps/HomeApp'
+import SmartBoard from '../components/SmartBoard'
 import Desktop from './Desktop'
 import StartMenu from './StartMenu'
 import Taskbar from './Taskbar'
@@ -68,6 +69,7 @@ const AppView = memo(function AppView({ appId, payload, open, osRef, wallpaper, 
   if (app.kind === 'dash') return <Dashboard embedded forcedTab={app.tab} launch={payload} onNavigate={open} />
   if (app.kind === 'home') return <HomeApp profile={profile} open={open} logo={LOGO} />
   if (app.kind === 'tasks') return <TasksApp />
+  if (app.kind === 'board') return <SmartBoard />
   if (app.kind === 'settings') return <SettingsApp osRef={osRef} wallpaper={wallpaper} />
   return null
 })
@@ -152,7 +154,6 @@ export default function RafeeqOS() {
     },
     tile: () => dispatch({ type: 'tile', area: areaRef.current }),
     closeAll: () => dispatch({ type: 'closeAll' }),
-    classic: () => nav('/dashboard'),
     logout: () => {
       localStorage.removeItem(TOKEN_KEY)
       sessionStorage.setItem('just_logged_out', '1')
@@ -271,7 +272,6 @@ export default function RafeeqOS() {
             osRef.current.tile()
             setStartOpen(false)
           }}
-          onClassic={() => nav('/dashboard')}
           onLogout={() => osRef.current.logout()}
         />
       )}
