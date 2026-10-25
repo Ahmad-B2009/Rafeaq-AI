@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const STAGES = [
-  [0, 'نتحقق من حسابك...'],
-  [25, 'نجهز مكتبتك...'],
-  [50, 'نفتح دفتر رفيق...'],
-  [75, 'نرتب مساحتك الدراسية...'],
-  [95, 'خلاص، تقريباً وصلنا!'],
+  [0, 'نرتّب لك مساحة دراسة هادئة...'],
+  [25, 'نجهّز أدواتك ومصادرك...'],
+  [50, 'نفتح آخر ما كنت تعمل عليه...'],
+  [75, 'نضبط التفاصيل الصغيرة...'],
+  [95, 'كل شيء جاهز تقريباً...'],
 ]
 
 const FEATURES = [
@@ -50,9 +50,11 @@ export default function Login() {
     const token = localStorage.getItem('rafeaq_token')
     const user = localStorage.getItem('rafeaq_user')
     if (token && user && !sessionStorage.getItem('just_logged_out')) {
-      nav('/dashboard')
+      startLoading(user, localStorage.getItem('rafeaq_name') || user, token, null, null, 'returning')
     }
-  }, [nav])
+    // startLoading is intentionally called only at startup when an active session exists.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /* ---------- حالة الاتصال ---------- */
   useEffect(() => {
@@ -121,7 +123,7 @@ export default function Login() {
     setShake((s) => s + 1)
   }
 
-  /* ---------- شاشة التحميل (7 ثواني) ---------- */
+  /* ---------- شاشة التحميل: انتقال قصير ومقصود ---------- */
   function startLoading(userId, name, tokenParam, picture, email, method) {
     if (timerRef.current) return
     setDisplayName(name || userId || '')
@@ -130,7 +132,7 @@ export default function Login() {
     let cur = 0
 
     timerRef.current = window.setInterval(() => {
-      cur += 1.43
+      cur += 2.5
       if (cur > 100) cur = 100
       setProgress(cur)
 
@@ -143,6 +145,7 @@ export default function Login() {
         localStorage.setItem('rafeaq_name', name)
         localStorage.setItem('rafeaq_token', tokenParam || 'user_' + Date.now())
         localStorage.setItem('rafeaq_login_time', Date.now().toString())
+        sessionStorage.setItem('rafeaq_skip_os_boot', '1')
 
         if (email) {
           fetch('/api/users/save', {
@@ -193,7 +196,6 @@ export default function Login() {
   }
 
   const stage = [...STAGES].reverse().find(([from]) => progress >= from)?.[1]
-  const secondsLeft = Math.max(0, Math.ceil((100 - progress) / 14.3))
   const feature = FEATURES[featureIndex]
 
   const styles = (
@@ -265,6 +267,10 @@ export default function Login() {
       .ring { background: conic-gradient(var(--brand) var(--deg), #E7E3FF 0); }
       .pulse-ring { animation: ring 1.8s ease-out infinite; }
       @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(45,212,160,.55); } 100% { box-shadow: 0 0 0 10px rgba(45,212,160,0); } }
+      .rr-mark { position:relative; display:inline-flex; letter-spacing:-.28em; padding-left:.16em; font-family:ui-serif, Georgia, serif; font-weight:900; font-style:italic; }
+      .rr-mark span:last-child { transform:translateX(-.08em) rotate(7deg); }
+      .smart-target { display:flex; align-items:center; justify-content:center; gap:8px; color:var(--muted); font-size:10px; }
+      .smart-target img { width:26px; height:26px; object-fit:contain; mix-blend-mode:multiply; border-radius:7px; }
 
       @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
     `}</style>
@@ -280,12 +286,16 @@ export default function Login() {
         <motion.div
           initial={{ opacity: 0, scale: 0.94, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="glass w-full max-w-[420px] rounded-[30px] p-8 text-center"
+          className="glass w-full max-w-[440px] rounded-[32px] p-7 text-center sm:p-9"
         >
+          <div className="mb-7 flex items-center justify-between text-[10px] font-semibold text-[var(--muted)]">
+            <span className="rounded-full bg-[var(--soft)] px-3 py-1.5">رفيق · مساحة التعلّم</span>
+            <span className="flex items-center gap-1.5"><i className="pulse-ring h-2 w-2 rounded-full bg-[var(--mint)]" /> متصل وآمن</span>
+          </div>
           <div className="ring mx-auto grid h-[132px] w-[132px] place-items-center rounded-full" style={{ '--deg': `${progress * 3.6}deg` }}>
             <div className="grid h-[114px] w-[114px] place-items-center rounded-full bg-white">
-              <div className="btn-grad float grid h-[76px] w-[76px] place-items-center rounded-[22px]">
-                <span className="text-[34px] font-black">ر</span>
+              <div className="btn-grad float grid h-[76px] w-[76px] place-items-center rounded-[24px]">
+                <span className="rr-mark text-[34px]">ر<span>ر</span></span>
               </div>
             </div>
           </div>
@@ -310,12 +320,14 @@ export default function Login() {
             <div className="h-[7px] overflow-hidden rounded-full bg-[var(--soft)]">
               <div className="h-full rounded-full transition-all" style={{ width: progress + '%', background: 'var(--grad)' }} />
             </div>
-            <div className="mt-3 flex justify-between text-[11px]">
-              <span className="text-[var(--muted)]">
-                {secondsLeft > 0 ? `${secondsLeft} ثواني وندخلوك...` : 'ندخلوك الآن...'}
-              </span>
+            <div className="mt-3 flex items-center justify-between text-[11px]">
+              <span className="text-[var(--muted)]">رحلة تعلّم مصممة لأجلك</span>
               <span className="font-bold text-[var(--brand)]">{Math.round(progress)}%</span>
             </div>
+          </div>
+          <div className="smart-target mt-7 border-t border-[var(--line)] pt-4">
+            <img src="/smart-target.png" alt="Smart Target Technology" />
+            <span dir="ltr">Developed by Smart Target Technology</span>
           </div>
         </motion.div>
       </div>
@@ -345,7 +357,7 @@ export default function Login() {
         >
           <div className="flex items-center gap-3">
             <div className="btn-grad grid h-12 w-12 place-items-center rounded-[15px]">
-              <span className="text-[20px] font-bold">ر</span>
+              <span className="rr-mark text-[20px]">ر<span>ر</span></span>
             </div>
             <div>
               <div className="gtext text-[19px] font-bold">رفيق</div>

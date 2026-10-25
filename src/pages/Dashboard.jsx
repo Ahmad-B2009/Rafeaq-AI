@@ -589,7 +589,7 @@ function UserContent({ m }) {
   )
 }
 
-function AssistantActions({ text, onSave, onNotion, onToast }) {
+function AssistantActions({ text, onSave, onToast }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(text)
@@ -616,7 +616,6 @@ function AssistantActions({ text, onSave, onNotion, onToast }) {
   return (
     <div className="mt-2 flex flex-wrap gap-2 border-t border-[var(--line)] pt-2">
       <button onClick={onSave} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">حفظ في ملاحظاتي</button>
-      <button onClick={onNotion} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">إلى Notion</button>
       <button onClick={copy} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">نسخ</button>
       <button onClick={speak} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">🔊 استماع</button>
     </div>
@@ -679,12 +678,8 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
   const cameraRef = useRef(null)
   const imgTargetRef = useRef('ai')
 
-  /* Notion */
-  const [notion, setNotion] = useState({ connected: false, workspace: '', loading: true })
-  const [notionError, setNotionError] = useState('')
-
   /* القوائم والإعدادات */
-  const [menu, setMenu] = useState(null) // user | settings | notion | paste | cite
+  const [menu, setMenu] = useState(null) // user | settings | paste | cite
   const [form, setForm] = useState({ name: '', class: '', section: '' })
   const [pasteForm, setPasteForm] = useState({ title: '', text: '' })
   const [citeView, setCiteView] = useState(null)
@@ -1496,78 +1491,6 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
     showToast('تم الحفظ في ملاحظاتي ✓')
   }
 
-  /* ---------- Notion ---------- */
-  async function loadNotionStatus() {
-    try {
-      const res = await fetch('/api/notion/status', { headers: authHeaders() })
-      const data = await res.json()
-      setNotion({ connected: !!data.connected, workspace: data.workspace || '', loading: false })
-    } catch {
-      setNotion({ connected: false, workspace: '', loading: false })
-    }
-  }
-
-  useEffect(() => {
-    loadNotionStatus()
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('notion') === 'connected') {
-      showToast('تم ربط Notion بنجاح ✓')
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  async function connectNotion() {
-    setNotionError('')
-    try {
-      const res = await fetch('/api/notion/auth-url', { headers: authHeaders() })
-      const data = await res.json().catch(() => null)
-      if (!res.ok || !data?.url) throw new Error(data?.error || `الخادم رد بالرمز ${res.status}`)
-      window.location.href = data.url
-    } catch (error) {
-      setNotionError(error.message || 'تعذر الاتصال بالخادم')
-      setMenu('notion')
-    }
-  }
-
-  function openNotionSite() {
-    window.open('https://www.notion.so/', '_blank', 'noopener')
-  }
-
-  async function disconnectNotion() {
-    if (!window.confirm('فصل الربط مع Notion؟')) return
-    await fetch('/api/notion/disconnect', { method: 'DELETE', headers: authHeaders() }).catch(() => null)
-    setNotion({ connected: false, workspace: '', loading: false })
-  }
-
-  async function exportToNotion(title, content) {
-    // بدون ربط: ننسخ المحتوى ونفتح موقع Notion الرسمي ليلصقه المستخدم
-    if (!notion.connected) {
-      openNotionSite()
-      try {
-        await navigator.clipboard.writeText(`# ${title}\n\n${content}`)
-        showToast('نُسخ المحتوى ✓ الصقه في صفحة جديدة داخل Notion (Ctrl+V)')
-      } catch {
-        showToast('تم فتح Notion. انسخ النص يدوياً والصقه هناك.')
-      }
-      return
-    }
-
-    try {
-      const res = await fetch('/api/notion/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ title, content }),
-      })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
-      showToast('تم التصدير إلى Notion ✓')
-      if (data?.url) window.open(data.url, '_blank', 'noopener')
-    } catch (error) {
-      showToast(error.message?.length < 90 ? error.message : 'فشل التصدير إلى Notion.')
-    }
-  }
-
   /* ---------- الإعدادات ---------- */
   function openSettings() {
     setForm({ name: user === 'الطالب' ? '' : user, class: studentClass, section: studentSection })
@@ -2010,15 +1933,6 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <button
-                onClick={() => setMenu('notion')}
-                className="btn-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-semibold"
-                title="Notion"
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${notion.connected ? 'pulse-ring bg-[var(--mint)]' : 'bg-[#C5C1E6]'}`} />
-                <span>{notion.connected ? 'Notion متصل' : 'Notion'}</span>
-              </button>
-
               <div className={`hidden text-left text-[10px] leading-4 text-[var(--muted)] ${embedded ? '' : 'md:block'}`}>{formatDate()}</div>
 
               <div className={embedded ? 'hidden' : 'relative'}>
@@ -2047,7 +1961,6 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                       <div className="my-1 h-px bg-[var(--line)]" />
                       {[
                         ['⚙', 'الإعدادات', openSettings],
-                        ['N', 'Notion', () => setMenu('notion')],
                       ].map(([icon, label, fn]) => (
                         <button key={label} onClick={fn} className="flex h-10 w-full items-center gap-3 rounded-[11px] px-3 text-right text-[12px] hover:bg-[var(--soft)]">
                           <span className="w-4 text-center">{icon}</span>{label}
@@ -2095,7 +2008,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
 
                       <p className="mt-3 max-w-[560px] text-[12px] leading-6 text-white/80 sm:text-[13px]">
                         ارفع مستنداتك أو حمّل كتبك على جهازك، وخلّي دفتر رفيق يقرأها معاك ويجاوب من داخلها،
-                        وصدّر ملخصاتك إلى Notion بضغطة وحدة.
+                        واحتفظ بملخصاتك وملاحظاتك في مكان واحد على جهازك.
                       </p>
 
                       <div className="mt-6 flex flex-wrap gap-2">
@@ -2305,7 +2218,6 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                                   <AssistantActions
                                     text={message.text}
                                     onSave={() => saveToNotes(message.text, 'رفيق')}
-                                    onNotion={() => exportToNotion('رد من رفيق', message.text)}
                                     onToast={showToast}
                                   />
                                 )}
@@ -2587,7 +2499,6 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                                     <AssistantActions
                                       text={m.text}
                                       onSave={() => saveToNotes(m.text)}
-                                      onNotion={() => exportToNotion('دفتر رفيق', m.text)}
                                       onToast={showToast}
                                     />
                                   )}
@@ -2840,13 +2751,8 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <h1 className="text-[19px] font-bold">ملاحظاتي</h1>
-                        <p className="mt-1 text-[10px] text-[var(--muted)]">محفوظة محلياً في هذا المتصفح، ويمكنك تصديرها إلى Notion أو استخدامها كمصدر في دفتر رفيق.</p>
+                        <p className="mt-1 text-[10px] text-[var(--muted)]">محفوظة محلياً في هذا المتصفح، ويمكنك استخدامها كمصدر في دفتر رفيق.</p>
                       </div>
-                      {!notion.connected && (
-                        <button onClick={connectNotion} className="btn-soft rounded-full px-4 py-2 text-[10px] font-semibold">
-                          ربط Notion
-                        </button>
-                      )}
                     </div>
 
                     <div className="mt-5 rounded-[16px] border border-[var(--line)] bg-white/80 p-2 transition focus-within:border-[var(--brand)] focus-within:shadow-[0_0_0_4px_rgba(109,94,245,.12)]">
@@ -2877,9 +2783,6 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                           </div>
                           <p className="mt-3 whitespace-pre-wrap text-[10px] leading-6 text-[var(--muted)]">{note.content}</p>
                           <div className="mt-4 flex justify-end gap-2">
-                            <button onClick={() => exportToNotion(note.title, note.content)} className="btn-soft rounded-full px-3 py-1.5 text-[9px]">
-                              إلى Notion
-                            </button>
                             <button onClick={() => deleteNote(note.id)} className="rounded-full border border-[#F6CFCF] bg-[#FFF5F5] px-3 py-1.5 text-[9px] text-[#B34A4A]">
                               حذف
                             </button>
@@ -3016,42 +2919,6 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
             <button onClick={logout} className="mt-4 h-11 w-full rounded-full border border-[#F6CFCF] bg-[#FFF5F5] text-[12px] font-semibold text-[#C23B3B]">
               تسجيل الخروج
             </button>
-          </Modal>
-        )}
-
-        {menu === 'notion' && (
-          <Modal key="notion" title="Notion" onClose={() => setMenu(null)}>
-            <div className="rounded-[16px] bg-[var(--soft)] p-4 text-[11px] leading-6">
-              {notion.connected ? (
-                <>
-                  <span className="pulse-ring ml-1.5 inline-block h-2 w-2 rounded-full bg-[var(--mint)]" />
-                  متصل{notion.workspace ? ` بمساحة "${notion.workspace}"` : ''}. زر "إلى Notion" سيُنشئ صفحة جديدة تلقائياً.
-                </>
-              ) : (
-                'غير متصل. يمكنك فتح Notion والتصدير يدوياً (نسخ ولصق)، أو ربط حسابك للتصدير التلقائي.'
-              )}
-            </div>
-
-            {notionError && (
-              <div className="mt-3 rounded-[14px] border border-[#F6CFCF] bg-[#FFF5F5] p-3 text-[10px] leading-5 text-[#9B3A3A]">
-                تعذر بدء الربط التلقائي: {notionError}
-                <br />
-                الربط يحتاج إعداد Notion Integration في الخادم (NOTION_CLIENT_ID و NOTION_CLIENT_SECRET) وتسجيل ملف books-notion.cjs.
-              </div>
-            )}
-
-            <div className="mt-4 grid gap-2">
-              <button onClick={openNotionSite} className="btn-grad h-11 rounded-full text-[12px] font-semibold">فتح موقع Notion ↗</button>
-              {notion.connected ? (
-                <button onClick={disconnectNotion} className="h-11 rounded-full border border-[#F6CFCF] bg-[#FFF5F5] text-[12px] text-[#C23B3B]">فصل الربط</button>
-              ) : (
-                <button onClick={connectNotion} className="btn-soft h-11 rounded-full text-[12px] font-semibold">ربط حسابي (تصدير تلقائي)</button>
-              )}
-            </div>
-
-            <p className="mt-3 text-[9px] leading-5 text-[var(--muted)]">
-              بدون ربط: زر "إلى Notion" ينسخ المحتوى ويفتح Notion، وتلصقه في صفحة جديدة.
-            </p>
           </Modal>
         )}
 

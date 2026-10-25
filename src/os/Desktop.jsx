@@ -34,11 +34,13 @@ export default function Desktop({ now, logo, sel, setSel, mobile, onOpen, onTile
     <div className="ros-layer">
       <header className="ros-topbar">
         <div className="ros-brand">
-          <img src={logo} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
+          <span className="ros-rr" aria-label="رفيق">رر</span>
           <div>
-            <strong><span>AI</span> رفيق</strong>
-            <small>معك نحو مستقبل أفضل</small>
+            <strong>رفيق</strong>
+            <small>مساحة تعلّم لك</small>
           </div>
+          <span className="ros-brand-divider" />
+          <img className="ros-partner" src="/smart-target.png" alt="Smart Target Technology" />
         </div>
         <SearchBox onOpen={onOpen} />
       </header>

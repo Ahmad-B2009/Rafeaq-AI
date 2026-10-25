@@ -881,11 +881,22 @@ const CSS = `
 .sb-sw.on { box-shadow: 0 0 0 2px #4b3fc4; }
 .sb-range { width: 84px; accent-color: #6d5ef5; }
 @media (max-width: 767px) {
-  .sb-root { padding: 6px; gap: 6px; }
+  .sb-root { min-height:100%; padding: 6px; gap: 6px; }
+  .sb-stage { min-height:48vh; border-radius:16px; }
   .sb-sep { display: none; }
-  .sb-bar { padding: 8px; justify-content: flex-start; overflow-x: auto; }
-  .sb-ask { flex-basis: 100%; }
+  .sb-bar { padding:8px; justify-content:flex-start; align-content:flex-start; overflow-x:auto; overflow-y:hidden; flex-wrap:nowrap; border-radius:16px; scrollbar-width:none; }
+  .sb-bar::-webkit-scrollbar { display:none; }
+  .sb-ask { flex:0 0 min(100%, 520px); }
+  .sb-ask select { max-width:96px; font-size:11px; }
+  .sb-ask input { font-size:12px; }
+  .sb-go { padding:0 12px; font-size:12px; }
   .sb-title { display: none; }
+  .sb-teacher { top:10px; right:10px; padding:5px 10px 5px 6px; }
+  .sb-teacher strong { font-size:11px; }.sb-teacher small { font-size:9px; }
+  .sb-avatar { width:28px; height:28px; font-size:13px; }
+  .sb-empty { justify-content:center; padding:75px 16px 20px; }
+  .sb-empty p { font-size:13px; }.sb-samples { gap:7px; }.sb-samples button { padding:8px 11px; font-size:11px; }
+  .sb-b { width:42px; height:42px; }.sb-sw { width:28px; height:28px; }
   .sb-caption { font-size: 14px; padding: 10px 14px; bottom: 12px; }
   .sb-group { flex: none; }
 }

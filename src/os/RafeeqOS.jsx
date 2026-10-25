@@ -20,6 +20,17 @@ import './os.css'
 const TOKEN_KEY = 'rafeaq_token'
 const LOGO = '/logo.png'
 
+function PreparingSpace() {
+  return <div className="ros-preparing" dir="rtl">
+    <div className="ros-preparing-orb">رر</div>
+    <p className="ros-preparing-kicker">رفيق · مساحة التعلّم</p>
+    <h1>نجهّز مساحتك</h1>
+    <p>لحظات بسيطة ونرتّب لك أدوات الدراسة كما تركتها.</p>
+    <div className="ros-preparing-line"><i /></div>
+    <div className="ros-preparing-company"><img src="/smart-target.png" alt="Smart Target Technology" /><span dir="ltr">Developed by Smart Target Technology</span></div>
+  </div>
+}
+
 /* ---------- أدوات ---------- */
 function useMedia(query) {
   const [m, setM] = useState(() => window.matchMedia(query).matches)
@@ -81,10 +92,6 @@ export default function RafeeqOS() {
   const taskbarH = mobile ? 60 : 68
 
   // لا دخول بدون تسجيل دخول (نفس شرط Dashboard)
-  useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) nav('/login', { replace: true })
-  }, [nav])
-
   const [prefs, setPrefs] = useState(loadOS)
   const [st, dispatch] = useReducer(reducer, undefined, () => initState(loadOS().windows, WINDOW_APPS.map((a) => a.id)))
   const [area, setArea] = useState(() => ({ w: window.innerWidth, h: window.innerHeight - (window.innerWidth < 768 ? 60 : 68) }))
@@ -98,6 +105,18 @@ export default function RafeeqOS() {
   const [note, setNote] = useState('')
   const noteTimer = useRef(null)
   const now = useClock()
+  const [prepared, setPrepared] = useState(() => sessionStorage.getItem('rafeaq_skip_os_boot') === '1')
+
+  useEffect(() => {
+    if (!localStorage.getItem(TOKEN_KEY)) {
+      nav('/login', { replace: true })
+      return undefined
+    }
+    sessionStorage.removeItem('rafeaq_skip_os_boot')
+    if (prepared) return undefined
+    const timer = window.setTimeout(() => setPrepared(true), 1500)
+    return () => window.clearTimeout(timer)
+  }, [nav, prepared])
 
   const areaRef = useRef(area)
   areaRef.current = area
@@ -204,6 +223,8 @@ export default function RafeeqOS() {
     if (prefs.fresh && !mobile && window.innerWidth >= 768) openApp('home')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  if (!prepared) return <PreparingSpace />
 
   return (
     <div
