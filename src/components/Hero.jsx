@@ -1,8 +1,37 @@
 import { useNavigate } from 'react-router-dom'
+
+import AcidSquares from './AcidSquares.jsx'
 export default function Hero(){
+
   const nav = useNavigate()
   return (
-    <section className="relative pt-[140px] pb-20 px-6 overflow-hidden">
+    <section className="relative isolate pt-[140px] pb-20 px-6 overflow-hidden">
+  <div
+    className="absolute inset-0 z-0 pointer-events-none"
+    aria-hidden="true"
+  >
+    <AcidSquares
+      color="#120f17"
+      accentColor="#ff4fb8"
+      secondaryColor="#3b6bff"
+      tileSize={1}
+      gap={0.12}
+      roundness={0.25}
+      rotation={35}
+      waves={1}
+      pulse={1}
+      lighting="split"
+      tilt={0.7}
+      grain={0.12}
+      intro
+      mouseInteraction
+      softness={0.5}
+      bulge={0.3}
+      gloss={0.6}
+      speed={0.6}
+      detail="medium"
+    />
+  </div>
       <style>{`
         @keyframes float { 0%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-20px) translateX(10px)} 100%{transform:translateY(0) translateX(0)} }
         @keyframes gradientMove { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
