@@ -184,11 +184,13 @@ function drawObj(ctx, o, p = 1) {
     case 'rect':
       partialPath(ctx, [[o.x, o.y], [o.x + o.w, o.y], [o.x + o.w, o.y + o.h], [o.x, o.y + o.h], [o.x, o.y]], p)
       break
-    case 'circle':
+    case 'circle': {
+      const rad = Math.max(1, Math.abs(o.r || 1))
       ctx.beginPath()
-      ctx.arc(o.x, o.y, o.r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p)
+      ctx.arc(o.x, o.y, rad, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p)
       ctx.stroke()
       break
+    }
     case 'poly':
       partialPath(ctx, o.pts, p)
       break
@@ -554,9 +556,14 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
 
   /* ---------- الرسم بالقلم ---------- */
   const toVirtual = (e) => {
-    const r = canvasRef.current.getBoundingClientRect()
+    const c = canvasRef.current
+    if (!c) return [0, 0]
+    const r = c.getBoundingClientRect()
     const { k, ox, oy } = layout.current
-    return [(e.clientX - r.left - ox) / k, (e.clientY - r.top - oy) / k]
+    const scale = k || 1
+    const x = (e.clientX - r.left - ox) / scale
+    const y = (e.clientY - r.top - oy) / scale
+    return [Math.max(0, Math.min(VW, Math.round(x))), Math.max(0, Math.min(VH, Math.round(y)))]
   }
 
   const commit = (obj) => {
@@ -566,15 +573,16 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
   }
 
   const onDown = (e) => {
-    if (e.button !== undefined && e.button !== 0) return
+    // يسمح بلمس الشاشة وقلم الآيباد (pointerType !== 'mouse')، ويتحقق فقط من الزر الأيسر للماوس
+    if (e.pointerType === 'mouse' && e.button !== 0) return
     const [x, y] = toVirtual(e)
     if (tool === 'text') {
-      const r = canvasRef.current.getBoundingClientRect()
+      const r = canvasRef.current?.getBoundingClientRect() || { left: 0, top: 0 }
       setTextBox({ x, y, sx: e.clientX - r.left, sy: e.clientY - r.top, value: '' })
       return
     }
-    e.currentTarget.setPointerCapture(e.pointerId)
-    const w = tool === 'eraser' ? size * 3 + 10 : tool === 'marker' ? size * 2.4 + 8 : size
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+    const w = tool === 'eraser' ? size * 3 + 12 : tool === 'marker' ? size * 2.4 + 8 : size
     if (tool === 'pen' || tool === 'marker' || tool === 'eraser') {
       liveRef.current = { t: 'free', pts: [[x, y]], c: tool === 'eraser' ? '#FFFFFF' : color, w, a: tool === 'marker' ? 0.35 : 1 }
     } else {
@@ -587,20 +595,24 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
     const o = liveRef.current
     if (!o) return
     const [x, y] = toVirtual(e)
-    if (o.t === 'free') o.pts.push([x, y])
-    else {
+    if (o.t === 'free') {
+      o.pts.push([x, y])
+    } else {
       const [sx, sy] = o._s
       if (o.t === 'line' || o.t === 'arrow') { o.x2 = x; o.y2 = y }
       if (o.t === 'rect') { o.x = Math.min(sx, x); o.y = Math.min(sy, y); o.w = Math.abs(x - sx); o.h = Math.abs(y - sy) }
-      if (o.t === 'circle') { o.x = sx; o.y = sy; o.r = Math.hypot(x - sx, y - sy) }
+      if (o.t === 'circle') { o.x = sx; o.y = sy; o.r = Math.max(1, Math.hypot(x - sx, y - sy)) }
     }
     schedule()
   }
 
-  const onUp = () => {
+  const onUp = (e) => {
     const o = liveRef.current
     if (!o) return
     liveRef.current = null
+    try {
+      e?.currentTarget?.releasePointerCapture?.(e.pointerId)
+    } catch { /* ignore */ }
     if (o.t !== 'free') {
       // في المستطيل w/h أبعاد، أما سُمك الخط فيُخزَّن في lw
       const { _s, ...rest } = o
@@ -617,18 +629,19 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
     setTextBox(null)
   }
 
-  const undo = () => {
+  const undo = useCallback(() => {
     const o = objectsRef.current.pop()
     if (o) redoRef.current.push(o)
     redraw()
     sync()
-  }
-  const redo = () => {
+  }, [redraw, sync])
+
+  const redo = useCallback(() => {
     const o = redoRef.current.pop()
     if (o) objectsRef.current.push(o)
     redraw()
     sync()
-  }
+  }, [redraw, sync])
 
   useEffect(() => {
     const key = (e) => {
@@ -637,7 +650,22 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
     }
     window.addEventListener('keydown', key)
     return () => window.removeEventListener('keydown', key)
-  })
+  }, [undo, redo])
+
+  const exportBoardImage = () => {
+    const c = canvasRef.current
+    if (!c) return
+    try {
+      const url = c.toDataURL('image/png')
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `سبورة-رفيق-${new Date().toISOString().slice(0, 10)}.png`
+      a.click()
+    } catch (err) {
+      console.error('Export error:', err)
+      setError('تعذر تحميل صورة السبورة.')
+    }
+  }
 
   const toggleFull = () => {
     if (document.fullscreenElement) document.exitFullscreen?.()
@@ -810,6 +838,7 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
           {lesson && !teaching && !busy && (
             <button className="sb-b" onClick={() => startLesson(lesson)} title="إعادة الشرح" aria-label="إعادة الشرح"><Icon name="replay" size={18} /></button>
           )}
+          <button className="sb-b" onClick={exportBoardImage} title="حفظ السبورة كصورة" aria-label="حفظ السبورة كصورة"><Icon name="download" size={18} /></button>
           <button className={`sb-b ${voiceOn ? 'on' : ''}`} onClick={() => { setVoiceOn((v) => !v); speechRef.current?.cancel() }} title={voiceOn ? 'كتم الصوت' : 'تشغيل الصوت'} aria-label="الصوت"><Icon name={voiceOn ? 'volume' : 'volumeOff'} size={19} /></button>
           <button className="sb-b" onClick={toggleFull} title="ملء الشاشة" aria-label="ملء الشاشة"><Icon name={isFull ? 'shrink' : 'expand'} size={18} /></button>
         </div>
@@ -820,10 +849,10 @@ export default function SmartBoard({ fullscreen = false, onClose = null }) {
 
 /* ---------------------------- التنسيق ---------------------------- */
 const CSS = `
-.sb-root { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 10px; gap: 10px; background: #f1eefc; box-sizing: border-box; font-family: Tajawal, 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #26304a; }
+.sb-root { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 10px; gap: 10px; background: #f8fafc; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', Tajawal, system-ui, sans-serif; color: #1e1b4b; }
 .sb-root *, .sb-root *::before, .sb-root *::after { box-sizing: border-box; font-family: inherit; }
 .sb-fixed { position: fixed; inset: 0; z-index: 60; }
-.sb-stage { --lvl: .2; position: relative; flex: 1; min-height: 0; border-radius: 22px; background: #fff; overflow: hidden; box-shadow: 0 10px 34px rgba(70,60,170,.16), inset 0 0 0 1px #e6e1fa; }
+.sb-stage { --lvl: .2; position: relative; flex: 1; min-height: 0; border-radius: 24px; background: #fff; overflow: hidden; box-shadow: 0 12px 36px rgba(30,27,75,.12), inset 0 0 0 1px #e2e8f0; }
 .sb-canvas { position: absolute; inset: 0; display: block; touch-action: none; cursor: crosshair; }
 .sb-canvas.is-text { cursor: text; }
 
@@ -845,46 +874,50 @@ const CSS = `
 @keyframes sb-slide { from { background-position: 0 0, 0 0; } to { background-position: 280px 0, -190px 0; } }
 @keyframes sb-slide-v { from { background-position: 0 0, 0 0; } to { background-position: 0 280px, 0 -190px; } }
 
-.sb-teacher { position: absolute; top: 14px; right: 16px; display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 8px; border-radius: 999px; background: rgba(255,255,255,.92); box-shadow: 0 4px 16px rgba(70,60,170,.16); pointer-events: none; }
-.sb-teacher strong { display: block; font-size: 13px; }
-.sb-teacher small { display: block; font-size: 11px; color: #7a76a8; }
-.sb-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 16px; }
-.sb-title { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); max-width: 46%; padding: 6px 16px; border-radius: 999px; background: rgba(255,255,255,.92); box-shadow: 0 4px 16px rgba(70,60,170,.14); font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-.sb-x { position: absolute; top: 14px; left: 16px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgba(255,255,255,.95); color: #26304a; box-shadow: 0 4px 16px rgba(70,60,170,.2); display: grid; place-items: center; cursor: pointer; }
-.sb-caption { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(86%, 900px); padding: 12px 20px; border-radius: 16px; background: rgba(38,48,74,.88); color: #fff; font-size: 16px; line-height: 1.7; text-align: center; pointer-events: none; }
-.sb-toast { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); max-width: 88%; padding: 10px 18px; border-radius: 14px; background: #ece8ff; color: #4b3fc4; font-size: 14px; box-shadow: 0 6px 20px rgba(70,60,170,.2); display: flex; gap: 12px; align-items: center; }
-.sb-toast.err { background: #fff0ef; color: #b3261e; }
-.sb-toast button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 14px; }
-.sb-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; pointer-events: none; color: #5b5890; }
-.sb-empty h2 { margin: 0 0 8px; font-size: clamp(26px, 4vw, 40px); color: #3f3a8f; }
-.sb-empty p { margin: 0 0 18px; max-width: 460px; font-size: 15px; line-height: 1.8; }
-.sb-samples { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 720px; pointer-events: auto; }
-.sb-samples button { padding: 9px 16px; border-radius: 999px; border: 1px solid #ddd7f7; background: #f7f5ff; color: #4b3fc4; font-size: 13px; cursor: pointer; }
-.sb-samples button:hover { background: #ece8ff; }
-.sb-samples button.demo { background: #4b3fc4; color: #fff; border-color: #4b3fc4; }
-.sb-textin { position: absolute; transform: translate(-50%, -50%); min-width: 160px; padding: 6px 10px; border: 2px dashed #9b8cff; border-radius: 10px; background: rgba(255,255,255,.96); font-size: 20px; font-weight: 700; outline: 0; }
+.sb-teacher { position: absolute; top: 14px; right: 16px; display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 8px; border-radius: 999px; background: rgba(255,255,255,.94); box-shadow: 0 6px 20px rgba(30,27,75,.14); border: 1px solid rgba(226,232,240,.9); pointer-events: none; z-index: 5; }
+.sb-teacher strong { display: block; font-size: 13px; font-weight: 700; }
+.sb-teacher small { display: block; font-size: 11px; color: #64748b; }
+.sb-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.sb-title { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); max-width: 48%; padding: 7px 18px; border-radius: 999px; background: rgba(255,255,255,.94); box-shadow: 0 6px 20px rgba(30,27,75,.12); border: 1px solid rgba(226,232,240,.9); font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; z-index: 5; }
+.sb-x { position: absolute; top: 14px; left: 16px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgba(255,255,255,.95); color: #1e1b4b; box-shadow: 0 4px 16px rgba(30,27,75,.18); display: grid; place-items: center; cursor: pointer; z-index: 6; transition: transform .15s ease; }
+.sb-x:hover { transform: scale(1.06); }
+.sb-caption { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(88%, 900px); padding: 14px 22px; border-radius: 18px; background: rgba(30,27,75,.92); color: #fff; font-size: 16px; line-height: 1.7; text-align: center; pointer-events: none; backdrop-filter: blur(12px); box-shadow: 0 12px 32px rgba(0,0,0,.25); z-index: 5; }
+.sb-toast { position: absolute; left: 50%; top: 72px; transform: translateX(-50%); max-width: 88%; padding: 11px 20px; border-radius: 14px; background: #eef2ff; color: #4338ca; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(99,102,241,.2); display: flex; gap: 12px; align-items: center; z-index: 10; border: 1px solid #c7d2fe; }
+.sb-toast.err { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+.sb-toast button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 14px; font-weight: 800; }
+.sb-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; pointer-events: none; color: #64748b; z-index: 2; }
+.sb-empty h2 { margin: 0 0 8px; font-size: clamp(26px, 4vw, 38px); color: #1e1b4b; font-weight: 800; }
+.sb-empty p { margin: 0 0 20px; max-width: 480px; font-size: 15px; line-height: 1.8; }
+.sb-samples { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 740px; pointer-events: auto; }
+.sb-samples button { padding: 10px 18px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #4338ca; font-size: 13.5px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: all .18s ease; }
+.sb-samples button:hover { background: #eef2ff; border-color: #c7d2fe; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(99,102,241,.14); }
+.sb-samples button.demo { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(99,102,241,.3); }
+.sb-samples button.demo:hover { filter: brightness(1.06); }
+.sb-textin { position: absolute; transform: translate(-50%, -50%); min-width: 180px; padding: 8px 14px; border: 2px solid #6366f1; border-radius: 12px; background: rgba(255,255,255,.98); font-size: 20px; font-weight: 700; text-align: center; outline: 0; box-shadow: 0 8px 24px rgba(99,102,241,.25); z-index: 15; }
 
-.sb-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 12px; padding: 10px 14px; border-radius: 20px; background: #fff; border: 1px solid #e3defa; box-shadow: 0 8px 26px rgba(70,60,170,.12); }
+.sb-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 12px; padding: 10px 16px; border-radius: 22px; background: rgba(255,255,255,.94); border: 1px solid rgba(226,232,240,.9); backdrop-filter: blur(18px); box-shadow: 0 10px 30px rgba(30,27,75,.08); }
 .sb-ask { flex: 1 1 380px; min-width: 0; display: flex; align-items: center; gap: 8px; }
-.sb-ask select { height: 40px; padding: 0 10px; border: 1px solid #ddd7f7; border-radius: 12px; background: #f7f5ff; color: #3f3a8f; font-size: 13px; max-width: 150px; }
-.sb-ask input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; border: 1px solid #ddd7f7; border-radius: 12px; background: #fff; font-size: 14px; outline: 0; }
-.sb-ask input:focus, .sb-ask select:focus { border-color: #6d5ef5; box-shadow: 0 0 0 3px rgba(109,94,245,.18); }
-.sb-go { height: 40px; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 12px; background: linear-gradient(135deg, #7c6cff, #5b47e8); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+.sb-ask select { height: 42px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 13px; background: #f8fafc; color: #1e1b4b; font-size: 13px; font-weight: 600; max-width: 150px; outline: 0; transition: border-color .2s; }
+.sb-ask input { flex: 1; min-width: 0; height: 42px; padding: 0 16px; border: 1px solid #cbd5e1; border-radius: 13px; background: #fff; font-size: 14px; outline: 0; transition: all .2s; }
+.sb-ask input:focus, .sb-ask select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
+.sb-go { height: 42px; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 13px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(99,102,241,.25); transition: all .2s ease; }
+.sb-go:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(99,102,241,.35); }
 .sb-go:disabled { opacity: .6; cursor: wait; }
-.sb-sep { width: 1px; height: 28px; background: #e3defa; }
+.sb-sep { width: 1px; height: 28px; background: #e2e8f0; }
 .sb-group { display: flex; align-items: center; gap: 6px; }
-.sb-b { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 12px; background: transparent; color: #3f3a8f; cursor: pointer; transition: background .12s; }
-.sb-b:hover:not(:disabled) { background: #f1edff; }
-.sb-b.on { background: #e7e2ff; border-color: #b9aeff; color: #4b3fc4; }
+.sb-b { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid transparent; border-radius: 13px; background: transparent; color: #475569; cursor: pointer; transition: all .16s ease; }
+.sb-b:hover:not(:disabled) { background: #eef2ff; color: #4338ca; transform: translateY(-1px); }
+.sb-b.on { background: #ede9fe; border-color: #c4b5fd; color: #4f46e5; box-shadow: 0 2px 8px rgba(99,102,241,.18); }
 .sb-b:disabled { opacity: .35; cursor: not-allowed; }
-.sb-sw { width: 24px; height: 24px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px #d8d3f2; cursor: pointer; padding: 0; }
-.sb-sw.on { box-shadow: 0 0 0 2px #4b3fc4; }
-.sb-range { width: 84px; accent-color: #6d5ef5; }
+.sb-sw { width: 25px; height: 25px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; cursor: pointer; padding: 0; transition: transform .15s ease; }
+.sb-sw:hover { transform: scale(1.12); }
+.sb-sw.on { box-shadow: 0 0 0 2.5px #6366f1; transform: scale(1.1); }
+.sb-range { width: 84px; accent-color: #6366f1; }
 @media (max-width: 767px) {
   .sb-root { min-height:100%; padding: 6px; gap: 6px; }
-  .sb-stage { min-height:48vh; border-radius:16px; }
+  .sb-stage { min-height:48vh; border-radius:18px; }
   .sb-sep { display: none; }
-  .sb-bar { padding:8px; justify-content:flex-start; align-content:flex-start; overflow-x:auto; overflow-y:hidden; flex-wrap:nowrap; border-radius:16px; scrollbar-width:none; }
+  .sb-bar { padding:8px; justify-content:flex-start; align-content:flex-start; overflow-x:auto; overflow-y:hidden; flex-wrap:nowrap; border-radius:18px; scrollbar-width:none; }
   .sb-bar::-webkit-scrollbar { display:none; }
   .sb-ask { flex:0 0 min(100%, 520px); }
   .sb-ask select { max-width:96px; font-size:11px; }

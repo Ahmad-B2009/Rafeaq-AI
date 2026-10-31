@@ -34,15 +34,46 @@ export default function Desktop({ now, logo, sel, setSel, mobile, onOpen, onTile
     <div className="ros-layer">
       <header className="ros-topbar">
         <div className="ros-brand">
-          <span className="ros-rr" aria-label="رفيق">رر</span>
-          <div>
-            <strong>رفيق</strong>
-            <small>مساحة تعلّم لك</small>
+          <div className="ros-brand-icon">
+            <span className="ros-r-emblem" aria-label="رفيق">
+              <span className="ros-r-letter">ر</span>
+              <span className="ros-r-dot" />
+            </span>
+            <span className="ros-status-dot" title="متصل بالخدمة" />
           </div>
-          <span className="ros-brand-divider" />
-          <img className="ros-partner" src="/smart-target.png" alt="Smart Target Technology" />
+          <div className="ros-brand-text">
+            <div className="ros-brand-title">
+              <strong>رفيق</strong>
+              <span className="ros-badge-ai">AI</span>
+            </div>
+            <small>مساحة التعلّم الذكية</small>
+          </div>
         </div>
-        <SearchBox onOpen={onOpen} />
+        <div className="ros-center-hub">
+          <SearchBox onOpen={onOpen} />
+          {!mobile && (
+            <div className="ros-sections-strip" role="toolbar" aria-label="أقسام رفيق">
+              {[
+                { id: 'ai', title: 'رفيق AI', tag: 'محادثة' },
+                { id: 'lab', title: 'مختبر رفيق', tag: 'توقعات' },
+                { id: 'board', title: 'السبورة التفاعلية', tag: 'شرح حي' },
+                { id: 'notebook', title: 'دفتر رفيق', tag: 'تحليل' },
+                { id: 'books', title: 'المكتبة', tag: 'المناهج' },
+                { id: 'timer', title: 'مؤقت التركيز', tag: 'دراسة' },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  className="ros-section-pill"
+                  onClick={() => onOpen(s.id)}
+                  title={`فتح ${s.title}`}
+                >
+                  <span className="ros-pill-title">{s.title}</span>
+                  <span className="ros-pill-tag">{s.tag}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="ros-icons">

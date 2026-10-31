@@ -21,14 +21,36 @@ const TOKEN_KEY = 'rafeaq_token'
 const LOGO = '/logo.png'
 
 function PreparingSpace() {
-  return <div className="ros-preparing" dir="rtl">
-    <div className="ros-preparing-orb">رر</div>
-    <p className="ros-preparing-kicker">رفيق · مساحة التعلّم</p>
-    <h1>نجهّز مساحتك</h1>
-    <p>لحظات بسيطة ونرتّب لك أدوات الدراسة كما تركتها.</p>
-    <div className="ros-preparing-line"><i /></div>
-    <div className="ros-preparing-company"><img src="/smart-target.png" alt="Smart Target Technology" /><span dir="ltr">Developed by Smart Target Technology</span></div>
-  </div>
+  return (
+    <div className="ros-preparing" dir="rtl">
+      <div className="ros-preparing-ambient" aria-hidden="true">
+        <div className="ros-orb-glow ros-glow-1" />
+        <div className="ros-orb-glow ros-glow-2" />
+        <div className="ros-orb-glow ros-glow-3" />
+      </div>
+      <div className="ros-preparing-card">
+        <div className="ros-preparing-orb-wrapper">
+          <div className="ros-preparing-orb">
+            <span className="ros-r-letter">ر</span>
+            <span className="ros-r-dot" />
+          </div>
+          <div className="ros-preparing-halo" />
+        </div>
+        <p className="ros-preparing-kicker">نظام رفيق الدراسي · AI</p>
+        <h1>نجهّز مساحتك الخاصة</h1>
+        <p>لحظات يسيرة ونرتّب لك أدوات دراستك وملاحظاتك بعناية.</p>
+        <div className="ros-preparing-line" role="progressbar" aria-label="جاري التحميل">
+          <i />
+        </div>
+        <div className="ros-preparing-footer">
+          <span className="ros-live-badge">
+            <i className="ros-pulse-dot" />
+            بيئة دراسية ذكية وآمنة
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /* ---------- أدوات ---------- */

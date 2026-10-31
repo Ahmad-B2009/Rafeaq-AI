@@ -86,6 +86,15 @@ const P = {
       <path d="M9 9V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2" />
     </>
   ),
+  lab: (
+    <>
+      <path d="M10 2v7.5L4.5 19.5A2 2 0 0 0 6.2 22h11.6a2 2 0 0 0 1.7-2.5L14 9.5V2" />
+      <path d="M8.5 2h7M7 16h10" />
+      <circle cx="10" cy="18" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="13" cy="14" r="0.9" fill="currentColor" stroke="none" />
+    </>
+  ),
+  download: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />,
   close: <path d="m6.5 6.5 11 11M17.5 6.5l-11 11" />,
   calendar: (
     <>

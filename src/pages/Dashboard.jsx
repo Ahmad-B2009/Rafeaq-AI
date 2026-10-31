@@ -26,50 +26,232 @@ const STORAGE = {
 }
 
 /* ============ ثيم النافذة (فاتح) عند تشغيل Dashboard داخل Rafeeq OS ============
-   كل القواعد محصورة تحت .dash-embed حتى لا تتسرب إلى الواجهة الخارجية. */
+   قواعد متناسقة وراقية محصورة تحت .dash-embed لتمنح إحساساً إنسانياً فائق الإتقان. */
 const EMBED_CSS = `
   .dash-embed {
-    --bg: #F7F6FF; --ink: #24214F; --muted: #6E6A99; --brand: #6D5EF5; --brand2: #A36BFF;
-    --cyan: #2DB7DD; --mint: #22C7A0; --coral: #FF9F7A; --soft: #F1EFFF; --line: #E2DEF8;
-    --grad: linear-gradient(125deg, #6D5EF5 0%, #9B6BFF 55%, #4FB4F0 100%);
-    background: var(--bg); color: var(--ink); color-scheme: light;
+    --bg: #F8FAFC;
+    --ink: #1E1B4B;
+    --ink-dim: #334155;
+    --muted: #64748B;
+    --brand: #6366F1;
+    --brand2: #8B5CF6;
+    --cyan: #06B6D4;
+    --mint: #10B981;
+    --coral: #F43F5E;
+    --soft: #F1F5F9;
+    --soft-brand: #EEF2FF;
+    --line: rgba(226, 232, 240, 0.85);
+    --grad: linear-gradient(135deg, #6366F1 0%, #8B5CF6 52%, #06B6D4 100%);
+    background: var(--bg);
+    color: var(--ink);
+    color-scheme: light;
   }
-  .dash-embed, .dash-embed * { font-family: 'IBM Plex Sans Arabic', 'Tajawal', system-ui, sans-serif; }
-  .dash-embed :focus-visible { outline: 2px solid rgba(109, 94, 245, .8); outline-offset: 2px; }
-  .dash-embed ::selection { background: #6D5EF5; color: #fff; }
-  .dash-embed .thin-scroll { scrollbar-width: thin; scrollbar-color: #CFC9F5 transparent; }
-  .dash-embed .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-  .dash-embed .thin-scroll::-webkit-scrollbar-thumb { background: #CFC9F5; border-radius: 999px; }
-  .dash-embed .glass { background: rgba(255,255,255,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: 0 6px 22px rgba(109,94,245,.08); }
-  .dash-embed .dash-embed-head { box-shadow: 0 2px 10px rgba(109,94,245,.06); }
-  .dash-embed .aurora-card { background: linear-gradient(118deg, #7B6CFF 0%, #9E7BFF 50%, #5CB6F2 100%); background-size: 200% 200%; animation: dflow 15s ease infinite; border: 1px solid rgba(255,255,255,.5); box-shadow: 0 14px 36px rgba(109,94,245,.25); color: #fff; }
-  @keyframes dflow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-  .dash-embed .blob { position: absolute; border-radius: 999px; filter: blur(48px); opacity: .35; pointer-events: none; }
-  .dash-embed .blob-a { width: 220px; height: 220px; background: #fff; top: -80px; left: -50px; opacity: .25; animation: ddrift 9s ease-in-out infinite; }
-  .dash-embed .blob-b { width: 240px; height: 240px; background: #4FB4F0; bottom: -130px; right: 25%; opacity: .3; animation: ddrift 11s ease-in-out infinite reverse; }
-  @keyframes ddrift { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(26px,18px) scale(1.1); } }
-  .dash-embed .float { animation: dfloat 4.5s ease-in-out infinite; }
-  @keyframes dfloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-  .dash-embed .gtext { background: linear-gradient(110deg, #5B4BE0, #8B5CF6 55%, #2AA8D8); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .dash-embed .btn-grad { position: relative; overflow: hidden; color: #fff; background: var(--grad); background-size: 160% 160%; border: 1px solid rgba(255,255,255,.35); box-shadow: 0 6px 18px rgba(109,94,245,.28); transition: transform .2s, box-shadow .2s, filter .2s; }
-  .dash-embed .btn-grad:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 10px 24px rgba(109,94,245,.34); }
-  .dash-embed .btn-grad:disabled { opacity: .45; transform: none; box-shadow: none; cursor: not-allowed; }
-  .dash-embed .btn-soft { background: #EFEBFF; color: #4B3FC4; border: 1px solid #DDD7FA; transition: background .2s, transform .2s; }
-  .dash-embed .btn-soft:hover { background: #E4DEFF; transform: translateY(-1px); }
-  .dash-embed .card-hover { transition: transform .25s, box-shadow .25s, border-color .25s; }
-  .dash-embed .card-hover:hover { transform: translateY(-2px); border-color: #B9AEFF; box-shadow: 0 12px 28px rgba(109,94,245,.16); }
-  .dash-embed .nav-active { background: #EDE9FF; color: #4B3FC4; border: 1px solid #CFC7FF; }
-  .dash-embed .pulse-ring { animation: dring 1.8s ease-out infinite; }
-  @keyframes dring { 0% { box-shadow: 0 0 0 0 rgba(34,199,160,.45); } 100% { box-shadow: 0 0 0 9px rgba(34,199,160,0); } }
-  .dash-embed .shimmer { background: linear-gradient(90deg, #EFEBFF 25%, #F8F6FF 50%, #EFEBFF 75%); background-size: 200% 100%; animation: dshim 1.4s infinite; }
-  @keyframes dshim { to { background-position: -200% 0; } }
-  .dash-embed .timer-ring { background: conic-gradient(var(--brand) var(--deg), #E6E1FB 0); }
-  .dash-embed .typing-dot { width: 6px; height: 6px; border-radius: 999px; background: #8B7BFF; animation: dbounce 1.1s infinite ease-in-out; }
-  .dash-embed .typing-dot:nth-child(2) { animation-delay: .15s; }
-  .dash-embed .typing-dot:nth-child(3) { animation-delay: .3s; }
-  @keyframes dbounce { 0%,80%,100% { transform: translateY(0); opacity: .4; } 40% { transform: translateY(-5px); opacity: 1; } }
-  .dash-embed input::placeholder, .dash-embed textarea::placeholder { color: #A29ECB; opacity: 1; }
-  @media (prefers-reduced-motion: reduce) { .dash-embed *, .dash-embed *::before, .dash-embed *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+  .dash-embed, .dash-embed * {
+    font-family: 'IBM Plex Sans Arabic', 'Tajawal', system-ui, -apple-system, sans-serif;
+    box-sizing: border-box;
+  }
+  .dash-embed :focus-visible {
+    outline: 2px solid rgba(99, 102, 241, 0.85);
+    outline-offset: 2px;
+  }
+  .dash-embed ::selection {
+    background: #6366F1;
+    color: #ffffff;
+  }
+  .dash-embed .thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
+  }
+  .dash-embed .thin-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .dash-embed .thin-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .dash-embed .thin-scroll::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 999px;
+  }
+  .dash-embed .thin-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+  .dash-embed .glass {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 10px 30px -6px rgba(30, 27, 75, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .dash-embed .dash-embed-head {
+    box-shadow: 0 4px 18px rgba(30, 27, 75, 0.06);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  }
+  .dash-embed .aurora-card {
+    background: linear-gradient(120deg, #6366F1 0%, #8B5CF6 50%, #06B6D4 100%);
+    background-size: 200% 200%;
+    animation: dflow 12s ease-in-out infinite;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 18px 42px -8px rgba(99, 102, 241, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+  }
+  @keyframes dflow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  .dash-embed .blob {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(52px);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .dash-embed .blob-a {
+    width: 240px;
+    height: 240px;
+    background: #ffffff;
+    top: -90px;
+    left: -50px;
+    opacity: 0.28;
+    animation: ddrift 10s ease-in-out infinite;
+  }
+  .dash-embed .blob-b {
+    width: 260px;
+    height: 260px;
+    background: #38BDF8;
+    bottom: -130px;
+    right: 20%;
+    opacity: 0.32;
+    animation: ddrift 12s ease-in-out infinite reverse;
+  }
+  @keyframes ddrift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(24px, 16px) scale(1.1); }
+  }
+  .dash-embed .float {
+    animation: dfloat 4.5s ease-in-out infinite;
+  }
+  @keyframes dfloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  .dash-embed .gtext {
+    background: linear-gradient(110deg, #4F46E5 0%, #7C3AED 52%, #0284C7 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .dash-embed .btn-grad {
+    position: relative;
+    overflow: hidden;
+    color: #ffffff;
+    background: var(--grad);
+    background-size: 160% 160%;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.28);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, filter 0.2s ease;
+  }
+  .dash-embed .btn-grad:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 10px 26px rgba(99, 102, 241, 0.38);
+  }
+  .dash-embed .btn-grad::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -80%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
+  }
+  .dash-embed .btn-grad:hover::after {
+    left: 140%;
+  }
+  .dash-embed .btn-grad:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .dash-embed .btn-grad:disabled {
+    opacity: 0.5;
+    transform: none;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .dash-embed .btn-soft {
+    background: #EEF2FF;
+    color: #4338CA;
+    border: 1px solid rgba(199, 210, 254, 0.8);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .dash-embed .btn-soft:hover {
+    background: #E0E7FF;
+    color: #3730A3;
+    border-color: rgba(165, 180, 252, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
+  }
+  .dash-embed .btn-soft:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .dash-embed .card-hover {
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .dash-embed .card-hover:hover {
+    transform: translateY(-3px);
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 16px 36px -6px rgba(99, 102, 241, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  .dash-embed .nav-active {
+    background: #EEF2FF;
+    color: #4338CA;
+    border: 1px solid rgba(199, 210, 254, 0.9);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+  }
+  .dash-embed .pulse-ring {
+    animation: dring 1.8s ease-out infinite;
+  }
+  @keyframes dring {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+    100% { box-shadow: 0 0 0 9px rgba(16, 185, 129, 0); }
+  }
+  .dash-embed .shimmer {
+    background: linear-gradient(90deg, #F1F5F9 25%, #FFFFFF 50%, #F1F5F9 75%);
+    background-size: 200% 100%;
+    animation: dshim 1.4s infinite;
+  }
+  @keyframes dshim {
+    to { background-position: -200% 0; }
+  }
+  .dash-embed .timer-ring {
+    background: conic-gradient(var(--brand) var(--deg), #E2E8F0 0);
+  }
+  .dash-embed .typing-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--brand);
+    animation: dbounce 1.1s infinite ease-in-out;
+  }
+  .dash-embed .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .dash-embed .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes dbounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+  .dash-embed input::placeholder, .dash-embed textarea::placeholder {
+    color: #94A3B8;
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dash-embed *, .dash-embed *::before, .dash-embed *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 `
 
 /* ============================== LocalStorage ============================== */
@@ -618,6 +800,503 @@ function AssistantActions({ text, onSave, onToast }) {
       <button onClick={onSave} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">حفظ في ملاحظاتي</button>
       <button onClick={copy} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">نسخ</button>
       <button onClick={speak} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">🔊 استماع</button>
+    </div>
+  )
+}
+
+/* ============================== مختبر رفيق الذكي (Standout Feature) ============================== */
+const LAB_TOPICS = [
+  {
+    id: 'physics_motion',
+    category: 'الفيزياء',
+    subject: 'قوانين الحركة والجاذبية (نيوتن)',
+    summary: 'فهم الحركة، القوة، وعلاقة القصور الذاتي بالتسارع وقوة الفعل ورد الفعل.',
+    nodes: [
+      { id: 'n1', title: 'القانون الأول (القصور)', desc: 'الجسم الساكن يبقى ساكناً والمتحرك يستمر بسرعة ثابتة ما لم تؤثر عليه قوة محصلة.', tag: 'مفهوم أساسي', icon: '🛑' },
+      { id: 'n2', title: 'القانون الثاني (F = m·a)', desc: 'تسارع الجسم يتناسب طردياً مع القوة المحصلة وعكسياً مع كتلته. وحدة القياس نيوتن (N).', tag: 'قانون ذهبي', icon: '⚡' },
+      { id: 'n3', title: 'القانون الثالث (الفعل ورد الفعل)', desc: 'لكل فعل رد فعل مساوٍ له في المقدار ومضاد له في الاتجاه، ويؤثران على جسمين مختلفين.', tag: 'تطبيق عملي', icon: '🔄' },
+      { id: 'n4', title: 'علاقة الوزن بالكتلة', desc: 'الكتلة ثابتة بالكيلوجرام، أما الوزن W = m·g فيتغير حسب شدة مجال الجاذبية g.', tag: 'رابط محوري', icon: '⚖️' },
+    ],
+    traps: [
+      {
+        question: '«إذا أثرت قوة فعل ورد فعل، لماذا لا يُلغي كل منهما الآخر ليصبح المجموع صفراً؟»',
+        difficulty: 'تميز وتفوق',
+        trap: 'الخطأ الشائع: الاعتقاد بأن قوتي الفعل ورد الفعل تؤثران على نفس الجسم وبالتالي تلغيان بعضهما كالقوى المتزنة.',
+        solution: 'الحل الصحيح: قوتا الفعل ورد الفعل تؤثران على جسمين مختلفين تماماً (مثلاً: الأرض تؤثر على القمر، والقمر يؤثر على الأرض)، والقوى لا تُلغي بعضها إلا إذا أثرت على نفس الجسم الواحد.',
+      },
+      {
+        question: '«احسب القوة اللازمة لإكساب صندوق كتلته 20 كجم تسارعاً قدره 3 م/ث² إذا كان الاحتكاك 10 نيوتن.»',
+        difficulty: 'متوسط',
+        trap: 'الخطأ الشائع: ضرب الكتلة في التسارع مباشرة (F = 20 × 3 = 60 N) وإهمال قوة الاحتكاك المعاكسة.',
+        solution: 'الحل النموذجي: محصلة القوى ΣF = F_app - F_friction = m·a. إذن F_app - 10 = 20 × 3 = 60، ومنها القوة المطلوبة F_app = 60 + 10 = 70 نيوتن.',
+      },
+    ],
+  },
+  {
+    id: 'math_derivatives',
+    category: 'الرياضيات',
+    subject: 'التفاضل والمشتقات وتطبيقاتها',
+    summary: 'إيجاد معدل التغير اللحظي، ميل المماس للمنحنيات، وتحديد القيم العظمى والصغرى.',
+    nodes: [
+      { id: 'n1', title: 'المعنى الهندسي للمشتقة', desc: 'المشتقة الأولى dy/dx تمثل ميل المماس لمنحنى الدالة عند أي نقطة (x, y).', tag: 'مفهوم أساسي', icon: '📐' },
+      { id: 'n2', title: 'قواعد الاشتقاق الذهبية', desc: 'مشتقة الثابت صفر، مشتقة x^n هي n·x^(n-1)، ومشتقة حاصل الضرب: الأولى × مشتقة الثانية + الثانية × مشتقة الأولى.', tag: 'قانون ذهبي', icon: '✨' },
+      { id: 'n3', title: 'قاعدة السلسلة (Chain Rule)', desc: 'لاشتقاق دالة داخل دالة: نشتق الخارجية مع بقاء الداخلية، ثم نضرب في مشتقة الداخلية.', tag: 'رابط محوري', icon: '🔗' },
+      { id: 'n4', title: 'النقاط الحرجة والتزايد والتناقص', desc: 'نساوي f\'(x) بالصفر؛ إذا كانت f\' > 0 فالدالة متزايدة، وإذا كانت f\' < 0 فالدالة متناقصة.', tag: 'تطبيق عملي', icon: '📈' },
+    ],
+    traps: [
+      {
+        question: '«أوجد مشتقة الدالة f(x) = (3x² - 5)⁴»',
+        difficulty: 'متوسط',
+        trap: 'الخطأ الشائع: اشتقاق القوة الخارجية ونسيان الضرب في مشتقة ما بداخل القوس: 4(3x² - 5)³ فقط.',
+        solution: 'الحل النموذجي: قاعدة السلسلة: f\'(x) = 4(3x² - 5)³ × d/dx(3x² - 5) = 4(3x² - 5)³ × (6x) = 24x(3x² - 5)³.',
+      },
+      {
+        question: '«حدد متى تكون النقطة الحرجة قيمة عظمى محلية باستخدام اختبار المشتقة الثانية.»',
+        difficulty: 'تميز وتفوق',
+        trap: 'الخطأ الشائع: الاعتقاد بأن المشتقة الثانية الموجبة f\'\'(x) > 0 تعني قيمة عظمى لأنها موجبة!',
+        solution: 'الحل الصحيح: العكس تماماً! إذا كانت f\'(c) = 0 وكانت f\'\'(c) < 0 فالمنحنى مقعر لأسفل وتكون النقطة عظمى محلية. أما إذا كانت f\'\'(c) > 0 فالمنحنى مقعر لأعلى وتكون النقطة صغرى محلية.',
+      },
+    ],
+  },
+  {
+    id: 'chem_equilibrium',
+    category: 'الكيمياء',
+    subject: 'الاتزان الكيميائي ومبدأ لوشاتيليه',
+    summary: 'ثبات سرعة التفاعل الأمامي والعكسي وكيف يستجيب النظام المتزن للمؤثرات الخارجية.',
+    nodes: [
+      { id: 'n1', title: 'حالة الاتزان الديناميكي', desc: 'تساوي سرعتي التفاعل الأمامي والعكسي مع ثبوت تراكيز المواد المتفاعلة والناتجة.', tag: 'مفهوم أساسي', icon: '⚖️' },
+      { id: 'n2', title: 'تعبير ثابت الاتزان (Kc)', desc: 'حاصل ضرب تراكيز النواتج مقسوماً على المتفاعلات، كل مرفوع لأس يمثل عدد مولاته.', tag: 'قانون ذهبي', icon: '🧪' },
+      { id: 'n3', title: 'مبدأ لوشاتيليه', desc: 'إذا أثر مؤثر خارجي (تركيز، ضغط، حرارة) على نظام متزن، فإن النظام ينزاح في الاتجاه الذي يقلل من هذا المؤثر.', tag: 'رابط محوري', icon: '🔄' },
+      { id: 'n4', title: 'أثر العامل الحفاز', desc: 'يزيد سرعة الوصول إلى حالة الاتزان دون التأثير على موضع الاتزان أو قيمة Kc مطلقاً.', tag: 'تطبيق عملي', icon: '⚡' },
+    ],
+    traps: [
+      {
+        question: '«ما هو المؤثر الوحيد الذي يغير من القيمة العددية لثابت الاتزان Kc؟»',
+        difficulty: 'أساسي',
+        trap: 'الخطأ الشائع: القول بأن زيادة الضغط أو مضاعفة تراكيز المتفاعلات يغير قيمة Kc.',
+        solution: 'الحل الدقيق: درجة الحرارة هي المؤثر الوحيد الذي يغير القيمة العددية لثابت الاتزان Kc؛ تغير التركيز والضغط يغير موضع الاتزان اللحظي ليعود ويستقر على نفس قيمة Kc.',
+      },
+      {
+        question: '«اكتب تعبير ثابت الاتزان للتفاعل: CaCO3(s) ⇌ CaO(s) + CO2(g)»',
+        difficulty: 'متوسط',
+        trap: 'الخطأ الشائع: إدخال المواد الصلبة CaCO3 و CaO في معادلة Kc.',
+        solution: 'الحل الصحيح: المواد الصلبة النقية (s) والسوائل النقية (l) تراكيزها ثابتة وتُحذف من القانون، إذن: Kc = [CO2] فقط!',
+      },
+    ],
+  },
+  {
+    id: 'bio_genetics',
+    category: 'الأحياء',
+    subject: 'علم الوراثة وقوانين مندل',
+    summary: 'انتقال الصفات عبر الأجيال، السيادة التامة، ومربعات بانيت لحساب الاحتمالات.',
+    nodes: [
+      { id: 'n1', title: 'قانون انعزال العوامل (مندل 1)', desc: 'ينعزل زوج الأليلات عند تكوين الأمشاج (الجاميتات)، بحيث يحمل كل مشيج أليلاً واحداً.', tag: 'مفهوم أساسي', icon: '🧬' },
+      { id: 'n2', title: 'السيادة والجين المتنحي', desc: 'الأليل السائد (A) يحجب ظهور الأليل المتنحي (a) في الطراز المظهري للفرد الهجين (Aa).', tag: 'قانون ذهبي', icon: '🌱' },
+      { id: 'n3', title: 'الطراز الجيني vs المظهري', desc: 'الجيني هو التركيب الوراثي الحقيقي (AA, Aa, aa)، والمظهري هو الصفة المشاهدة خارجياً.', tag: 'رابط محوري', icon: '🔬' },
+      { id: 'n4', title: 'مربع بانيت التنبؤي', desc: 'شبكة هندسية لحساب نسب الطرز الجينية والمظهرية الناتجة عن أي تزاوج وراثي بدقة.', tag: 'تطبيق عملي', icon: '📊' },
+    ],
+    traps: [
+      {
+        question: '«عند تلقيح نباتي بازلاء كلاهما هجين لصفة الطول (Tt × Tt)، ما احتمال الحصول على نبات طويل الساق هجين؟»',
+        difficulty: 'متوسط',
+        trap: 'الخطأ الشائع: الإجابة بـ 75% أو 3/4 لأن الطويل يمثل 3 من 4، مع نسيان كلمة "هجين"!',
+        solution: 'الحل الدقيق: الناتج الجيني هو 1 TT (طويل نقي) : 2 Tt (طويل هجين) : 1 tt (قصير). احتمال الطويل عموماً هو 3/4، لكن احتمال الطويل الهجين (Tt) هو 2/4 أي 50% (نصف النسل).',
+      },
+    ],
+  },
+  {
+    id: 'arabic_grammar',
+    category: 'اللغة العربية',
+    subject: 'إعراب الجمل وأشباه الجمل',
+    summary: 'معرفة المحل الإعرابي للجمل الواقعة خبراً، نعتاً، حالاً، أو مضافاً إليه بدقة.',
+    nodes: [
+      { id: 'n1', title: 'القاعدة الذهبية', desc: '«الجمل بعد المعارف أحوال، وبعد النكرات صفات» بشرط اكتمال أركان الجملة الأصلية.', tag: 'قانون ذهبي', icon: '📜' },
+      { id: 'n2', title: 'الجمل التي لها محل', desc: 'جملة الخبر (في محل رفع)، جملة المفعول لمقول القول (في محل نصب)، جملة الحال (نصب).', tag: 'مفهوم أساسي', icon: '✒️' },
+      { id: 'n3', title: 'الجمل التي لا محل لها', desc: 'الجملة الابتدائية، جملة صلة الموصول، الجملة الاعتراضية، وجملة جواب القسم.', tag: 'رابط محوري', icon: '📖' },
+      { id: 'n4', title: 'شبه الجملة (الجار والمجرور والظرف)', desc: 'يتعلق بالفعل أو المشتق، أو يقع خبراً مقدماً أو نعتاً أو حالاً بنفس قواعد الجمل.', tag: 'تطبيق عملي', icon: '💡' },
+    ],
+    traps: [
+      {
+        question: '«أعرب جملة (يقرأ) في: رأيتُ الطالبَ يقرأُ - ورأيتُ طالباً يقرأُ»',
+        difficulty: 'أساسي',
+        trap: 'الخطأ الشائع: إعراب الجملتين بنفس الإعراب دون الانتباه لتعريف وتنكير الكلمة السابقة.',
+        solution: 'الحل: في الأولى (الطالبَ) معرفة، فالجملة بعد المعرفة حال: جملة فعلية في محل نصب حال. في الثانية (طالباً) نكرة، فالجملة بعد النكرة نعت: في محل نصب نعت (صفة).',
+      },
+    ],
+  },
+]
+
+function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
+  const [selectedTopicId, setSelectedTopicId] = useState(LAB_TOPICS[0].id)
+  const [activeTab, setActiveTab] = useState('mindmap') // 'mindmap' | 'exam'
+  const [customQuery, setCustomQuery] = useState('')
+  const [revealedSolutions, setRevealedSolutions] = useState({})
+  const [activeNode, setActiveNode] = useState(null)
+
+  const currentTopic = useMemo(() => {
+    return LAB_TOPICS.find((t) => t.id === selectedTopicId) || LAB_TOPICS[0]
+  }, [selectedTopicId])
+
+  const toggleSolution = (idx) => {
+    setRevealedSolutions((prev) => ({ ...prev, [idx]: !prev[idx] }))
+  }
+
+  const handleOpenOnBoard = (title, details) => {
+    onNavigate('board')
+    onToast(`تم تجهيز مساحة العمل للسبورة: ${title}`)
+  }
+
+  const handleAskRafeeq = (query) => {
+    if (onAskAi) {
+      onAskAi(query)
+    } else {
+      onNavigate('ai')
+    }
+  }
+
+  const handleSaveConcept = (item) => {
+    const text = `【${currentTopic.subject}】\nالعنوان: ${item.title}\nالنوع: ${item.tag}\nالشرح: ${item.desc}`
+    onSaveNote(text, 'مختبر رفيق')
+  }
+
+  const handleSaveTrap = (trap) => {
+    const text = `【فخ امتحانات - ${currentTopic.subject}】\nالسؤال: ${trap.question}\nالفخ الشائع: ${trap.trap}\nالحل النموذجي: ${trap.solution}`
+    onSaveNote(text, 'مختبر رفيق')
+  }
+
+  return (
+    <div className="mx-auto max-w-[1080px] space-y-6">
+      {/* Header Banner */}
+      <div className="glass relative overflow-hidden rounded-[26px] p-6 sm:p-8">
+        <div className="absolute -left-12 -top-12 h-44 w-44 rounded-full bg-gradient-to-tr from-rose-500/20 to-purple-500/20 blur-2xl pointer-events-none" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-[18px] text-white shadow-lg shadow-rose-500/20">
+                ⚗
+              </span>
+              <div>
+                <h1 className="text-[20px] font-black tracking-tight sm:text-[22px]">مختبر رفيق الذكي</h1>
+                <p className="text-[11px] text-[var(--muted)]">خرائط مفاهيم تفاعلية • توقع فخاخ الامتحانات • تكامل مباشر مع السبورة والذكاء الاصطناعي</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab('mindmap')}
+              className={`rounded-full px-4 py-2 text-[11px] font-bold transition-all ${
+                activeTab === 'mindmap'
+                  ? 'btn-grad shadow-md shadow-indigo-500/20 text-white'
+                  : 'bg-white/60 text-[var(--ink)] hover:bg-white'
+              }`}
+            >
+              🗺 خريطة المفاهيم
+            </button>
+            <button
+              onClick={() => setActiveTab('exam')}
+              className={`rounded-full px-4 py-2 text-[11px] font-bold transition-all ${
+                activeTab === 'exam'
+                  ? 'btn-grad shadow-md shadow-indigo-500/20 text-white'
+                  : 'bg-white/60 text-[var(--ink)] hover:bg-white'
+              }`}
+            >
+              🎯 توقعات الامتحانات والفخاخ
+            </button>
+          </div>
+        </div>
+
+        {/* Categories selector */}
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-4">
+          <span className="text-[10px] font-semibold text-[var(--muted)]">الموضوعات المجهزة:</span>
+          {LAB_TOPICS.map((topic) => (
+            <button
+              key={topic.id}
+              onClick={() => {
+                setSelectedTopicId(topic.id)
+                setActiveNode(null)
+              }}
+              className={`rounded-xl px-3 py-1.5 text-[11px] font-medium transition-all ${
+                selectedTopicId === topic.id
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-white/70 hover:bg-white text-[var(--ink)]'
+              }`}
+            >
+              {topic.category}: {topic.subject.split('(')[0].trim()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
+        {/* Left Side: Interactive Mindmap or Exam Traps */}
+        <div className="glass rounded-[26px] p-6 space-y-5">
+          <div className="flex items-center justify-between border-b border-[var(--line)] pb-3">
+            <div>
+              <span className="rounded-md bg-rose-500/10 px-2 py-0.5 text-[9px] font-bold text-rose-600">
+                {currentTopic.category}
+              </span>
+              <h2 className="mt-1 text-[16px] font-bold">{currentTopic.subject}</h2>
+              <p className="text-[10px] text-[var(--muted)]">{currentTopic.summary}</p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handleAskRafeeq(`اشرح لي بالتفصيل مفهوم: ${currentTopic.subject} مع أمثلة عملية وتمارين تطبيقية.`)}
+                className="btn-soft rounded-full px-3 py-1 text-[10px] font-semibold"
+                title="افتح نقاشاً فورياً مع رفيق AI حول هذا الدرس"
+              >
+                ✦ ناقش رفيق
+              </button>
+              <button
+                onClick={() => handleOpenOnBoard(currentTopic.subject, currentTopic.summary)}
+                className="btn-soft rounded-full px-3 py-1 text-[10px] font-semibold"
+                title="انتقل إلى السبورة للرسم والكتابة التفاعلية"
+              >
+                ▱ السبورة
+              </button>
+            </div>
+          </div>
+
+          {activeTab === 'mindmap' ? (
+            <div className="space-y-4">
+              <div className="text-[12px] font-bold text-[var(--ink)] flex items-center gap-1.5">
+                <span>عُقد المفهوم والروابط المحورية</span>
+                <span className="text-[9px] text-[var(--muted)] font-normal">(انقر على أي عقدة لاستعراض تفاصيلها وإجراءاتها)</span>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {currentTopic.nodes.map((node) => {
+                  const isSelected = activeNode?.id === node.id
+                  return (
+                    <div
+                      key={node.id}
+                      onClick={() => setActiveNode(node)}
+                      className={`cursor-pointer rounded-2xl border p-4 transition-all duration-200 ${
+                        isSelected
+                          ? 'border-indigo-500 bg-indigo-50/70 shadow-md ring-2 ring-indigo-500/20'
+                          : 'border-[var(--line)] bg-white/75 hover:bg-white hover:border-indigo-200 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[18px]">{node.icon}</span>
+                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[8px] font-bold text-indigo-700">
+                          {node.tag}
+                        </span>
+                      </div>
+                      <div className="mt-2.5 text-[12px] font-bold text-[var(--ink)]">{node.title}</div>
+                      <p className="mt-1 text-[10px] leading-relaxed text-[var(--muted)]">{node.desc}</p>
+                      
+                      <div className="mt-3 flex items-center justify-between border-t border-[var(--line)]/60 pt-2 text-[9px]">
+                        <span className="text-indigo-600 font-medium">عرض التفاصيل ←</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSaveConcept(node)
+                          }}
+                          className="text-[var(--muted)] hover:text-indigo-600"
+                          title="حفظ في ملاحظاتي"
+                        >
+                          ▢ حفظ
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Node Inspector Callout */}
+              {activeNode && (
+                <div className="rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[20px]">{activeNode.icon}</span>
+                      <strong className="text-[13px] text-indigo-950">{activeNode.title}</strong>
+                    </div>
+                    <span className="rounded-full bg-indigo-200 px-2 py-0.5 text-[9px] font-bold text-indigo-800">
+                      {activeNode.tag}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-indigo-900">{activeNode.desc}</p>
+                  
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => handleAskRafeeq(`أريد شرحاً عميقاً لمفهوم "${activeNode.title}" في درس ${currentTopic.subject}، مع إعطائي سؤال اختبار متوقع وحله النموذجي.`)}
+                      className="btn-grad rounded-full px-3 py-1.5 text-[10px] text-white font-semibold"
+                    >
+                      ✦ اشرح هذا الجزء بالتفصيل
+                    </button>
+                    <button
+                      onClick={() => handleOpenOnBoard(activeNode.title, activeNode.desc)}
+                      className="rounded-full border border-indigo-300 bg-white px-3 py-1.5 text-[10px] font-semibold text-indigo-900 hover:bg-indigo-100"
+                    >
+                      ▱ ارسم مسألة على السبورة
+                    </button>
+                    <button
+                      onClick={() => handleSaveConcept(activeNode)}
+                      className="rounded-full bg-white px-3 py-1.5 text-[10px] text-[var(--muted)] hover:text-indigo-900"
+                    >
+                      ▢ حفظ في ملاحظاتي
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-[12px] font-bold text-[var(--ink)] flex items-center justify-between">
+                <span>توقعات أسئلة الامتحانات والفخاخ الشائعة</span>
+                <span className="text-[9px] text-[var(--muted)]">اضغط لكشف الحل النموذجي خطوة بخطوة</span>
+              </div>
+
+              <div className="space-y-3">
+                {currentTopic.traps.map((trap, idx) => {
+                  const isOpen = !!revealedSolutions[idx]
+                  return (
+                    <div key={idx} className="rounded-2xl border border-[var(--line)] bg-white/80 p-4 transition-all">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="text-[12px] font-bold text-[var(--ink)] leading-snug">
+                          {trap.question}
+                        </div>
+                        <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[8px] font-bold ${
+                          trap.difficulty.includes('تميز')
+                            ? 'bg-purple-100 text-purple-700'
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {trap.difficulty}
+                        </span>
+                      </div>
+
+                      {/* Trap Warning Box */}
+                      <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/70 p-3 text-[10px] text-rose-950">
+                        <div className="font-bold flex items-center gap-1 text-rose-700 mb-1">
+                          <span>⚠️ فخ الامتحان الأكثر تكراراً:</span>
+                        </div>
+                        <p className="leading-relaxed">{trap.trap}</p>
+                      </div>
+
+                      {/* Solution accordion */}
+                      {isOpen && (
+                        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-[10px] text-emerald-950">
+                          <div className="font-bold text-emerald-700 mb-1 flex items-center gap-1">
+                            <span>✓ الحل النموذجي المفصل:</span>
+                          </div>
+                          <p className="leading-relaxed whitespace-pre-line">{trap.solution}</p>
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between border-t border-[var(--line)]/60 pt-2 text-[9px]">
+                        <button
+                          onClick={() => toggleSolution(idx)}
+                          className="font-bold text-indigo-600 hover:text-indigo-800"
+                        >
+                          {isOpen ? 'إخفاء الحل النموذجي ▴' : 'كشف الحل النموذجي بالتفصيل ▾'}
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleSaveTrap(trap)}
+                            className="text-[var(--muted)] hover:text-indigo-600"
+                            title="حفظ السؤال والحل"
+                          >
+                            ▢ حفظ السؤال
+                          </button>
+                          <button
+                            onClick={() => handleAskRafeeq(`أريد تدريباً مشابهاً لهذا السؤال: ${trap.question} مع خطة حل واضحة.`)}
+                            className="text-[var(--muted)] hover:text-indigo-600"
+                            title="سؤال مشابه"
+                          >
+                            ✦ سؤال مشابه
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Quick Subject Generator & Tools Panel */}
+        <div className="space-y-4">
+          <div className="glass rounded-[26px] p-5 space-y-4">
+            <h3 className="text-[13px] font-bold">حلل أي موضوع مخصص مع رفيق AI</h3>
+            <p className="text-[10px] text-[var(--muted)] leading-relaxed">
+              اكتب اسم أي درس أو موضوع تريده من المنهاج لتوليد خريطة ذهنية وتوقعات أسئلة مخصصة فوراً.
+            </p>
+
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={customQuery}
+                onChange={(e) => setCustomQuery(e.target.value)}
+                placeholder="مثلاً: الاتزان الإشعاعي، نظرية فيثاغورس، إعراب كان وأخواتها..."
+                className="w-full rounded-xl border border-[var(--line)] bg-white/80 px-3.5 py-2.5 text-[11px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && customQuery.trim()) {
+                    handleAskRafeeq(`أريد خريطة مفاهيم متكاملة وتوقعات أهم فخاخ الامتحانات لدرس: "${customQuery.trim()}". وضح لي القوانين الذهبية، العلاقات المحورية، والأسئلة الشائعة مع حلولها.`)
+                    setCustomQuery('')
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  if (!customQuery.trim()) {
+                    onToast('يرجى كتابة اسم الموضوع أو الدرس أولاً')
+                    return
+                  }
+                  handleAskRafeeq(`أريد خريطة مفاهيم متكاملة وتوقعات أهم فخاخ الامتحانات لدرس: "${customQuery.trim()}". وضح لي القوانين الذهبية، العلاقات المحورية، والأسئلة الشائعة مع حلولها.`)
+                  setCustomQuery('')
+                }}
+                className="btn-grad w-full rounded-xl py-2.5 text-[11px] font-bold text-white shadow-sm"
+              >
+                ⚗ توليد خريطة وتوقعات للدرس
+              </button>
+            </div>
+
+            {/* Quick Inspiration Pills */}
+            <div className="border-t border-[var(--line)] pt-3">
+              <div className="text-[9px] font-semibold text-[var(--muted)] mb-2">أفكار دراسية مقترحة للاستكشاف:</div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  'تطبيقات التكامل المحدد',
+                  'قاعدة لنز والحث الكهرومغناطيسي',
+                  'الأكسدة والاختزال وجهود الأقطاب',
+                  'التنفس الخلوي ودورة كريبس',
+                  'الاستثناء بـ إلا وغير وسوى',
+                ].map((idea) => (
+                  <button
+                    key={idea}
+                    onClick={() => {
+                      handleAskRafeeq(`أريد تحليلاً شاملاً لدرس "${idea}": خريطة مفاهيم، أهم القوانين، وأبرز فخاخ الامتحانات المتكررة مع حل نموذجي.`)
+                    }}
+                    className="rounded-lg border border-[var(--line)] bg-white/60 px-2 py-1 text-[9px] text-[var(--ink)] hover:bg-white hover:border-indigo-300"
+                  >
+                    + {idea}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Bridge to SmartBoard and Notebook */}
+          <div className="glass rounded-[26px] p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[16px]">▱</span>
+              <h3 className="text-[12px] font-bold">السبورة التفاعلية الذكية</h3>
+            </div>
+            <p className="text-[10px] text-[var(--muted)] leading-relaxed">
+              السبورة المدمجة مزودة بأقلام ملونة، أشكال هندسية، إمكانية التصدير كصورة PNG، وحساب المعادلات خطوة بخطوة.
+            </p>
+            <button
+              onClick={() => onNavigate('board')}
+              className="w-full rounded-xl border border-[var(--line)] bg-white/80 py-2 text-[10px] font-bold text-[var(--ink)] hover:bg-white hover:border-indigo-400"
+            >
+              افتح السبورة للرسم والشرح الآن ←
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1686,6 +2365,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
   const navigation = [
     { id: 'home', label: 'الرئيسية', icon: '⌂' },
     { id: 'ai', label: 'رفيق AI', icon: '✦' },
+    { id: 'lab', label: 'مختبر رفيق', icon: '⚗' },
     { id: 'notebook', label: 'دفتر رفيق', icon: '❖' },
     { id: 'board', label: 'سبورة رفيق', icon: '▱' },
     { id: 'books', label: 'كتب ودروس', icon: '▤' },
@@ -2028,12 +2708,14 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                     {[
                       { id: 'ai', title: 'رفيق AI', value: `${chances}/${DAILY_LIMIT}`, caption: 'رسائل متبقية اليوم', icon: '✦', tone: 'var(--brand)' },
-                      { id: 'books', title: 'مكتبتي', value: library.length, caption: 'مصدر على جهازك', icon: '▤', tone: 'var(--cyan)' },
+                      { id: 'lab', title: 'مختبر رفيق', value: '5 تخصصات', caption: 'خرائط وفخاخ الامتحانات', icon: '⚗', tone: 'linear-gradient(135deg,#f43f5e,#8b5cf6)' },
+                      { id: 'board', title: 'سبورة رفيق', value: 'تفاعلية', caption: 'رسم ومسائل وحسابات', icon: '▱', tone: 'linear-gradient(135deg,#06b6d4,#3b82f6)' },
+                      { id: 'notebook', title: 'دفتر رفيق', value: readySources.length, caption: 'مصادر مفهرسة', icon: '❖', tone: 'linear-gradient(135deg,#8b5cf6,#ec4899)' },
+                      { id: 'books', title: 'المكتبة', value: library.length, caption: 'مصدر دراسي', icon: '▤', tone: 'var(--cyan)' },
                       { id: 'notes', title: 'ملاحظاتي', value: notes.length, caption: 'ملاحظة محفوظة', icon: '▢', tone: 'var(--coral)' },
-                      { id: 'timer', title: 'مؤقت الدراسة', value: formatTime(pomoTime), caption: pomoRunning ? 'جلسة تعمل الآن' : 'جاهز للدراسة', icon: '◷', tone: 'var(--mint)' },
                     ].map((card) => (
                       <button
                         key={card.id}
@@ -2058,8 +2740,9 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                       <h2 className="text-[14px] font-bold">ابدأ بسرعة</h2>
                       <p className="mt-1 text-[10px] text-[var(--muted)]">أدوات مصممة للدراسة فقط</p>
 
-                      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
                         {[
+                          { icon: '⚗', t: 'مختبر المفاهيم', d: 'خرائط وفخاخ الامتحانات', fn: () => goTo('lab') },
                           { icon: '✦', t: 'شرح درس', d: 'فهم الفكرة خطوة بخطوة', fn: () => { goTo('ai'); setInput('اشرح لي هذا الدرس بطريقة بسيطة') } },
                           { icon: '▱', t: 'سبورة رفيق', d: 'اكتب وارسم مع الأستاذ', fn: () => goTo('board') },
                           { icon: '＋', t: 'ارفع مستنداً', d: 'PDF أو Word أو نص', fn: () => { goTo('notebook'); window.setTimeout(() => fileRef.current?.click(), 400) } },
@@ -2133,6 +2816,19 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                     </div>
                   </div>
                 </section>
+              )}
+
+              {/* ================= مختبر رفيق الذكي ================= */}
+              {tab === 'lab' && (
+                <LabSection
+                  onNavigate={goTo}
+                  onToast={showToast}
+                  onSaveNote={saveToNotes}
+                  onAskAi={(q) => {
+                    setInput(q)
+                    goTo('ai')
+                  }}
+                />
               )}
 
               {/* ================= سبورة رفيق ================= */}
