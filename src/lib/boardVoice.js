@@ -12,6 +12,8 @@
 //
 // تستطيع استدعاء onLevel(0..1) أثناء التشغيل لتتحرك أضواء السبورة مع علو الصوت فعلياً.
 
+import { readUserPreferences } from './userPreferences'
+
 let provider = null
 
 export function setVoiceProvider(fn) {
@@ -41,8 +43,15 @@ function arabicVoice() {
 }
 
 // يرجع { done: Promise, cancel() }. done يُحلّ عند انتهاء الكلام أو إلغائه أو تعذره.
-export function speak(text, { teacher, onLevel } = {}) {
+function selectedVoice() {
+  const voices = window.speechSynthesis.getVoices?.() || []
+  const selectedURI = readUserPreferences().voiceURI
+  return voices.find((voice) => voice.voiceURI === selectedURI) || arabicVoice()
+}
+
+export function speak(text, { teacher, onLevel, speed = 1 } = {}) {
   const spoken = cleanForSpeech(text)
+  const preferences = readUserPreferences()
   const ctrl = new AbortController()
   let finished = false
   let cleanup = () => {}
@@ -57,7 +66,12 @@ export function speak(text, { teacher, onLevel } = {}) {
     ctrl.signal.addEventListener('abort', finish)
 
     if (provider) {
-      provider(spoken, { teacher, signal: ctrl.signal, onLevel }).catch(() => {}).then(finish)
+      provider(spoken, {
+        teacher,
+        signal: ctrl.signal,
+        onLevel,
+        speed: speed * preferences.speechRate,
+      }).catch(() => {}).then(finish)
       return
     }
 
@@ -69,10 +83,10 @@ export function speak(text, { teacher, onLevel } = {}) {
     const synth = window.speechSynthesis
     synth.cancel()
     const u = new SpeechSynthesisUtterance(spoken)
-    const v = arabicVoice()
+    const v = selectedVoice()
     if (v) u.voice = v
     u.lang = v?.lang || 'ar-SA'
-    u.rate = teacher?.rate || 0.95
+    u.rate = Math.max(0.6, Math.min(1.8, (teacher?.rate || 0.95) * (Number(speed) || 1) * preferences.speechRate))
     u.pitch = teacher?.pitch || 1
     // كل كلمة تنطق تعطي نبضة لأضواء السبورة
     u.onboundary = () => onLevel?.(0.55 + Math.random() * 0.45)

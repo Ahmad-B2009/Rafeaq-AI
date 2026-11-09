@@ -96,14 +96,33 @@ class AppBoundary extends Component {
   }
 }
 
-const AppView = memo(function AppView({ appId, payload, open, osRef, wallpaper, profile }) {
+const AppView = memo(function AppView({
+  appId,
+  payload,
+  open,
+  osRef,
+  wallpaper,
+  profile,
+  onClose
+}) {
   const app = getApp(appId)
   if (!app) return null
-  if (app.kind === 'dash') return <Dashboard embedded forcedTab={app.tab} launch={payload} onNavigate={open} />
-  if (app.kind === 'home') return <HomeApp profile={profile} open={open} logo={LOGO} />
+
+  if (app.kind === 'dash') {
+    return <Dashboard embedded forcedTab={app.tab} launch={payload} onNavigate={open} />
+  }
+
+  if (app.kind === 'home') {
+    return <HomeApp profile={profile} open={open} logo={LOGO} />
+  }
+
   if (app.kind === 'tasks') return <TasksApp />
-  if (app.kind === 'board') return <SmartBoard />
-  if (app.kind === 'settings') return <SettingsApp osRef={osRef} wallpaper={wallpaper} />
+  if (app.kind === 'board') return <SmartBoard onClose={onClose} />
+
+  if (app.kind === 'settings') {
+    return <SettingsApp osRef={osRef} wallpaper={wallpaper} />
+  }
+
   return null
 })
 
@@ -294,7 +313,15 @@ export default function RafeeqOS() {
               onDragging={setDragging}
             >
               <AppBoundary name={app.title}>
-                <AppView appId={w.app} payload={w.payload} open={openApp} osRef={osRef} wallpaper={prefs.wallpaper} profile={profile} />
+<AppView
+  appId={w.app}
+  payload={w.payload}
+  open={openApp}
+  osRef={osRef}
+  wallpaper={prefs.wallpaper}
+  profile={profile}
+ onClose={() => dispatch({ type: 'close', id: w.id })}
+/>
               </AppBoundary>
             </Window>
           )

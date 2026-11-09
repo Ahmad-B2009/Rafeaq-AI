@@ -31,7 +31,7 @@ export function ResultList({ groups, onPick }) {
       <div className="ros-sgroup">{g.title}</div>
       {g.items.map((it) => (
         <button key={it.key} className="ros-sitem" onClick={() => onPick(it)}>
-          {it.icon ? <AppIcon app={it} size={28} /> : <span className="ros-sglyph">{it.glyph}</span>}
+          {it.icon ? <AppIcon app={it} size={28} /> : <span className="ros-sglyph"><Icon name={it.glyph} size={17} /></span>}
           <span className="ros-sname">{it.label}</span>
         </button>
       ))}

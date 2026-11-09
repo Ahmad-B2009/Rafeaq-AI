@@ -146,16 +146,16 @@ export async function searchAll(query) {
   if (apps.length) groups.push({ title: 'التطبيقات', items: apps.map((a) => ({ key: `app:${a.id}`, label: a.title, icon: a.icon, grad: a.grad, open: { app: a.id } })) })
 
   const lib = (await readLibrary()).filter((b) => hit(b.title, b.subject, b.grade)).slice(0, 5)
-  if (lib.length) groups.push({ title: 'كتبي', items: lib.map((b) => ({ key: `lib:${b.id}`, label: b.title, glyph: '📖', open: { app: 'books', payload: { query: b.title, view: 'mine' } } })) })
+  if (lib.length) groups.push({ title: 'كتبي', items: lib.map((b) => ({ key: `lib:${b.id}`, label: b.title, glyph: 'book', open: { app: 'books', payload: { query: b.title, view: 'mine' } } })) })
 
   const catalog = (readLS(K.catalog, { books: [] }).books || []).filter((b) => hit(b.title, b.subject, b.grade)).slice(0, 5)
-  if (catalog.length) groups.push({ title: 'كتب الموقع', items: catalog.map((b) => ({ key: `cat:${b.id}`, label: b.title, glyph: '📚', open: { app: 'books', payload: { query: b.title, view: 'site' } } })) })
+  if (catalog.length) groups.push({ title: 'كتب الموقع', items: catalog.map((b) => ({ key: `cat:${b.id}`, label: b.title, glyph: 'book', open: { app: 'books', payload: { query: b.title, view: 'site' } } })) })
 
   const notes = readLS(K.notes, []).filter((n) => hit(n.title, n.content)).slice(0, 5)
-  if (notes.length) groups.push({ title: 'ملاحظاتي', items: notes.map((n) => ({ key: `note:${n.id}`, label: n.title, glyph: '▢', open: { app: 'notes', payload: { query: n.title } } })) })
+  if (notes.length) groups.push({ title: 'ملاحظاتي', items: notes.map((n) => ({ key: `note:${n.id}`, label: n.title, glyph: 'notes', open: { app: 'notes', payload: { query: n.title } } })) })
 
   const subjects = (await readSubjects()).filter((s) => hit(s))
-  if (subjects.length) groups.push({ title: 'المواد الدراسية', items: subjects.map((s) => ({ key: `sub:${s}`, label: s, glyph: '🎓', open: { app: 'books', payload: { query: s, view: 'site' } } })) })
+  if (subjects.length) groups.push({ title: 'المواد الدراسية', items: subjects.map((s) => ({ key: `sub:${s}`, label: s, glyph: 'graduation', open: { app: 'books', payload: { query: s, view: 'site' } } })) })
 
   return groups
 }

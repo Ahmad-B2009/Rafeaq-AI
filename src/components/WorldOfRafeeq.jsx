@@ -1,26 +1,27 @@
 
 import './WorldOfRafeeq.css'
+import { RafeeqIcon } from './RafeeqIcon.jsx'
 
 const features = [
   {
     number: '01',
     title: 'مساعد ذكي',
     description: 'اسأل رفيق وتعلّم بأسلوب واضح وبسيط.',
-    icon: '✳',
+    icon: 'ai',
     color: 'purple',
   },
   {
     number: '02',
     title: 'سبورة تفاعلية',
     description: 'افهم الأفكار من خلال الشرح والرسم.',
-    icon: '⌁',
+    icon: 'board',
     color: 'cyan',
   },
   {
     number: '03',
     title: 'مساحة تعلّم',
     description: 'اجمع مصادرك وأدواتك الدراسية في مكان واحد.',
-    icon: '▤',
+    icon: 'notebook',
     color: 'violet',
   },
 ]
@@ -80,12 +81,12 @@ export default function WorldOfRafeeq() {
 
           <div className="wr-highlights">
             <span>
-              <span className="wr-check">✓</span>
+              <span className="wr-check"><RafeeqIcon name="check" size={14} weight="bold" /></span>
               تجربة تعليمية مترابطة
             </span>
 
             <span>
-              <span className="wr-check">✓</span>
+              <span className="wr-check"><RafeeqIcon name="check" size={14} weight="bold" /></span>
               واجهة عربية سهلة
             </span>
           </div>
@@ -95,7 +96,7 @@ export default function WorldOfRafeeq() {
           <GlassRibbons />
 
           <div className="wr-floating-card wr-floating-card--top">
-            <span className="wr-floating-icon">✦</span>
+            <span className="wr-floating-icon"><RafeeqIcon name="ai" size={20} weight="duotone" /></span>
             <div>
               <strong>أفكارك تبدأ هنا</strong>
               <span>مساحة للإبداع والتعلّم</span>
@@ -119,7 +120,7 @@ export default function WorldOfRafeeq() {
             key={feature.number}
           >
             <div className={`wr-feature-icon wr-feature-icon--${feature.color}`}>
-              {feature.icon}
+              <RafeeqIcon name={feature.icon} size={22} weight="duotone" />
             </div>
 
             <div className="wr-feature-content">
@@ -130,9 +131,7 @@ export default function WorldOfRafeeq() {
               <p>{feature.description}</p>
             </div>
 
-            <span className="wr-feature-arrow" aria-hidden="true">
-              ↙
-            </span>
+            <span className="wr-feature-arrow" aria-hidden="true"><RafeeqIcon name="arrowUpRight" size={17} /></span>
           </article>
         ))}
       </div>

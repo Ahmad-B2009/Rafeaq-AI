@@ -1,8 +1,10 @@
+import { RafeeqIcon } from './RafeeqIcon.jsx'
+
 const feats = [
-  {title:'رفيق AI', desc:'شرح وتلخيص وأسئلة مراجعة، مع 25 محادثة يومية منظمة.', icon:'✦'},
-  {title:'دفتر رفيق', desc:'اجمع مصادر درسك وملاحظاتك في مساحة واحدة للمراجعة.', icon:'◈'},
-  {title:'مكتبة رفيق', desc:'احتفظ بكتب المنهج الليبي التي تختارها بصيغة PDF على جهازك.', icon:'▤'},
-  {title:'العروض', desc:'أنشئ شرائح مرتبة لأبحاثك وشارك أفكارك بوضوح.', icon:'▧'},]
+  {title:'رفيق AI', desc:'شرح وتلخيص وأسئلة مراجعة، مع 25 محادثة يومية منظمة.', icon:'ai'},
+  {title:'دفتر رفيق', desc:'اجمع مصادر درسك وملاحظاتك في مساحة واحدة للمراجعة.', icon:'notebook'},
+  {title:'مكتبة رفيق', desc:'احتفظ بكتب المنهج الليبي التي تختارها بصيغة PDF على جهازك.', icon:'book'},
+  {title:'العروض', desc:'أنشئ شرائح مرتبة لأبحاثك وشارك أفكارك بوضوح.', icon:'board'},]
 
 export default function Features(){
   return (
@@ -16,7 +18,7 @@ export default function Features(){
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[0.9s]" />
             <div className="relative w-12 h-12 rounded-full bg-[#EDE9FF] flex items-center justify-center text-[20px] group-hover:scale-110 transition-transform duration-300">
               <span className="absolute inset-0 rounded-full border border-[#7C3AED]/30 group-hover:animate-[pulseRing_1.2s_ease-out_infinite]"></span>
-              {f.icon}
+              <RafeeqIcon name={f.icon} size={22} weight="duotone" />
             </div>
             <h3 className="mt-4 font-bold text-[16px] relative z-10">{f.title}</h3>
             <p className="mt-2 text-sm opacity-60 leading-6 relative z-10">{f.desc}</p>

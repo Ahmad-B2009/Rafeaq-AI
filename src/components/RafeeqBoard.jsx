@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { RafeeqIcon } from './RafeeqIcon.jsx'
 
 const BOARD_STORAGE = 'rafeaq_whiteboard_sessions_v1'
 const TEACHER_STORAGE = 'rafeaq_whiteboard_teachers_v1'
@@ -787,7 +788,7 @@ export default function RafeeqBoard({ onToast = () => {} }) {
                   setPenColor('#26304A')
                 }}
               >
-                ✎ قلم
+                <RafeeqIcon name="edit" size={14} /> قلم
               </ActionButton>
 
               <ActionButton
@@ -814,14 +815,14 @@ export default function RafeeqBoard({ onToast = () => {} }) {
                 active={tool === 'eraser'}
                 onClick={() => setTool('eraser')}
               >
-                ⌫ ممحاة
+                <RafeeqIcon name="eraser" size={14} /> ممحاة
               </ActionButton>
 
               <ActionButton
                 onClick={undo}
                 disabled={!strokes.length}
               >
-                ↶ تراجع
+                <RafeeqIcon name="undo" size={14} /> تراجع
               </ActionButton>
 
               <ActionButton danger onClick={clearBoard}>
@@ -829,7 +830,7 @@ export default function RafeeqBoard({ onToast = () => {} }) {
               </ActionButton>
 
               <ActionButton active={mathMode} onClick={formatMath}>
-                ∑ {mathMode ? 'عودة للخط اليدوي' : 'تنسيق رياضي'}
+                <RafeeqIcon name="math" size={14} /> {mathMode ? 'عودة للخط اليدوي' : 'تنسيق رياضي'}
               </ActionButton>
             </div>
           </div>
@@ -873,7 +874,7 @@ export default function RafeeqBoard({ onToast = () => {} }) {
                 className="h-12 rounded-xl px-5 text-xs font-bold text-white transition disabled:opacity-40"
                 style={{ background: currentTeacher.color }}
               >
-                {isTeaching ? 'جاري الشرح…' : '▶ ابدأ الشرح التجريبي'}
+                {isTeaching ? 'جاري الشرح…' : <><RafeeqIcon name="play" size={14} /> ابدأ الشرح التجريبي</>}
               </button>
 
               <button

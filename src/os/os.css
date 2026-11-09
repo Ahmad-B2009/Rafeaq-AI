@@ -1938,3 +1938,125 @@
     transition: none !important;
   }
 }
+
+/* =========================================================
+   Rafeeq SmartBoard — مساحة رسم كاملة داخل نافذة OS
+   ========================================================= */
+
+/* منع نافذة السبورة من التحول إلى صفحة طويلة */
+.ros-win:has(.sb-root) {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.ros-win:has(.sb-root) .ros-wbody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ros-win:has(.sb-root) .ros-wscroll {
+  position: relative;
+  inset: auto;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* السبورة تملأ المساحة المتاحة */
+.ros-win .sb-root {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* مساحة الرسم */
+.ros-win .sb-stage {
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* شريط الأدوات لا يستهلك مساحة عشوائية */
+.ros-win .sb-bar {
+  flex: 0 0 auto;
+  max-width: 100%;
+  justify-content: center;
+}
+
+/* الهاتف: لا نغير سلوك النوافذ الأخرى */
+@media (max-width: 767px) {
+  .ros-mobile .ros-win:has(.sb-root) .ros-wbody {
+    min-height: 0;
+  }
+
+  .ros-mobile .ros-win .sb-root {
+    padding: 6px;
+    gap: 6px;
+  }
+}
+/* Rafeeq Board — use the complete window workspace */
+.ros-win:has(.sb-root) {
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ros-win:has(.sb-root) .ros-wbody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ros-win:has(.sb-root) .ros-wscroll {
+  position: relative;
+  inset: auto;
+  flex: 1 1 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ros-win .sb-root {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px;
+  gap: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ros-win .sb-stage {
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ros-win .sb-bar {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .ros-mobile .ros-win .sb-root {
+    padding: 6px;
+    gap: 6px;
+  }
+}

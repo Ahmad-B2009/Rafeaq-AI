@@ -4,6 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import QuizCard from '../components/QuizCard'
 import FlashcardDeck from '../components/FlashcardDeck'
 import SmartBoard from '../components/SmartBoard'
+import RafeeqNotebook from '../components/RafeeqNotebook'
+import SmartLabAnalysis from '../components/SmartLabAnalysis'
+import AchievementSection from '../components/AchievementSection'
+import { RafeeqIcon } from '../components/RafeeqIcon.jsx'
+import { readUserPreferences } from '../lib/userPreferences'
 
 /* ============================== الثوابت ============================== */
 const DAILY_LIMIT = 25
@@ -680,7 +685,7 @@ function EmptyState({ icon, title, text }) {
   return (
     <div className="glass rounded-[22px] border-dashed p-12 text-center">
       <div className="float mx-auto grid h-16 w-16 place-items-center rounded-[20px] bg-[var(--soft)] text-[26px]">
-        {icon}
+        <RafeeqIcon name={icon} size={29} weight="duotone" />
       </div>
       <div className="mt-4 text-[14px] font-bold">{title}</div>
       <p className="mx-auto mt-2 max-w-[440px] text-[11px] leading-6 text-[var(--muted)]">{text}</p>
@@ -706,7 +711,7 @@ function Modal({ title, onClose, children }) {
       >
         <div className="flex items-center justify-between">
           <h2 className="text-[15px] font-bold">{title}</h2>
-          <button onClick={onClose} className="btn-soft grid h-8 w-8 place-items-center rounded-full text-[12px]">✕</button>
+          <button onClick={onClose} className="btn-soft grid h-8 w-8 place-items-center rounded-full text-[12px]" aria-label="إغلاق"><RafeeqIcon name="x" size={16} /></button>
         </div>
         <div className="mt-4">{children}</div>
       </motion.div>
@@ -717,8 +722,8 @@ function Modal({ title, onClose, children }) {
 function ImageTools({ onGallery, onCamera, disabled }) {
   return (
     <>
-      <button type="button" onClick={onGallery} disabled={disabled} title="إضافة صورة" className="btn-soft grid h-9 w-9 shrink-0 place-items-center rounded-full disabled:opacity-40">🖼</button>
-      <button type="button" onClick={onCamera} disabled={disabled} title="التقاط بالكاميرا" className="btn-soft grid h-9 w-9 shrink-0 place-items-center rounded-full disabled:opacity-40">📷</button>
+      <button type="button" onClick={onGallery} disabled={disabled} title="إضافة صورة" className="btn-soft grid h-9 w-9 shrink-0 place-items-center rounded-full disabled:opacity-40"><RafeeqIcon name="image" size={17} /></button>
+      <button type="button" onClick={onCamera} disabled={disabled} title="التقاط بالكاميرا" className="btn-soft grid h-9 w-9 shrink-0 place-items-center rounded-full disabled:opacity-40"><RafeeqIcon name="camera" size={17} /></button>
     </>
   )
 }
@@ -735,7 +740,7 @@ function ImagePreviews({ images, onRemove }) {
             onClick={() => onRemove(img.id)}
             className="absolute -left-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#F04438] text-[9px] text-white"
           >
-            ✕
+            <RafeeqIcon name="x" size={12} />
           </button>
         </div>
       ))}
@@ -765,7 +770,7 @@ function UserContent({ m }) {
           ))}
         </div>
       )}
-      {!m.images?.length && m.imageCount > 0 && <div className="mb-1 text-[10px] opacity-80">📎 {m.imageCount} صورة</div>}
+      {!m.images?.length && m.imageCount > 0 && <div className="mb-1 flex items-center gap-1 text-[10px] opacity-80"><RafeeqIcon name="paperclip" size={13} /> {m.imageCount} صورة</div>}
       {m.text}
     </>
   )
@@ -775,7 +780,7 @@ function AssistantActions({ text, onSave, onToast }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(text)
-      onToast('تم النسخ ✓')
+      onToast('تم النسخ')
     } catch {
       onToast('تعذر النسخ.')
     }
@@ -799,7 +804,7 @@ function AssistantActions({ text, onSave, onToast }) {
     <div className="mt-2 flex flex-wrap gap-2 border-t border-[var(--line)] pt-2">
       <button onClick={onSave} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">حفظ في ملاحظاتي</button>
       <button onClick={copy} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">نسخ</button>
-      <button onClick={speak} className="btn-soft rounded-full px-2.5 py-1 text-[9px]">🔊 استماع</button>
+      <button onClick={speak} className="btn-soft flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px]"><RafeeqIcon name="speaker" size={13} /> استماع</button>
     </div>
   )
 }
@@ -812,10 +817,10 @@ const LAB_TOPICS = [
     subject: 'قوانين الحركة والجاذبية (نيوتن)',
     summary: 'فهم الحركة، القوة، وعلاقة القصور الذاتي بالتسارع وقوة الفعل ورد الفعل.',
     nodes: [
-      { id: 'n1', title: 'القانون الأول (القصور)', desc: 'الجسم الساكن يبقى ساكناً والمتحرك يستمر بسرعة ثابتة ما لم تؤثر عليه قوة محصلة.', tag: 'مفهوم أساسي', icon: '🛑' },
-      { id: 'n2', title: 'القانون الثاني (F = m·a)', desc: 'تسارع الجسم يتناسب طردياً مع القوة المحصلة وعكسياً مع كتلته. وحدة القياس نيوتن (N).', tag: 'قانون ذهبي', icon: '⚡' },
-      { id: 'n3', title: 'القانون الثالث (الفعل ورد الفعل)', desc: 'لكل فعل رد فعل مساوٍ له في المقدار ومضاد له في الاتجاه، ويؤثران على جسمين مختلفين.', tag: 'تطبيق عملي', icon: '🔄' },
-      { id: 'n4', title: 'علاقة الوزن بالكتلة', desc: 'الكتلة ثابتة بالكيلوجرام، أما الوزن W = m·g فيتغير حسب شدة مجال الجاذبية g.', tag: 'رابط محوري', icon: '⚖️' },
+      { id: 'n1', title: 'القانون الأول (القصور)', desc: 'الجسم الساكن يبقى ساكناً والمتحرك يستمر بسرعة ثابتة ما لم تؤثر عليه قوة محصلة.', tag: 'مفهوم أساسي', icon: 'stop' },
+      { id: 'n2', title: 'القانون الثاني (F = m·a)', desc: 'تسارع الجسم يتناسب طردياً مع القوة المحصلة وعكسياً مع كتلته. وحدة القياس نيوتن (N).', tag: 'قانون ذهبي', icon: 'lightning' },
+      { id: 'n3', title: 'القانون الثالث (الفعل ورد الفعل)', desc: 'لكل فعل رد فعل مساوٍ له في المقدار ومضاد له في الاتجاه، ويؤثران على جسمين مختلفين.', tag: 'تطبيق عملي', icon: 'refresh' },
+      { id: 'n4', title: 'علاقة الوزن بالكتلة', desc: 'الكتلة ثابتة بالكيلوجرام، أما الوزن W = m·g فيتغير حسب شدة مجال الجاذبية g.', tag: 'رابط محوري', icon: 'balance' },
     ],
     traps: [
       {
@@ -838,10 +843,10 @@ const LAB_TOPICS = [
     subject: 'التفاضل والمشتقات وتطبيقاتها',
     summary: 'إيجاد معدل التغير اللحظي، ميل المماس للمنحنيات، وتحديد القيم العظمى والصغرى.',
     nodes: [
-      { id: 'n1', title: 'المعنى الهندسي للمشتقة', desc: 'المشتقة الأولى dy/dx تمثل ميل المماس لمنحنى الدالة عند أي نقطة (x, y).', tag: 'مفهوم أساسي', icon: '📐' },
-      { id: 'n2', title: 'قواعد الاشتقاق الذهبية', desc: 'مشتقة الثابت صفر، مشتقة x^n هي n·x^(n-1)، ومشتقة حاصل الضرب: الأولى × مشتقة الثانية + الثانية × مشتقة الأولى.', tag: 'قانون ذهبي', icon: '✨' },
-      { id: 'n3', title: 'قاعدة السلسلة (Chain Rule)', desc: 'لاشتقاق دالة داخل دالة: نشتق الخارجية مع بقاء الداخلية، ثم نضرب في مشتقة الداخلية.', tag: 'رابط محوري', icon: '🔗' },
-      { id: 'n4', title: 'النقاط الحرجة والتزايد والتناقص', desc: 'نساوي f\'(x) بالصفر؛ إذا كانت f\' > 0 فالدالة متزايدة، وإذا كانت f\' < 0 فالدالة متناقصة.', tag: 'تطبيق عملي', icon: '📈' },
+      { id: 'n1', title: 'المعنى الهندسي للمشتقة', desc: 'المشتقة الأولى dy/dx تمثل ميل المماس لمنحنى الدالة عند أي نقطة (x, y).', tag: 'مفهوم أساسي', icon: 'chart' },
+      { id: 'n2', title: 'قواعد الاشتقاق الذهبية', desc: 'مشتقة الثابت صفر، مشتقة x^n هي n·x^(n-1)، ومشتقة حاصل الضرب: الأولى × مشتقة الثانية + الثانية × مشتقة الأولى.', tag: 'قانون ذهبي', icon: 'sparkle' },
+      { id: 'n3', title: 'قاعدة السلسلة (Chain Rule)', desc: 'لاشتقاق دالة داخل دالة: نشتق الخارجية مع بقاء الداخلية، ثم نضرب في مشتقة الداخلية.', tag: 'رابط محوري', icon: 'link' },
+      { id: 'n4', title: 'النقاط الحرجة والتزايد والتناقص', desc: 'نساوي f\'(x) بالصفر؛ إذا كانت f\' > 0 فالدالة متزايدة، وإذا كانت f\' < 0 فالدالة متناقصة.', tag: 'تطبيق عملي', icon: 'chart' },
     ],
     traps: [
       {
@@ -864,10 +869,10 @@ const LAB_TOPICS = [
     subject: 'الاتزان الكيميائي ومبدأ لوشاتيليه',
     summary: 'ثبات سرعة التفاعل الأمامي والعكسي وكيف يستجيب النظام المتزن للمؤثرات الخارجية.',
     nodes: [
-      { id: 'n1', title: 'حالة الاتزان الديناميكي', desc: 'تساوي سرعتي التفاعل الأمامي والعكسي مع ثبوت تراكيز المواد المتفاعلة والناتجة.', tag: 'مفهوم أساسي', icon: '⚖️' },
-      { id: 'n2', title: 'تعبير ثابت الاتزان (Kc)', desc: 'حاصل ضرب تراكيز النواتج مقسوماً على المتفاعلات، كل مرفوع لأس يمثل عدد مولاته.', tag: 'قانون ذهبي', icon: '🧪' },
-      { id: 'n3', title: 'مبدأ لوشاتيليه', desc: 'إذا أثر مؤثر خارجي (تركيز، ضغط، حرارة) على نظام متزن، فإن النظام ينزاح في الاتجاه الذي يقلل من هذا المؤثر.', tag: 'رابط محوري', icon: '🔄' },
-      { id: 'n4', title: 'أثر العامل الحفاز', desc: 'يزيد سرعة الوصول إلى حالة الاتزان دون التأثير على موضع الاتزان أو قيمة Kc مطلقاً.', tag: 'تطبيق عملي', icon: '⚡' },
+      { id: 'n1', title: 'حالة الاتزان الديناميكي', desc: 'تساوي سرعتي التفاعل الأمامي والعكسي مع ثبوت تراكيز المواد المتفاعلة والناتجة.', tag: 'مفهوم أساسي', icon: 'balance' },
+      { id: 'n2', title: 'تعبير ثابت الاتزان (Kc)', desc: 'حاصل ضرب تراكيز النواتج مقسوماً على المتفاعلات، كل مرفوع لأس يمثل عدد مولاته.', tag: 'قانون ذهبي', icon: 'lab' },
+      { id: 'n3', title: 'مبدأ لوشاتيليه', desc: 'إذا أثر مؤثر خارجي (تركيز، ضغط، حرارة) على نظام متزن، فإن النظام ينزاح في الاتجاه الذي يقلل من هذا المؤثر.', tag: 'رابط محوري', icon: 'refresh' },
+      { id: 'n4', title: 'أثر العامل الحفاز', desc: 'يزيد سرعة الوصول إلى حالة الاتزان دون التأثير على موضع الاتزان أو قيمة Kc مطلقاً.', tag: 'تطبيق عملي', icon: 'lightning' },
     ],
     traps: [
       {
@@ -890,10 +895,10 @@ const LAB_TOPICS = [
     subject: 'علم الوراثة وقوانين مندل',
     summary: 'انتقال الصفات عبر الأجيال، السيادة التامة، ومربعات بانيت لحساب الاحتمالات.',
     nodes: [
-      { id: 'n1', title: 'قانون انعزال العوامل (مندل 1)', desc: 'ينعزل زوج الأليلات عند تكوين الأمشاج (الجاميتات)، بحيث يحمل كل مشيج أليلاً واحداً.', tag: 'مفهوم أساسي', icon: '🧬' },
-      { id: 'n2', title: 'السيادة والجين المتنحي', desc: 'الأليل السائد (A) يحجب ظهور الأليل المتنحي (a) في الطراز المظهري للفرد الهجين (Aa).', tag: 'قانون ذهبي', icon: '🌱' },
-      { id: 'n3', title: 'الطراز الجيني vs المظهري', desc: 'الجيني هو التركيب الوراثي الحقيقي (AA, Aa, aa)، والمظهري هو الصفة المشاهدة خارجياً.', tag: 'رابط محوري', icon: '🔬' },
-      { id: 'n4', title: 'مربع بانيت التنبؤي', desc: 'شبكة هندسية لحساب نسب الطرز الجينية والمظهرية الناتجة عن أي تزاوج وراثي بدقة.', tag: 'تطبيق عملي', icon: '📊' },
+      { id: 'n1', title: 'قانون انعزال العوامل (مندل 1)', desc: 'ينعزل زوج الأليلات عند تكوين الأمشاج (الجاميتات)، بحيث يحمل كل مشيج أليلاً واحداً.', tag: 'مفهوم أساسي', icon: 'brain' },
+      { id: 'n2', title: 'السيادة والجين المتنحي', desc: 'الأليل السائد (A) يحجب ظهور الأليل المتنحي (a) في الطراز المظهري للفرد الهجين (Aa).', tag: 'قانون ذهبي', icon: 'sparkle' },
+      { id: 'n3', title: 'الطراز الجيني vs المظهري', desc: 'الجيني هو التركيب الوراثي الحقيقي (AA, Aa, aa)، والمظهري هو الصفة المشاهدة خارجياً.', tag: 'رابط محوري', icon: 'lab' },
+      { id: 'n4', title: 'مربع بانيت التنبؤي', desc: 'شبكة هندسية لحساب نسب الطرز الجينية والمظهرية الناتجة عن أي تزاوج وراثي بدقة.', tag: 'تطبيق عملي', icon: 'chart' },
     ],
     traps: [
       {
@@ -910,10 +915,10 @@ const LAB_TOPICS = [
     subject: 'إعراب الجمل وأشباه الجمل',
     summary: 'معرفة المحل الإعرابي للجمل الواقعة خبراً، نعتاً، حالاً، أو مضافاً إليه بدقة.',
     nodes: [
-      { id: 'n1', title: 'القاعدة الذهبية', desc: '«الجمل بعد المعارف أحوال، وبعد النكرات صفات» بشرط اكتمال أركان الجملة الأصلية.', tag: 'قانون ذهبي', icon: '📜' },
-      { id: 'n2', title: 'الجمل التي لها محل', desc: 'جملة الخبر (في محل رفع)، جملة المفعول لمقول القول (في محل نصب)، جملة الحال (نصب).', tag: 'مفهوم أساسي', icon: '✒️' },
-      { id: 'n3', title: 'الجمل التي لا محل لها', desc: 'الجملة الابتدائية، جملة صلة الموصول، الجملة الاعتراضية، وجملة جواب القسم.', tag: 'رابط محوري', icon: '📖' },
-      { id: 'n4', title: 'شبه الجملة (الجار والمجرور والظرف)', desc: 'يتعلق بالفعل أو المشتق، أو يقع خبراً مقدماً أو نعتاً أو حالاً بنفس قواعد الجمل.', tag: 'تطبيق عملي', icon: '💡' },
+      { id: 'n1', title: 'القاعدة الذهبية', desc: '«الجمل بعد المعارف أحوال، وبعد النكرات صفات» بشرط اكتمال أركان الجملة الأصلية.', tag: 'قانون ذهبي', icon: 'text' },
+      { id: 'n2', title: 'الجمل التي لها محل', desc: 'جملة الخبر (في محل رفع)، جملة المفعول لمقول القول (في محل نصب)، جملة الحال (نصب).', tag: 'مفهوم أساسي', icon: 'edit' },
+      { id: 'n3', title: 'الجمل التي لا محل لها', desc: 'الجملة الابتدائية، جملة صلة الموصول، الجملة الاعتراضية، وجملة جواب القسم.', tag: 'رابط محوري', icon: 'book' },
+      { id: 'n4', title: 'شبه الجملة (الجار والمجرور والظرف)', desc: 'يتعلق بالفعل أو المشتق، أو يقع خبراً مقدماً أو نعتاً أو حالاً بنفس قواعد الجمل.', tag: 'تطبيق عملي', icon: 'lightbulb' },
     ],
     traps: [
       {
@@ -926,7 +931,7 @@ const LAB_TOPICS = [
   },
 ]
 
-function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
+function LabSection({ onNavigate, onToast, onSaveNote, onAskAi, onAnalyze }) {
   const [selectedTopicId, setSelectedTopicId] = useState(LAB_TOPICS[0].id)
   const [activeTab, setActiveTab] = useState('mindmap') // 'mindmap' | 'exam'
   const [customQuery, setCustomQuery] = useState('')
@@ -972,8 +977,8 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-[18px] text-white shadow-lg shadow-rose-500/20">
-                ⚗
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white shadow-lg shadow-rose-500/20">
+                <RafeeqIcon name="lab" size={20} weight="duotone" />
               </span>
               <div>
                 <h1 className="text-[20px] font-black tracking-tight sm:text-[22px]">مختبر رفيق الذكي</h1>
@@ -991,7 +996,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                   : 'bg-white/60 text-[var(--ink)] hover:bg-white'
               }`}
             >
-              🗺 خريطة المفاهيم
+              <RafeeqIcon name="brain" size={15} /> خريطة المفاهيم
             </button>
             <button
               onClick={() => setActiveTab('exam')}
@@ -1001,7 +1006,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                   : 'bg-white/60 text-[var(--ink)] hover:bg-white'
               }`}
             >
-              🎯 توقعات الامتحانات والفخاخ
+              <RafeeqIcon name="target" size={15} /> توقعات الامتحانات والفخاخ
             </button>
           </div>
         </div>
@@ -1028,6 +1033,8 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
         </div>
       </div>
 
+      <SmartLabAnalysis onAnalyze={onAnalyze} onSaveNote={onSaveNote} />
+
       {/* Main Content Area */}
       <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
         {/* Left Side: Interactive Mindmap or Exam Traps */}
@@ -1046,14 +1053,14 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                 className="btn-soft rounded-full px-3 py-1 text-[10px] font-semibold"
                 title="افتح نقاشاً فورياً مع رفيق AI حول هذا الدرس"
               >
-                ✦ ناقش رفيق
+                <RafeeqIcon name="ai" size={14} /> ناقش رفيق
               </button>
               <button
                 onClick={() => handleOpenOnBoard(currentTopic.subject, currentTopic.summary)}
                 className="btn-soft rounded-full px-3 py-1 text-[10px] font-semibold"
                 title="انتقل إلى السبورة للرسم والكتابة التفاعلية"
               >
-                ▱ السبورة
+                <RafeeqIcon name="board" size={14} /> السبورة
               </button>
             </div>
           </div>
@@ -1079,7 +1086,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[18px]">{node.icon}</span>
+                        <span className="text-indigo-600"><RafeeqIcon name={node.icon} size={19} weight={isSelected ? 'duotone' : 'regular'} /></span>
                         <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[8px] font-bold text-indigo-700">
                           {node.tag}
                         </span>
@@ -1097,7 +1104,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                           className="text-[var(--muted)] hover:text-indigo-600"
                           title="حفظ في ملاحظاتي"
                         >
-                          ▢ حفظ
+                          <RafeeqIcon name="bookmark" size={13} /> حفظ
                         </button>
                       </div>
                     </div>
@@ -1110,7 +1117,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                 <div className="rounded-2xl border border-indigo-200 bg-indigo-50/80 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-[20px]">{activeNode.icon}</span>
+                      <span className="text-indigo-600"><RafeeqIcon name={activeNode.icon} size={21} weight="duotone" /></span>
                       <strong className="text-[13px] text-indigo-950">{activeNode.title}</strong>
                     </div>
                     <span className="rounded-full bg-indigo-200 px-2 py-0.5 text-[9px] font-bold text-indigo-800">
@@ -1124,19 +1131,19 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                       onClick={() => handleAskRafeeq(`أريد شرحاً عميقاً لمفهوم "${activeNode.title}" في درس ${currentTopic.subject}، مع إعطائي سؤال اختبار متوقع وحله النموذجي.`)}
                       className="btn-grad rounded-full px-3 py-1.5 text-[10px] text-white font-semibold"
                     >
-                      ✦ اشرح هذا الجزء بالتفصيل
+                      <RafeeqIcon name="ai" size={14} /> اشرح هذا الجزء بالتفصيل
                     </button>
                     <button
                       onClick={() => handleOpenOnBoard(activeNode.title, activeNode.desc)}
                       className="rounded-full border border-indigo-300 bg-white px-3 py-1.5 text-[10px] font-semibold text-indigo-900 hover:bg-indigo-100"
                     >
-                      ▱ ارسم مسألة على السبورة
+                      <RafeeqIcon name="board" size={14} /> ارسم مسألة على السبورة
                     </button>
                     <button
                       onClick={() => handleSaveConcept(activeNode)}
                       className="rounded-full bg-white px-3 py-1.5 text-[10px] text-[var(--muted)] hover:text-indigo-900"
                     >
-                      ▢ حفظ في ملاحظاتي
+                      <RafeeqIcon name="bookmark" size={14} /> حفظ في ملاحظاتي
                     </button>
                   </div>
                 </div>
@@ -1170,7 +1177,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                       {/* Trap Warning Box */}
                       <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50/70 p-3 text-[10px] text-rose-950">
                         <div className="font-bold flex items-center gap-1 text-rose-700 mb-1">
-                          <span>⚠️ فخ الامتحان الأكثر تكراراً:</span>
+                          <span className="flex items-center gap-1"><RafeeqIcon name="warning" size={13} /> فخ الامتحان الأكثر تكراراً:</span>
                         </div>
                         <p className="leading-relaxed">{trap.trap}</p>
                       </div>
@@ -1179,7 +1186,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                       {isOpen && (
                         <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-[10px] text-emerald-950">
                           <div className="font-bold text-emerald-700 mb-1 flex items-center gap-1">
-                            <span>✓ الحل النموذجي المفصل:</span>
+                            <span className="flex items-center gap-1"><RafeeqIcon name="checkCircle" size={13} /> الحل النموذجي المفصل:</span>
                           </div>
                           <p className="leading-relaxed whitespace-pre-line">{trap.solution}</p>
                         </div>
@@ -1198,14 +1205,14 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                             className="text-[var(--muted)] hover:text-indigo-600"
                             title="حفظ السؤال والحل"
                           >
-                            ▢ حفظ السؤال
+                            <RafeeqIcon name="bookmark" size={13} /> حفظ السؤال
                           </button>
                           <button
                             onClick={() => handleAskRafeeq(`أريد تدريباً مشابهاً لهذا السؤال: ${trap.question} مع خطة حل واضحة.`)}
                             className="text-[var(--muted)] hover:text-indigo-600"
                             title="سؤال مشابه"
                           >
-                            ✦ سؤال مشابه
+                            <RafeeqIcon name="ai" size={13} /> سؤال مشابه
                           </button>
                         </div>
                       </div>
@@ -1250,7 +1257,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                 }}
                 className="btn-grad w-full rounded-xl py-2.5 text-[11px] font-bold text-white shadow-sm"
               >
-                ⚗ توليد خريطة وتوقعات للدرس
+                <RafeeqIcon name="lab" size={15} weight="duotone" /> توليد خريطة وتوقعات للدرس
               </button>
             </div>
 
@@ -1272,7 +1279,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
                     }}
                     className="rounded-lg border border-[var(--line)] bg-white/60 px-2 py-1 text-[9px] text-[var(--ink)] hover:bg-white hover:border-indigo-300"
                   >
-                    + {idea}
+                    <RafeeqIcon name="plus" size={12} /> {idea}
                   </button>
                 ))}
               </div>
@@ -1282,7 +1289,7 @@ function LabSection({ onNavigate, onToast, onSaveNote, onAskAi }) {
           {/* Quick Bridge to SmartBoard and Notebook */}
           <div className="glass rounded-[26px] p-5 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-[16px]">▱</span>
+              <span className="text-indigo-600"><RafeeqIcon name="board" size={17} /></span>
               <h3 className="text-[12px] font-bold">السبورة التفاعلية الذكية</h3>
             </div>
             <p className="text-[10px] text-[var(--muted)] leading-relaxed">
@@ -1483,11 +1490,11 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
     beep()
 
     if (pomoMode === 'break') {
-      showToast('انتهت الراحة، يلا نكمل 💪')
+      showToast('انتهت الراحة، يلا نكمل')
     } else {
       const mins = pomoMode === 'deep' ? 50 : 25
       setStudyLog((c) => ({ ...c, [todayKey()]: (c[todayKey()] || 0) + mins }))
-      showToast(`أحسنت! أنجزت ${mins} دقيقة تركيز ✓`)
+      showToast(`أحسنت! أنجزت ${mins} دقيقة تركيز`)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pomoTime, pomoMode])
@@ -1638,7 +1645,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
       })
 
       await loadLibrary()
-      showToast('تم حفظ الكتاب في مكتبتك على جهازك ✓')
+      showToast('تم حفظ الكتاب في مكتبتك على جهازك')
     } catch (error) {
       console.error('Download error:', error)
       showToast(
@@ -1695,7 +1702,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
       await dbPut('meta', { ...book, indexed: true })
       await loadLibrary()
       setNbSelected((c) => (c.includes(book.id) ? c : [...c, book.id]))
-      showToast('تم تجهيز الكتاب لدفتر رفيق ✓')
+      showToast('تم تجهيز الكتاب لدفتر رفيق')
     } catch (error) {
       console.error('Index error:', error)
       showToast(explainError(error, book.title))
@@ -1708,7 +1715,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
     }
   }
 
-  /* ---------- رفع المستندات (جديد: مثل NotebookLM) ---------- */
+  /* ---------- رفع ومعالجة المستندات (دفتر رفيق الذكي) ---------- */
   async function addFiles(fileList) {
     const files = Array.from(fileList || [])
     if (!files.length) return
@@ -1754,7 +1761,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
 
         await loadLibrary()
         setNbSelected((c) => (c.includes(id) ? c : [...c, id]))
-        showToast(`تمت إضافة "${file.name}" كمصدر ✓`)
+        showToast(`تمت إضافة "${file.name}" كمصدر`)
       } catch (error) {
         console.error('Upload error:', error)
         showToast(explainError(error, file.name))
@@ -1813,7 +1820,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
       setNbSelected((c) => [...c, id])
       setPasteForm({ title: '', text: '' })
       setMenu(null)
-      showToast('تمت إضافة النص كمصدر ✓')
+      showToast('تمت إضافة النص كمصدر')
     } catch (error) {
       console.error('Paste error:', error)
       showToast(explainError(error, title))
@@ -1860,6 +1867,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
         role: 'student',
         context,
         history,
+        preferences: { responseStyle: readUserPreferences().responseStyle },
         ...(images?.length ? { images } : {}),
         student: { name: user, class: studentClass, section: studentSection },
       }),
@@ -1934,8 +1942,8 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
           id: uid(),
           role: 'assistant',
           text: isQuiz
-            ? `جهّزت لك اختباراً من ${data.questions.length} سؤالاً في «${topic}» ✅`
-            : `جهّزت لك ${data.cards.length} بطاقة مراجعة في «${topic}» ✅`,
+            ? `جهّزت لك اختباراً من ${data.questions.length} سؤالاً في «${topic}»`
+            : `جهّزت لك ${data.cards.length} بطاقة مراجعة في «${topic}»`,
           quiz: data,
           quizTopic: topic,
         },
@@ -2019,8 +2027,8 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
             id: uid(),
             role: 'assistant',
             text: isQuiz
-              ? `جهّزت لك اختباراً من ${result.questions.length} سؤالاً ✅`
-              : `جهّزت لك ${result.cards.length} بطاقة مراجعة ✅`,
+              ? `جهّزت لك اختباراً من ${result.questions.length} سؤالاً`
+              : `جهّزت لك ${result.cards.length} بطاقة مراجعة`,
             quiz: result,
             quizTopic: question,
           },
@@ -2080,7 +2088,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
       pushNb({
         role: 'assistant',
         error: true,
-        text: 'ما عندي مصادر أقرأ منها بعد. اضغط "＋ رفع مستند" وارفع PDF أو Word أو نص، أو الصق نصاً، أو نزّل كتاباً من "كتب ودروس" ثم اضغط "تجهيز للدفتر".',
+        text: 'ما عندي مصادر أقرأ منها بعد. اختر "رفع مستند" وارفع PDF أو Word أو نص، أو الصق نصاً، أو نزّل كتاباً من "كتب ودروس" ثم اضغط "تجهيز للدفتر".',
       })
       setNbInput('')
       return
@@ -2167,7 +2175,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
       { id: uid(), title: `${title}: ${text.slice(0, 30)}`, content: text, date: formatDate() },
       ...c,
     ])
-    showToast('تم الحفظ في ملاحظاتي ✓')
+    showToast('تم الحفظ في ملاحظاتي')
   }
 
   /* ---------- الإعدادات ---------- */
@@ -2187,7 +2195,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
     localStorage.setItem('rafeaq_student_class', cls)
     localStorage.setItem('rafeaq_student_section', sec)
     setMenu(null)
-    showToast('تم حفظ الإعدادات ✓')
+    showToast('تم حفظ الإعدادات')
   }
 
   function wipeChatsAndNotes() {
@@ -2363,14 +2371,15 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
   }, [embedded, launch?.nonce])
 
   const navigation = [
-    { id: 'home', label: 'الرئيسية', icon: '⌂' },
-    { id: 'ai', label: 'رفيق AI', icon: '✦' },
-    { id: 'lab', label: 'مختبر رفيق', icon: '⚗' },
-    { id: 'notebook', label: 'دفتر رفيق', icon: '❖' },
-    { id: 'board', label: 'سبورة رفيق', icon: '▱' },
-    { id: 'books', label: 'كتب ودروس', icon: '▤' },
-    { id: 'notes', label: 'ملاحظاتي', icon: '▢' },
-    { id: 'timer', label: 'مؤقت الدراسة', icon: '◷' },
+    { id: 'home', label: 'الرئيسية', icon: 'home' },
+    { id: 'ai', label: 'رفيق AI', icon: 'ai' },
+    { id: 'lab', label: 'مختبر رفيق', icon: 'lab' },
+    { id: 'notebook', label: 'دفتر رفيق', icon: 'notebook' },
+    { id: 'board', label: 'سبورة رفيق', icon: 'board' },
+    { id: 'books', label: 'كتب ودروس', icon: 'book' },
+    { id: 'notes', label: 'ملاحظاتي', icon: 'notes' },
+    { id: 'tasks', label: 'الإنجاز', icon: 'list' },
+    { id: 'timer', label: 'مؤقت الدراسة', icon: 'timer' },
   ]
 
   const readySources = library.filter((b) => b.indexed)
@@ -2581,7 +2590,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
           </div>
 
           <div className="mt-2.5 grid grid-cols-2 gap-2">
-            <button onClick={openSettings} className="btn-soft h-9 rounded-[11px] text-[11px]">⚙ الإعدادات</button>
+            <button onClick={openSettings} className="btn-soft flex h-9 items-center justify-center gap-1.5 rounded-[11px] text-[11px]"><RafeeqIcon name="settings" size={14} /> الإعدادات</button>
             <button onClick={logout} className="h-9 rounded-[11px] border border-[#F6CFCF] bg-[#FFF5F5] text-[11px] text-[#C23B3B] transition hover:bg-[#FFEAEA]">
               تسجيل الخروج
             </button>
@@ -2602,7 +2611,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
               </button>
 
               <div className="relative max-w-[470px] flex-1">
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[var(--muted)]">⌕</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[var(--muted)]"><RafeeqIcon name="search" size={15} /></span>
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -2640,15 +2649,15 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                       </div>
                       <div className="my-1 h-px bg-[var(--line)]" />
                       {[
-                        ['⚙', 'الإعدادات', openSettings],
+                        ['settings', 'الإعدادات', openSettings],
                       ].map(([icon, label, fn]) => (
                         <button key={label} onClick={fn} className="flex h-10 w-full items-center gap-3 rounded-[11px] px-3 text-right text-[12px] hover:bg-[var(--soft)]">
-                          <span className="w-4 text-center">{icon}</span>{label}
+                          <span className="flex w-4 justify-center"><RafeeqIcon name={icon} size={15} /></span>{label}
                         </button>
                       ))}
                       <div className="my-1 h-px bg-[var(--line)]" />
                       <button onClick={logout} className="flex h-10 w-full items-center gap-3 rounded-[11px] px-3 text-right text-[12px] text-[#C23B3B] hover:bg-[#FFF1F1]">
-                        <span className="w-4 text-center">⎋</span>تسجيل الخروج
+                        <span className="flex w-4 justify-center"><RafeeqIcon name="logout" size={15} /></span>تسجيل الخروج
                       </button>
                     </motion.div>
                   )}
@@ -2681,7 +2690,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                       </div>
 
                       <h1 className="mt-5 text-[26px] font-bold leading-[1.35] sm:text-[34px]">
-                        أهلاً {user} 👋
+                        أهلاً {user}
                         <br />
                         خلّينا نكمّل دراستك اليوم.
                       </h1>
@@ -2696,7 +2705,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                           onClick={() => goTo('notebook')}
                           className="h-11 rounded-full bg-white px-5 text-[12px] font-bold text-[var(--brand)] shadow-lg transition hover:-translate-y-0.5"
                         >
-                          افتح دفتر رفيق ❖
+                          <RafeeqIcon name="notebook" size={16} /> افتح دفتر رفيق
                         </button>
                         <button
                           onClick={() => goTo('books')}
@@ -2710,12 +2719,12 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
 
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                     {[
-                      { id: 'ai', title: 'رفيق AI', value: `${chances}/${DAILY_LIMIT}`, caption: 'رسائل متبقية اليوم', icon: '✦', tone: 'var(--brand)' },
-                      { id: 'lab', title: 'مختبر رفيق', value: '5 تخصصات', caption: 'خرائط وفخاخ الامتحانات', icon: '⚗', tone: 'linear-gradient(135deg,#f43f5e,#8b5cf6)' },
-                      { id: 'board', title: 'سبورة رفيق', value: 'تفاعلية', caption: 'رسم ومسائل وحسابات', icon: '▱', tone: 'linear-gradient(135deg,#06b6d4,#3b82f6)' },
-                      { id: 'notebook', title: 'دفتر رفيق', value: readySources.length, caption: 'مصادر مفهرسة', icon: '❖', tone: 'linear-gradient(135deg,#8b5cf6,#ec4899)' },
-                      { id: 'books', title: 'المكتبة', value: library.length, caption: 'مصدر دراسي', icon: '▤', tone: 'var(--cyan)' },
-                      { id: 'notes', title: 'ملاحظاتي', value: notes.length, caption: 'ملاحظة محفوظة', icon: '▢', tone: 'var(--coral)' },
+                      { id: 'ai', title: 'رفيق AI', value: `${chances}/${DAILY_LIMIT}`, caption: 'رسائل متبقية اليوم', icon: 'ai', tone: 'var(--brand)' },
+                      { id: 'lab', title: 'مختبر رفيق', value: '5 تخصصات', caption: 'خرائط وفخاخ الامتحانات', icon: 'lab', tone: 'linear-gradient(135deg,#f43f5e,#8b5cf6)' },
+                      { id: 'board', title: 'سبورة رفيق', value: 'تفاعلية', caption: 'رسم ومسائل وحسابات', icon: 'board', tone: 'linear-gradient(135deg,#06b6d4,#3b82f6)' },
+                      { id: 'notebook', title: 'دفتر رفيق', value: readySources.length, caption: 'مصادر مفهرسة', icon: 'notebook', tone: 'linear-gradient(135deg,#8b5cf6,#ec4899)' },
+                      { id: 'books', title: 'المكتبة', value: library.length, caption: 'مصدر دراسي', icon: 'book', tone: 'var(--cyan)' },
+                      { id: 'notes', title: 'ملاحظاتي', value: notes.length, caption: 'ملاحظة محفوظة', icon: 'notes', tone: 'var(--coral)' },
                     ].map((card) => (
                       <button
                         key={card.id}
@@ -2726,7 +2735,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                           className="grid h-10 w-10 place-items-center rounded-[12px] text-[15px] text-white"
                           style={{ background: card.tone }}
                         >
-                          {card.icon}
+                          <RafeeqIcon name={card.icon} size={19} weight="duotone" />
                         </div>
                         <div className="mt-4 text-[12px] font-semibold">{card.title}</div>
                         <div className="mt-1 text-[21px] font-bold tracking-tight">{card.value}</div>
@@ -2742,19 +2751,19 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
 
                       <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
                         {[
-                          { icon: '⚗', t: 'مختبر المفاهيم', d: 'خرائط وفخاخ الامتحانات', fn: () => goTo('lab') },
-                          { icon: '✦', t: 'شرح درس', d: 'فهم الفكرة خطوة بخطوة', fn: () => { goTo('ai'); setInput('اشرح لي هذا الدرس بطريقة بسيطة') } },
-                          { icon: '▱', t: 'سبورة رفيق', d: 'اكتب وارسم مع الأستاذ', fn: () => goTo('board') },
-                          { icon: '＋', t: 'ارفع مستنداً', d: 'PDF أو Word أو نص', fn: () => { goTo('notebook'); window.setTimeout(() => fileRef.current?.click(), 400) } },
-                          { icon: '❖', t: 'اسأل كتبك', d: 'إجابات من داخل مصادرك', fn: () => goTo('notebook') },
-                          { icon: '◷', t: 'جلسة دراسة', d: '25 دقيقة تركيز', fn: () => goTo('timer') },
+                          { icon: 'lab', t: 'مختبر المفاهيم', d: 'خرائط وفخاخ الامتحانات', fn: () => goTo('lab') },
+                          { icon: 'ai', t: 'شرح درس', d: 'فهم الفكرة خطوة بخطوة', fn: () => { goTo('ai'); setInput('اشرح لي هذا الدرس بطريقة بسيطة') } },
+                          { icon: 'board', t: 'سبورة رفيق', d: 'اكتب وارسم مع الأستاذ', fn: () => goTo('board') },
+                          { icon: 'upload', t: 'ارفع مستنداً', d: 'PDF أو Word أو نص', fn: () => { goTo('notebook'); window.setTimeout(() => fileRef.current?.click(), 400) } },
+                          { icon: 'notebook', t: 'اسأل كتبك', d: 'إجابات من داخل مصادرك', fn: () => goTo('notebook') },
+                          { icon: 'timer', t: 'جلسة دراسة', d: '25 دقيقة تركيز', fn: () => goTo('timer') },
                         ].map((a) => (
                           <button
                             key={a.t}
                             onClick={a.fn}
                             className="card-hover rounded-[15px] border border-[var(--line)] bg-white/70 p-4 text-right"
                           >
-                            <div className="gtext text-[20px] font-bold">{a.icon}</div>
+                            <div className="gtext"><RafeeqIcon name={a.icon} size={20} weight="duotone" /></div>
                             <div className="mt-3 text-[11px] font-semibold">{a.t}</div>
                             <div className="mt-1 text-[9px] text-[var(--muted)]">{a.d}</div>
                           </button>
@@ -2787,7 +2796,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                         <div className="flex items-center justify-between">
                           <div className="text-[13px] font-bold">نشاط الدراسة</div>
                           <div className="rounded-full bg-[#FFF1EA] px-2.5 py-1 text-[9px] font-bold text-[var(--coral)]">
-                            🔥 {streak} {streak === 1 ? 'يوم متتالي' : 'أيام متتالية'}
+                            <RafeeqIcon name="lightning" size={13} /> {streak} {streak === 1 ? 'يوم متتالي' : 'أيام متتالية'}
                           </div>
                         </div>
 
@@ -2824,6 +2833,13 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                   onNavigate={goTo}
                   onToast={showToast}
                   onSaveNote={saveToNotes}
+                  onAnalyze={async ({ topic, content }) => {
+                    const data = await requestStudy({ mode: 'lab', topic, message: content })
+                    if (data.type !== 'lab') {
+                      throw new Error(data.error || data.reply || 'تعذر تحليل المحتوى. حاول مرة أخرى.')
+                    }
+                    return data
+                  }}
                   onAskAi={(q) => {
                     setInput(q)
                     goTo('ai')
@@ -2831,415 +2847,279 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                 />
               )}
 
+              {tab === 'tasks' && <AchievementSection />}
+
               {/* ================= سبورة رفيق ================= */}
-              {tab === 'board' && <SmartBoard fullscreen onClose={embedded ? null : () => goTo('home')} />}
+              {tab === 'board' && <SmartBoard fullscreen onClose={() => goTo('home')} />}
 
               {/* ================= رفيق AI ================= */}
-              {tab === 'ai' && (
-                <section className="mx-auto max-w-[920px]">
-                  <div className="glass overflow-hidden rounded-[24px]">
-                    <div className="flex min-h-[68px] flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] px-3 py-2 sm:gap-3 sm:px-5 sm:py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="btn-grad grid h-10 w-10 place-items-center rounded-full">✦</div>
-                        <div>
-                          <div className="text-[13px] font-bold">رفيق AI</div>
-                          <div className="text-[9px] text-[var(--muted)]">مساعد دراسي • {chances} رسالة متبقية</div>
-                        </div>
-                      </div>
+             
+{tab === 'ai' && (
+  <section className="mx-auto flex w-full max-w-[1050px] flex-col">
+    {/* رأس المحادثة */}
+    <div className="flex min-h-[58px] items-center justify-between gap-3 border-b border-[var(--line)] px-2 py-3 sm:px-5">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#8B75F6] to-[#59C7E8] text-lg text-white shadow-[0_4px_16px_rgba(109,94,245,.2)]">
+          <RafeeqIcon name="ai" size={15} weight="duotone" />
+        </div>
+        <div className="min-w-0">
+          <div className="truncate text-[13px] font-bold tracking-tight">رفيق AI</div>
+          <div className="text-[10px] text-[var(--muted)]">
+            مساعدك الدراسي · {chances} رسالة متبقية
+          </div>
+        </div>
+      </div>
 
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => openSetup('quiz')} className="btn-grad rounded-full px-3.5 py-1.5 text-[10px] font-semibold">
-                          📝 اختبار
-                        </button>
-                        <button onClick={() => openSetup('flashcards')} className="btn-grad rounded-full px-3.5 py-1.5 text-[10px] font-semibold">
-                          🗂 بطاقات
-                        </button>
-                        <button onClick={clearChat} className="btn-soft rounded-full px-3 py-1.5 text-[9px]">
-                          مسح المحادثة
-                        </button>
-                      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <button
+          onClick={() => openSetup('quiz')}
+          className="rounded-xl px-2.5 py-2 text-[10px] font-medium text-[var(--muted)] transition hover:bg-[var(--line)] hover:text-[var(--text)] sm:px-3"
+        >
+          <span className="mr-1"><RafeeqIcon name="exam" size={14} /></span>
+          <span className="hidden sm:inline">اختبار</span>
+        </button>
+        <button
+          onClick={() => openSetup('flashcards')}
+          className="rounded-xl px-2.5 py-2 text-[10px] font-medium text-[var(--muted)] transition hover:bg-[var(--line)] hover:text-[var(--text)] sm:px-3"
+        >
+          <span className="mr-1"><RafeeqIcon name="cards" size={14} /></span>
+          <span className="hidden sm:inline">بطاقات</span>
+        </button>
+        <button
+          onClick={clearChat}
+          title="محادثة جديدة"
+          className="grid h-9 w-9 place-items-center rounded-xl text-[var(--muted)] transition hover:bg-[var(--line)] hover:text-[var(--text)]"
+        >
+          <RafeeqIcon name="refresh" size={17} />
+        </button>
+      </div>
+    </div>
+
+    {/* مساحة المحادثة */}
+    <div
+  ref={chatBoxRef}
+  className={`thin-scroll min-h-0 overflow-y-auto px-3 py-6 sm:px-8 sm:py-9 ${
+    embedded
+      ? 'flex-1'
+      : 'h-[65vh] min-h-[430px] max-h-[850px]'
+  }`}
+>
+      {messages.length === 0 ? (
+        <div className={`mx-auto flex w-full max-w-[680px] flex-col justify-center ${
+          embedded ? 'min-h-full' : 'min-h-[430px]'
+        }`}>
+          <div className="mb-5 flex items-center gap-2">
+            <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#8B75F6] to-[#59C7E8] text-white">
+              <RafeeqIcon name="ai" size={16} weight="duotone" />
+            </div>
+            <span className="text-[11px] font-semibold text-[var(--muted)]">
+              رفيق جاهز لمساعدتك
+            </span>
+          </div>
+
+          <h2 className="text-[27px] font-semibold leading-[1.5] tracking-tight sm:text-[36px]">
+            أهلاً بك،<br />
+            <span className="bg-gradient-to-l from-[#55BFD9] via-[#8B75F6] to-[#A58BF5] bg-clip-text text-transparent">
+              شن نقدروا نتعلموا اليوم؟
+            </span>
+          </h2>
+
+          <p className="mt-4 max-w-[510px] text-[12px] leading-7 text-[var(--muted)] sm:text-[13px]">
+            اسأل رفيق عن أي درس، اطلب شرحاً خطوة بخطوة، أو جهّز نفسك للاختبارات. نبدأ من سؤالك ونبني الفهم معاً.
+          </p>
+
+          <div className="mt-9 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {[
+              {
+                icon: 'lightbulb',
+                title: 'اشرح لي درساً',
+                desc: 'شرح مبسط خطوة بخطوة',
+                action: () => sendMessage('اشرح لي درساً بطريقة بسيطة', 'study'),
+              },
+              {
+                icon: 'exam',
+                title: 'اختبر معلوماتي',
+                desc: 'أسئلة تقيس مدى فهمي',
+                action: () => openSetup('quiz'),
+              },
+              {
+                icon: 'notes',
+                title: 'لخص لي موضوعاً',
+                desc: 'أهم الأفكار والنقاط',
+                action: () => sendMessage('لخص أهم النقاط للمراجعة', 'study'),
+              },
+              {
+                icon: 'cards',
+                title: 'أنشئ بطاقات مراجعة',
+                desc: 'تعلم بطريقة السؤال والجواب',
+                action: () => openSetup('flashcards'),
+              },
+            ].map((item) => (
+              <button
+                key={item.title}
+                onClick={item.action}
+                className="group flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-white/60 p-4 text-right transition duration-200 hover:-translate-y-0.5 hover:border-[#A99AF5] hover:bg-white hover:shadow-[0_8px_25px_rgba(109,94,245,.07)]"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#8B75F6]/10 text-lg text-[#8975E9] transition group-hover:bg-[#8B75F6]/15">
+                  <RafeeqIcon name={item.icon} size={18} weight="duotone" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-semibold">{item.title}</span>
+                  <span className="mt-1 block text-[9px] text-[var(--muted)]">{item.desc}</span>
+                </span>
+                <span className="mr-auto text-[var(--muted)] opacity-0 transition group-hover:opacity-100">←</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mx-auto max-w-[760px] space-y-8 sm:space-y-10">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex w-full ${
+                message.role === 'user' ? 'justify-start' : 'justify-end'
+              }`}
+            >
+              {message.role === 'user' ? (
+                <div className="max-w-[88%] rounded-[22px] rounded-tr-[7px] bg-[#F0EEFA] px-4 py-3 text-[12px] leading-7 text-[#343044] sm:max-w-[78%] sm:px-5">
+                  <UserContent m={message} />
+                </div>
+              ) : (
+                <div className={`w-full max-w-[760px] ${
+                  message.error
+                    ? 'rounded-2xl border border-[#F6CFCF] bg-[#FFF5F5] p-4 text-[#9B3A3A]'
+                    : ''
+                }`}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[#8B75F6] to-[#59C7E8] text-[13px] text-white">
+                      <RafeeqIcon name="ai" size={15} weight="duotone" />
                     </div>
-
-                    <div ref={chatBoxRef} style={embedded && boxH ? { height: Math.max(240, boxH - 250) } : undefined} className={`thin-scroll overflow-y-auto bg-white/40 p-3 sm:p-6 ${embedded ? '' : 'h-[58vh] min-h-[430px]'}`}>
-                      {messages.length === 0 ? (
-                        <div className={`flex flex-col items-center justify-center text-center ${embedded ? 'min-h-full' : 'min-h-[420px]'}`}>
-                          <div className="btn-grad float grid h-16 w-16 place-items-center rounded-[22px] text-[23px]">✦</div>
-                          <h2 className="mt-5 text-[19px] font-bold">شن تبي نراجع معاك؟</h2>
-                          <p className="mt-2 max-w-[450px] text-[11px] leading-6 text-[var(--muted)]">
-                            اسأل عن درس أو اطلب شرحاً أو أسئلة مراجعة. رفيق لا يستبدل كتبك ومصادر المدرسة.
-                          </p>
-
-                          <div className="mt-6 grid w-full max-w-[600px] gap-2 sm:grid-cols-2">
-                            {[
-                              ['اشرح لي درساً بطريقة بسيطة', () => sendMessage('اشرح لي درساً بطريقة بسيطة', 'study')],
-                              ['📝 اختبرني في درس', () => openSetup('quiz')],
-                              ['لخص أهم النقاط للمراجعة', () => sendMessage('لخص أهم النقاط للمراجعة', 'study')],
-                              ['🗂 أنشئ لي بطاقات مراجعة', () => openSetup('flashcards')],
-                            ].map(([label, fn]) => (
-                              <button
-                                key={label}
-                                onClick={fn}
-                                className="card-hover rounded-[14px] border border-[var(--line)] bg-white p-3 text-right text-[10px]"
-                              >
-                                {label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {messages.map((message) => (
-                            <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}>
-                              <div
-                                className={`max-w-[88%] rounded-[18px] px-4 py-3 text-[12px] leading-7 sm:max-w-[76%] ${
-                                  message.role === 'user'
-                                    ? 'btn-grad whitespace-pre-wrap rounded-tl-[5px] !shadow-none'
-                                    : message.error
-                                      ? 'rounded-tr-[5px] border border-[#F6CFCF] bg-[#FFF5F5] text-[#9B3A3A]'
-                                      : 'rounded-tr-[5px] border border-[var(--line)] bg-white shadow-[0_4px_14px_rgba(109,94,245,.07)]'
-                                }`}
-                              >
-                                {message.role === 'assistant' ? <RichText text={message.text} /> : <UserContent m={message} />}
-
-                                {message.quiz && (
-                                  <button
-                                    onClick={() => setStudy({ data: message.quiz, topic: message.quizTopic })}
-                                    className="btn-grad mt-3 h-9 rounded-full px-5 text-[10px] font-semibold"
-                                  >
-                                    فتح {message.quiz.type === 'quiz' ? 'الاختبار' : 'البطاقات'}
-                                  </button>
-                                )}
-
-                                {message.role === 'assistant' && !message.error && (
-                                  <AssistantActions
-                                    text={message.text}
-                                    onSave={() => saveToNotes(message.text, 'رفيق')}
-                                    onToast={showToast}
-                                  />
-                                )}
-                              </div>
-                            </div>
-                          ))}
-
-                          {aiLoading && (
-                            <div className="flex justify-end">
-                              <div className="flex items-center gap-2 rounded-[16px] border border-[var(--line)] bg-white px-4 py-3 text-[10px] text-[var(--muted)]">
-                                <span className="flex gap-1"><i className="typing-dot" /><i className="typing-dot" /><i className="typing-dot" /></span>
-                                رفيق يجهز الإجابة...
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border-t border-[var(--line)] bg-white/70 p-3 sm:p-4">
-                      <ImagePreviews images={aiImages} onRemove={(id) => setAiImages((c) => c.filter((x) => x.id !== id))} />
-                      <div className="flex items-end gap-2 rounded-[18px] border border-[var(--line)] bg-white p-2 transition focus-within:border-[var(--brand)] focus-within:shadow-[0_0_0_4px_rgba(109,94,245,.12)]">
-                        <button
-                          onClick={toggleVoice}
-                          title="إدخال صوتي"
-                          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition ${
-                            isListening ? 'animate-pulse bg-[#F04438] text-white' : 'btn-soft'
-                          }`}
-                        >
-                          🎙
-                        </button>
-
-                        <ImageTools onGallery={() => openImagePicker('ai')} onCamera={() => openImagePicker('ai', true)} disabled={aiLoading} />
-
-                        <textarea
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              sendMessage()
-                            }
-                          }}
-                          rows={1}
-                          placeholder={isListening ? 'تكلم الآن...' : 'اكتب سؤالك الدراسي هنا...'}
-                          className="max-h-28 min-h-9 flex-1 resize-none bg-transparent px-1 py-2 text-[12px] leading-5 outline-none"
-                        />
-
-                        <button
-                          onClick={() => sendMessage()}
-                          disabled={(!input.trim() && !aiImages.length) || aiLoading || chances <= 0}
-                          className="btn-grad grid h-9 w-9 shrink-0 place-items-center rounded-full"
-                        >
-                          ↑
-                        </button>
-                      </div>
-
-                      <div className="mt-2 flex items-center justify-between gap-2 px-1 text-[8px] text-[var(--muted)]">
-                        <span>Enter للإرسال • Shift + Enter لسطر جديد • {DAILY_LIMIT} رسالة يومياً</span>
-                        <span>{chances}/{DAILY_LIMIT}</span>
-                      </div>
-                    </div>
+                    <span className="text-[10px] font-semibold text-[var(--muted)]">رفيق</span>
                   </div>
-                </section>
-              )}
 
-              {/* ================= دفتر رفيق ================= */}
-              {tab === 'notebook' && (
-                <section className="space-y-4">
-                  <SectionHero
-                    eyebrow="❖ شبيه NotebookLM"
-                    title="دفتر رفيق"
-                    text="ارفع مستنداتك أو اختر كتبك وملاحظاتك كمصادر، واسأل. الإجابات تُبنى من داخل مصادرك فقط مع ذكر المصدر والصفحة."
-                    right={
-                      <div className="rounded-full border border-white/30 bg-white/15 px-3 py-1.5 text-[10px] backdrop-blur">
-                        {nbSelected.length} مصدر محدد
-                      </div>
-                    }
-                  />
+                  <div className="text-[12px] leading-[2.05] text-[var(--text)] sm:text-[13px]">
+                    <RichText text={message.text} />
+                  </div>
 
-                  <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-                    {/* المصادر */}
-                    <div
-                      className={`glass rounded-[22px] p-4 transition lg:sticky lg:top-[80px] lg:self-start ${
-                        dragOver ? 'ring-2 ring-[var(--brand)]' : ''
-                      }`}
-                      onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-                      onDragLeave={() => setDragOver(false)}
-                      onDrop={onDropFiles}
+                  {message.quiz && (
+                    <button
+                      onClick={() => setStudy({ data: message.quiz, topic: message.quizTopic })}
+                      className="mt-4 rounded-xl bg-gradient-to-l from-[#8B75F6] to-[#59C7E8] px-5 py-2.5 text-[10px] font-semibold text-white shadow-sm transition hover:opacity-90"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-[12px] font-bold">المصادر</div>
-                        {readySources.length + notes.length > 1 && (
-                          <button onClick={toggleAllSources} className="text-[9px] font-semibold text-[var(--brand)]">
-                            تحديد / إلغاء الكل
-                          </button>
-                        )}
-                      </div>
+                      فتح {message.quiz.type === 'quiz' ? 'الاختبار' : 'البطاقات'}
+                    </button>
+                  )}
 
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        <button onClick={() => fileRef.current?.click()} className="btn-grad h-9 rounded-full text-[10px] font-semibold">
-                          ＋ رفع مستند
-                        </button>
-                        <button
-                          onClick={() => setMenu('paste')}
-                          className="btn-soft h-9 rounded-full text-[10px] font-semibold"
-                        >
-                          ✎ لصق نص
-                        </button>
-                      </div>
+                  {!message.error && (
+                    <AssistantActions
+                      text={message.text}
+                      onSave={() => saveToNotes(message.text, 'رفيق')}
+                      onToast={showToast}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
 
-                      <div
-                        className={`mt-2 rounded-[12px] border-2 border-dashed px-3 py-2 text-center text-[9px] leading-5 transition ${
-                          dragOver ? 'border-[var(--brand)] bg-[var(--soft)] text-[var(--brand)]' : 'border-[var(--line)] text-[var(--muted)]'
-                        }`}
-                      >
-                        أو اسحب الملفات وأفلتها هنا<br />PDF • Word • TXT • MD • HTML
-                      </div>
-
-                      <div className="thin-scroll mt-3 max-h-[46vh] space-y-2 overflow-y-auto pl-1">
-                        {uploadingList.map(([id, u]) => (
-                          <div key={id} className="rounded-[14px] border border-[var(--line)] bg-white/70 p-3">
-                            <div className="line-clamp-1 text-[11px] font-semibold">{u.name}</div>
-                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--soft)]">
-                              <div className="h-full rounded-full transition-all" style={{ width: `${u.progress || 6}%`, background: 'var(--grad)' }} />
-                            </div>
-                            <div className="mt-1 text-[8px] text-[var(--muted)]">جاري قراءة الملف... {u.progress}%</div>
-                          </div>
-                        ))}
-
-                        {library.length === 0 && notes.length === 0 && uploadingList.length === 0 && (
-                          <p className="rounded-[12px] bg-[var(--soft)] p-3 text-[10px] leading-5 text-[var(--muted)]">
-                            لا توجد مصادر بعد. ارفع مستنداً، أو نزّل كتاباً من قسم "كتب ودروس"، أو أضف ملاحظة.
-                          </p>
-                        )}
-
-                        {library.map((book) => {
-                          const prog = indexing[book.id]
-                          const on = nbSelected.includes(book.id)
-                          return (
-                            <div
-                              key={book.id}
-                              className={`rounded-[14px] border p-3 transition ${
-                                on ? 'border-[var(--brand)] bg-[var(--soft)]' : 'border-[var(--line)] bg-white/70'
-                              }`}
-                            >
-                              <div className="line-clamp-2 text-[11px] font-semibold">{book.title}</div>
-                              <div className="mt-0.5 text-[8px] text-[var(--muted)]">{book.source || ''} • {formatSize(book.size)}</div>
-
-                              {book.indexed ? (
-                                <div className="mt-2 flex gap-1.5">
-                                  <button
-                                    onClick={() => toggleSource(book.id)}
-                                    className={`h-7 flex-1 rounded-full text-[9px] font-semibold ${on ? 'btn-grad' : 'btn-soft'}`}
-                                  >
-                                    {on ? 'محدد ✓' : 'تحديد كمصدر'}
-                                  </button>
-                                  <button
-                                    onClick={() => removeBook(book)}
-                                    title="حذف"
-                                    className="h-7 w-7 rounded-full border border-[#F6CFCF] bg-[#FFF5F5] text-[10px] text-[#B34A4A]"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              ) : prog !== undefined ? (
-                                <div className="mt-2">
-                                  <div className="h-1.5 overflow-hidden rounded-full bg-white">
-                                    <div className="h-full rounded-full transition-all" style={{ width: `${prog}%`, background: 'var(--grad)' }} />
-                                  </div>
-                                  <div className="mt-1 text-[8px] text-[var(--muted)]">جاري قراءة الكتاب... {prog}%</div>
-                                </div>
-                              ) : (
-                                <button onClick={() => indexBook(book)} className="btn-soft mt-2 h-7 w-full rounded-full text-[9px] font-semibold">
-                                  تجهيز للدفتر
-                                </button>
-                              )}
-                            </div>
-                          )
-                        })}
-
-                        {notes.slice(0, 20).map((note) => {
-                          const id = `note:${note.id}`
-                          const on = nbSelected.includes(id)
-                          return (
-                            <button
-                              key={id}
-                              onClick={() => toggleSource(id)}
-                              className={`w-full rounded-[14px] border p-3 text-right transition ${
-                                on ? 'border-[var(--coral)] bg-[#FFF1EA]' : 'border-[var(--line)] bg-white/70'
-                              }`}
-                            >
-                              <div className="text-[8px] text-[var(--coral)]">ملاحظة</div>
-                              <div className="line-clamp-1 text-[11px] font-semibold">{note.title}</div>
-                            </button>
-                          )
-                        })}
-                      </div>
-
-                      {readySources.length === 0 && library.length > 0 && (
-                        <p className="mt-3 text-[9px] leading-5 text-[var(--muted)]">
-                          اضغط "تجهيز للدفتر" ليقرأ رفيق نص الكتاب مرة وحدة ويحفظه على جهازك.
-                        </p>
-                      )}
-                    </div>
-
-                    {/* المحادثة */}
-                    <div className="glass overflow-hidden rounded-[22px]">
-                      <div className="flex flex-wrap gap-2 border-b border-[var(--line)] p-3">
-                        {[
-                          ['ملخص', nbTasks.summary],
-                          ['دليل مذاكرة', nbTasks.guide],
-                          ['اختبار قصير', nbTasks.quiz],
-                          ['بطاقات مراجعة', nbTasks.cards],
-                        ].map(([label, prompt]) => (
-                          <button
-                            key={label}
-                            onClick={() => askNotebook(prompt)}
-                            disabled={nbLoading}
-                            className="btn-soft rounded-full px-3.5 py-1.5 text-[10px] font-semibold disabled:opacity-40"
-                          >
-                            {label}
-                          </button>
-                        ))}
-                        {nbMessages.length > 0 && (
-                          <button
-                            onClick={() => window.confirm('مسح محادثة الدفتر؟') && setNbMessages([])}
-                            className="mr-auto rounded-full px-3 py-1.5 text-[10px] text-[var(--muted)] hover:text-[var(--ink)]"
-                          >
-                            مسح
-                          </button>
-                        )}
-                      </div>
-
-                      <div ref={nbBoxRef} className="thin-scroll h-[50vh] min-h-[380px] overflow-y-auto bg-white/40 p-4">
-                        {nbMessages.length === 0 ? (
-                          <div className="flex min-h-[340px] flex-col items-center justify-center text-center">
-                            <div className="btn-grad float grid h-16 w-16 place-items-center rounded-[22px] text-[24px]">❖</div>
-                            <h2 className="mt-5 text-[18px] font-bold">اسأل مصادرك</h2>
-                            <p className="mt-2 max-w-[400px] text-[11px] leading-6 text-[var(--muted)]">
-                              ارفع مستنداً أو حدّد مصدراً من القائمة ثم اكتب سؤالك، أو اضغط على ملخص / اختبار قصير.
-                              إن لم تحدد شيئاً سيستخدم رفيق كل مصادرك الجاهزة.
-                            </p>
-                            <button onClick={() => fileRef.current?.click()} className="btn-grad mt-5 h-10 rounded-full px-6 text-[11px] font-semibold">
-                              ＋ ارفع أول مستند
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            {nbMessages.map((m) => (
-                              <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
-                                <div
-                                  className={`max-w-[92%] rounded-[18px] px-4 py-3 text-[12px] leading-7 sm:max-w-[80%] ${
-                                    m.role === 'user'
-                                      ? 'btn-grad whitespace-pre-wrap rounded-tl-[5px] !shadow-none'
-                                      : m.error
-                                        ? 'rounded-tr-[5px] border border-[#F6CFCF] bg-[#FFF5F5] text-[#9B3A3A]'
-                                        : 'rounded-tr-[5px] border border-[var(--line)] bg-white shadow-[0_4px_14px_rgba(109,94,245,.07)]'
-                                  }`}
-                                >
-                                  {m.role === 'assistant' ? <RichText text={m.text} /> : <UserContent m={m} />}
-
-                                  {m.cites?.length > 0 && (
-                                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--line)] pt-2">
-                                      {m.cites.map((c) => (
-                                        <button
-                                          key={c.n}
-                                          onClick={() => { setCiteView(c); setMenu('cite') }}
-                                          className="rounded-full bg-[var(--soft)] px-2 py-0.5 text-[8px] text-[var(--brand)] transition hover:bg-[#E1DCFF]"
-                                          title="اضغط لعرض المقطع"
-                                        >
-                                          [{c.n}] {c.title.slice(0, 22)}{c.page ? ` • ص${c.page}` : ''}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-
-                                  {m.role === 'assistant' && !m.error && (
-                                    <AssistantActions
-                                      text={m.text}
-                                      onSave={() => saveToNotes(m.text)}
-                                      onToast={showToast}
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-
-                            {nbLoading && (
-                              <div className="flex justify-end">
-                                <div className="shimmer h-10 w-48 rounded-[16px]" />
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="border-t border-[var(--line)] bg-white/70 p-3">
-                        <ImagePreviews images={nbImages} onRemove={(id) => setNbImages((c) => c.filter((x) => x.id !== id))} />
-                        <div className="flex items-end gap-2 rounded-[18px] border border-[var(--line)] bg-white p-2 transition focus-within:border-[var(--brand)] focus-within:shadow-[0_0_0_4px_rgba(109,94,245,.12)]">
-                          <ImageTools onGallery={() => openImagePicker('nb')} onCamera={() => openImagePicker('nb', true)} disabled={nbLoading} />
-                          <textarea
-                            value={nbInput}
-                            onChange={(e) => setNbInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault()
-                                askNotebook()
-                              }
-                            }}
-                            rows={1}
-                            placeholder="اسأل عن شي في مصادرك..."
-                            className="max-h-28 min-h-9 flex-1 resize-none bg-transparent px-2 py-2 text-[12px] leading-5 outline-none"
-                          />
-                          <button
-                            onClick={() => askNotebook()}
-                            disabled={(!nbInput.trim() && !nbImages.length) || nbLoading || chances <= 0}
-                            className="btn-grad grid h-9 w-9 shrink-0 place-items-center rounded-full"
-                          >
-                            ↑
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+          {aiLoading && (
+            <div className="flex justify-end">
+              <div className="w-full max-w-[760px]">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[#8B75F6] to-[#59C7E8] text-[13px] text-white">
+                    <RafeeqIcon name="ai" size={15} weight="duotone" />
                   </div>
-                </section>
+                  <span className="text-[10px] font-semibold text-[var(--muted)]">رفيق</span>
+                </div>
+                <div className="flex items-center gap-3 py-2 text-[11px] text-[var(--muted)]">
+                  <span className="flex gap-1">
+                    <i className="typing-dot" />
+                    <i className="typing-dot" />
+                    <i className="typing-dot" />
+                  </span>
+                  رفيق يفكر...
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+
+    {/* محرر الرسائل */}
+   <div className="relative z-20 shrink-0 bg-white px-2 pb-3 pt-2 sm:px-5 sm:pb-5">
+      <div className="mx-auto max-w-[800px]">
+        <div className="rounded-[24px] border border-[var(--line)] bg-white shadow-[0_5px_30px_rgba(35,28,70,.07)] transition focus-within:border-[#A99AF5] focus-within:shadow-[0_5px_30px_rgba(109,94,245,.12)]">
+          <ImagePreviews
+            images={aiImages}
+            onRemove={(id) => setAiImages((c) => c.filter((x) => x.id !== id))}
+          />
+
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                sendMessage()
+              }
+            }}
+            rows={2}
+            placeholder={isListening ? 'رفيق يسمعك الآن...' : 'اسأل رفيق أي شيء...'}
+            className="max-h-36 min-h-[58px] w-full resize-none bg-transparent px-5 pt-4 text-[12px] leading-6 text-[var(--text)] outline-none placeholder:text-[var(--muted)] sm:text-[13px]"
+          />
+
+          <div className="flex items-center justify-between gap-2 px-3 pb-3">
+            <div className="flex items-center gap-1">
+              <ImageTools
+                onGallery={() => openImagePicker('ai')}
+                onCamera={() => openImagePicker('ai', true)}
+                disabled={aiLoading}
+              />
+
+              <button
+                onClick={toggleVoice}
+                title="إدخال صوتي"
+                className={`grid h-9 w-9 place-items-center rounded-full transition ${
+                  isListening
+                    ? 'animate-pulse bg-[#E45B68] text-white'
+                    : 'text-[var(--muted)] hover:bg-[#8B75F6]/10 hover:text-[#8975E9]'
+                }`}
+              >
+                <RafeeqIcon name="mic" size={16} />
+              </button>
+            </div>
+
+            <button
+              onClick={() => sendMessage()}
+              disabled={(!input.trim() && !aiImages.length) || aiLoading || chances <= 0}
+              title="إرسال"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#8B75F6] to-[#59C7E8] text-lg font-semibold text-white shadow-[0_3px_12px_rgba(109,94,245,.22)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ↑
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-2 flex items-center justify-between gap-2 px-2 text-[9px] text-[var(--muted)]">
+          <span>Enter للإرسال · Shift + Enter لسطر جديد</span>
+          <span>{chances}/{DAILY_LIMIT} رسالة متبقية اليوم</span>
+        </div>
+        <p className="mt-2 text-center text-[9px] text-[var(--muted)]">
+          قد يخطئ رفيق أحياناً؛ راجع المعلومات المهمة مع مصادرك الدراسية.
+        </p>
+      </div>
+    </div>
+  </section>
+)}
+
+              {/* ================= دفتر رفيق الذكي ================= */}
+              {tab === 'notebook' && (
+                <RafeeqNotebook
+                  onClose={() => goTo('home')}
+                  onToast={showToast}
+                />
               )}
 
               {/* ================= الكتب ================= */}
@@ -3267,11 +3147,11 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                   />
 
                   <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-[18px] p-3 text-[10px] leading-5 text-[var(--muted)]">
-                    <span className="min-w-[220px] flex-1">
-                      📚 المصدر: موقع الأمجاد — الحقوق محفوظة لأصحابها. الكتب تُعرض من الموقع الأصلي، وعند التنزيل تُحفظ نسخة في مكتبتك على جهازك للاستخدام الشخصي.
+                    <span className="flex min-w-[220px] flex-1 items-start gap-1.5">
+                      <RafeeqIcon name="book" size={14} className="mt-1 shrink-0" /> المصدر: موقع الأمجاد — الحقوق محفوظة لأصحابها. الكتب تُعرض من الموقع الأصلي، وعند التنزيل تُحفظ نسخة في مكتبتك على جهازك للاستخدام الشخصي.
                     </span>
                     <a href={SOURCE_PAGE} target="_blank" rel="noreferrer" className="btn-soft rounded-full px-3 py-1.5 font-semibold">
-                      فتح الموقع الأصلي ↗
+                      فتح الموقع الأصلي <RafeeqIcon name="arrowUpRight" size={13} />
                     </a>
                   </div>
 
@@ -3314,7 +3194,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                           </select>
                         )}
                         <button onClick={() => loadCatalog(true)} className="btn-soft h-10 rounded-full px-4 text-[11px] font-semibold">
-                          ↻ تحديث القائمة
+                          <RafeeqIcon name="refresh" size={14} /> تحديث القائمة
                         </button>
                         <span className="text-[10px] text-[var(--muted)]">{filteredCatalog.length} كتاب</span>
                       </div>
@@ -3324,9 +3204,9 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                           {Array.from({ length: 6 }).map((_, i) => <div key={i} className="shimmer h-[120px] rounded-[20px]" />)}
                         </div>
                       ) : catalogError && catalog.length === 0 ? (
-                        <EmptyState icon="⚠" title="تعذر جلب الكتب" text={catalogError} />
+                        <EmptyState icon="warning" title="تعذر جلب الكتب" text={catalogError} />
                       ) : filteredCatalog.length === 0 ? (
-                        <EmptyState icon="▤" title="لا توجد نتائج" text="جرّب كلمة بحث أخرى أو غيّر الصف." />
+                        <EmptyState icon="book" title="لا توجد نتائج" text="جرّب كلمة بحث أخرى أو غيّر الصف." />
                       ) : (
                         <>
                           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -3336,7 +3216,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                               return (
                                 <div key={book.id} className="glass card-hover rounded-[20px] p-4">
                                   <div className="flex items-start gap-3">
-                                    <div className="btn-grad grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-[19px]">📖</div>
+                                    <div className="btn-grad grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-white"><RafeeqIcon name="book" size={21} weight="duotone" /></div>
                                     <div className="min-w-0 flex-1">
                                       <div className="line-clamp-2 text-[12px] font-bold">{book.title}</div>
                                       <div className="mt-1 text-[9px] text-[var(--muted)]">
@@ -3348,7 +3228,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                                   <div className="mt-4">
                                     {owned ? (
                                       <div className="h-9 rounded-full bg-[#E4FBF3] text-center text-[10px] font-semibold leading-9 text-[#0E8F66]">
-                                        ✓ في مكتبتك
+                                        <RafeeqIcon name="checkCircle" size={14} /> في مكتبتك
                                       </div>
                                     ) : progress !== undefined ? (
                                       <div>
@@ -3359,7 +3239,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                                       </div>
                                     ) : (
                                       <button onClick={() => downloadBook(book)} className="btn-grad h-9 w-full rounded-full text-[10px] font-semibold">
-                                        ⬇ تنزيل إلى مكتبتي
+                                        <RafeeqIcon name="download" size={14} /> تنزيل إلى مكتبتي
                                       </button>
                                     )}
                                   </div>
@@ -3384,16 +3264,16 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                     <>
                       <div className="flex flex-wrap items-center gap-2">
                         <button onClick={() => fileRef.current?.click()} className="btn-grad h-10 rounded-full px-5 text-[11px] font-semibold">
-                          ＋ رفع مستند من جهازك
+                          <RafeeqIcon name="upload" size={15} /> رفع مستند من جهازك
                         </button>
                         <button onClick={() => setMenu('paste')} className="btn-soft h-10 rounded-full px-5 text-[11px] font-semibold">
-                          ✎ لصق نص
+                          <RafeeqIcon name="edit" size={15} /> لصق نص
                         </button>
                       </div>
 
                       {filteredLibrary.length === 0 ? (
                         <EmptyState
-                          icon="▤"
+                          icon="file"
                           title="مكتبتك فارغة"
                           text="نزّل كتباً من تبويب كتب الموقع أو ارفع مستنداتك الخاصة وستظهر هنا. كل شيء محفوظ على جهازك ولا يحتاج إنترنت لفتحه."
                         />
@@ -3402,13 +3282,13 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                           {filteredLibrary.map((book) => (
                             <div key={book.id} className="glass card-hover rounded-[20px] p-4">
                               <div className="flex items-start gap-3">
-                                <div className="btn-grad grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-[19px]">📖</div>
+                                <div className="btn-grad grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-white"><RafeeqIcon name="book" size={21} weight="duotone" /></div>
                                 <div className="min-w-0 flex-1">
                                   <div className="line-clamp-2 text-[12px] font-bold">{book.title}</div>
                                   <div className="mt-1 text-[9px] text-[var(--muted)]">
                                     {formatSize(book.size)}{book.subject ? ` • ${book.subject}` : ''}
                                     {book.source ? ` • ${book.source}` : ''}
-                                    {book.indexed ? ' • جاهز للدفتر ❖' : ''}
+                                    {book.indexed ? <span className="inline-flex items-center gap-1"> • جاهز للدفتر <RafeeqIcon name="notebook" size={12} /></span> : ''}
                                   </div>
                                 </div>
                               </div>
@@ -3468,7 +3348,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                   </div>
 
                   {filteredNotes.length === 0 ? (
-                    <EmptyState icon="▢" title="لا توجد ملاحظات" text="اكتب أول ملاحظة من الأعلى." />
+                    <EmptyState icon="notes" title="لا توجد ملاحظات" text="اكتب أول ملاحظة من الأعلى." />
                   ) : (
                     <div className="grid gap-3 md:grid-cols-2">
                       {filteredNotes.map((note) => (
@@ -3516,10 +3396,10 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                     </p>
 
                     <div className="mt-6 flex justify-center gap-3">
-                      <button onClick={() => setPomoRunning((c) => !c)} className="btn-grad grid h-14 w-14 place-items-center rounded-full text-[18px]">
-                        {pomoRunning ? 'Ⅱ' : '▶'}
+                      <button type="button" onClick={() => setPomoRunning((c) => !c)} aria-label={pomoRunning ? 'إيقاف المؤقت' : 'بدء المؤقت'} className="btn-grad grid h-14 w-14 place-items-center rounded-full text-[18px]">
+                        <RafeeqIcon name={pomoRunning ? 'pause' : 'play'} size={19} weight="fill" />
                       </button>
-                      <button onClick={() => resetTimer()} className="btn-soft grid h-14 w-14 place-items-center rounded-full text-[18px]">↺</button>
+                      <button onClick={() => resetTimer()} className="btn-soft grid h-14 w-14 place-items-center rounded-full text-[18px]" title="إعادة ضبط المؤقت" aria-label="إعادة ضبط المؤقت"><RafeeqIcon name="restore" size={18} /></button>
                     </div>
 
                     <div className="mt-8 grid grid-cols-3 gap-2">
@@ -3535,7 +3415,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                     </div>
 
                     <p className="mt-5 text-[10px] text-[var(--muted)]">
-                      تركيزك اليوم: <strong className="text-[var(--ink)]">{todayMins} دقيقة</strong> • 🔥 {streak} {streak === 1 ? 'يوم' : 'أيام'} متتالية
+                      تركيزك اليوم: <strong className="text-[var(--ink)]">{todayMins} دقيقة</strong> • <RafeeqIcon name="lightning" size={13} /> {streak} {streak === 1 ? 'يوم' : 'أيام'} متتالية
                     </p>
                   </div>
 
@@ -3568,7 +3448,7 @@ export default function Dashboard({ embedded = false, forcedTab = null, launch =
                 tab === item.id ? 'nav-active' : 'text-[var(--muted)]'
               }`}
             >
-              <div className="text-[14px]">{item.icon}</div>
+              <div className="flex justify-center"><RafeeqIcon name={item.icon} size={17} weight={tab === item.id ? 'duotone' : 'regular'} /></div>
               <div className="mt-0.5 text-[8px] font-semibold">{item.label}</div>
             </button>
           ))}

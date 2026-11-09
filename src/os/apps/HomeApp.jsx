@@ -10,7 +10,7 @@ export default function HomeApp({ profile, open, logo }) {
     <div className="ros-pad ros-home" dir="rtl">
       <div className="ros-home-hero">
         <div>
-          <h2>مرحباً {profile.name} <span aria-hidden="true">👋</span></h2>
+          <h2>مرحباً {profile.name}</h2>
           <p>مستعد لمساعدتك في رحلتك الدراسية</p>
         </div>
         <span className="ros-hero-bot" aria-hidden="true">

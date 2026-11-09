@@ -373,6 +373,34 @@ ${focusText}
 الأرقام غربية (0-9).`
 }
 
+function buildLabPrompt(topic, content) {
+  return `حلّل الدرس الدراسي التالي ونظّم المعرفة الواردة فيه. الموضوع: «${String(topic || 'غير محدد').slice(0, 180)}».
+استخرج المعلومات المدعومة بالنص فقط، ولا تخترع قانوناً أو علاقة أو تعريفاً غير موجودة. اجعل الشرح بالعربية الواضحة، وحافظ على دقة الرموز والمعادلات.
+محتوى الدرس:
+${String(content || topic || '').slice(0, 12000)}
+
+أرجع JSON فقط بهذا الشكل:
+{"title":"عنوان مناسب","concepts":[{"title":"الفكرة الرئيسية أو الفرعية","description":"شرح موجز","type":"رئيسية أو فرعية"}],"definitions":[{"term":"المصطلح","definition":"تعريفه"}],"laws":[{"name":"اسم القانون أو القاعدة","formula":"الصيغة كما وردت أو فارغة إن لم توجد","explanation":"معنى القانون وشروطه أو متى يستخدم"}],"relationships":[{"from":"المفهوم الأول","to":"المفهوم الثاني","relationship":"طبيعة العلاقة بينهما"}]}
+أعد قوائم فارغة عند عدم وجود معلومات مناسبة، ولا تكرر العناصر. اجعل كل قائمة بين 0 و12 عنصراً.`
+}
+
+function normalizeLab(raw) {
+  const cleanText = (value, max = 500) => typeof value === 'string' ? value.trim().slice(0, max) : ''
+  const list = (value, fields) => (Array.isArray(value) ? value : [])
+    .slice(0, 12)
+    .map((item) => Object.fromEntries(fields.map(([key, max]) => [key, cleanText(item?.[key], max)])))
+    .filter((item) => Object.values(item).some(Boolean))
+
+  return {
+    type: 'lab',
+    title: cleanText(raw?.title, 160) || 'تحليل الدرس',
+    concepts: list(raw?.concepts, [['title', 160], ['description', 700], ['type', 60]]),
+    definitions: list(raw?.definitions, [['term', 160], ['definition', 700]]),
+    laws: list(raw?.laws, [['name', 160], ['formula', 240], ['explanation', 700]]),
+    relationships: list(raw?.relationships, [['from', 160], ['to', 160], ['relationship', 360]]),
+  }
+}
+
 function normalizeQuiz(q) {
   const questions = (q.questions || []).map((x) => {
     const options = (x.options || []).slice(0, 4)
@@ -391,6 +419,15 @@ function buildSystem(body) {
   s += st.class
     ? `\n\nصف الطالب: ${st.class}. اجعل الشرح والأسئلة مناسبة لهذا الصف في المنهج الليبي ولا تخمّن صفاً آخر.`
     : '\n\nصف الطالب غير محدد، فلا تخمّن صفاً دراسياً.'
+  const responseStyles = {
+    concise: 'اجعل إجاباتك موجزة ومباشرة مع الحفاظ على المعلومات الأساسية.',
+    balanced: 'وازن بين الاختصار والتوضيح، واستخدم أمثلة عند الحاجة.',
+    detailed: 'قدّم شرحاً مفصلاً ومنظماً خطوة بخطوة عند ملاءمة السؤال.',
+  }
+  const responseStyle = body.preferences?.responseStyle
+  if (Object.prototype.hasOwnProperty.call(responseStyles, responseStyle)) {
+    s += `\n\nتفضيل أسلوب الإجابة: ${responseStyles[responseStyle]}`
+  }
   if (body.mode === 'notebook' && Array.isArray(body.context) && body.context.length) {
     s += `\n\nوضع دفتر رفيق: أجب فقط من المقاطع المرقمة أدناه، واذكر رقم المقطع بين قوسين مربعين مثل [1] بعد كل معلومة. إن لم تجد الجواب فيها فقل ذلك صراحة ولا تخترع.\n\n` +
       body.context.map((c) => `[${c.n}] (${c.title}${c.page ? `، ص${c.page}` : ''})\n${c.text}`).join('\n\n')
@@ -452,7 +489,7 @@ export default async function handler(req, res) {
 
     // الواجهة ترسل general/study/notebook/quiz/flashcards
     const ui = body.mode
-    const mode = ['quiz', 'flashcards'].includes(ui)
+    const mode = ['quiz', 'flashcards', 'lab'].includes(ui)
       ? ui
       : ui === 'notebook' || imageList.length
         ? 'chat'
@@ -524,6 +561,23 @@ export default async function handler(req, res) {
       const cards = (parsed.cards || []).filter((c) => c.front && c.back)
       if (!cards.length) return res.json({ reply: 'تعذر إنشاء البطاقات، حاول مرة أخرى.' })
       return res.json(deepConvert({ type: 'flashcards', title: parsed.title || 'بطاقات', cards, provider }))
+    }
+
+    // ---------- فهم المعرفة وتنظيمها: مختبر رفيق ----------
+    if (mode === 'lab') {
+      const { content, provider } = await callLLM({
+        messages: [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: buildLabPrompt(body.topic || '', message || body.content || '') }
+        ],
+        max_tokens: 3000,
+        json: true
+      })
+      const analysis = normalizeLab(parseJson(content))
+      if (!analysis.concepts.length && !analysis.definitions.length && !analysis.laws.length && !analysis.relationships.length) {
+        return res.status(422).json({ error: 'لم أتمكن من استخراج عناصر واضحة من هذا المحتوى. أضف نصاً تعليمياً أكثر تفصيلاً وحاول مجدداً.' })
+      }
+      return res.json(deepConvert({ ...analysis, provider }))
     }
 
     // ---------- صور ----------

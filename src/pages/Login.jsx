@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Iridescence from '../components/Iridescence'
 import ProfileCard from '../components/ProfileCard'
+import { RafeeqIcon } from '../components/RafeeqIcon.jsx'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 const LOADING_DURATION = 15000
@@ -18,22 +19,22 @@ const STAGES = [
 
 const FEATURES = [
   {
-    icon: '✦',
+    icon: 'ai',
     title: 'رفيق AI',
     text: 'اسأل أي سؤال دراسي وخذ شرحاً بسيطاً خطوة بخطوة.',
   },
   {
-    icon: '❖',
+    icon: 'notebook',
     title: 'دفتر رفيق',
     text: 'استخدم كتبك كمصادر للمراجعة والتعلّم.',
   },
   {
-    icon: '▤',
+    icon: 'book',
     title: 'مكتبة رفيق',
     text: 'اجمع كتبك ومصادرك في مساحة واحدة.',
   },
   {
-    icon: '◷',
+    icon: 'timer',
     title: 'مؤقت الدراسة',
     text: 'نظّم جلسات التركيز والدراسة.',
   },
@@ -621,7 +622,7 @@ export default function Login() {
             </div>
           </div>
 
-          <h1 className="mt-7 text-2xl font-bold">مرحباً بك 👋</h1>
+          <h1 className="mt-7 text-2xl font-bold">مرحباً بك</h1>
           <p className="mt-2 text-xs text-[var(--muted)]">
             سجّل دخولك للوصول إلى مساحتك التعليمية
           </p>
@@ -664,7 +665,7 @@ export default function Login() {
                   className={`login-field ${errors.username ? 'bad' : ''}`}
                 />
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60">
-                  ✉
+                  <RafeeqIcon name="mail" size={16} />
                 </span>
               </div>
               {errors.username && (
@@ -702,7 +703,7 @@ export default function Login() {
                   title={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                   aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                 >
-                  {showPass ? '🙈' : '👁'}
+                  <RafeeqIcon name={showPass ? 'eyeOff' : 'eye'} size={17} />
                 </button>
               </div>
 
@@ -714,7 +715,7 @@ export default function Login() {
 
               {capsOn && (
                 <p className="mt-1.5 px-1 text-[11px] text-amber-700">
-                  ⚠ زر Caps Lock مفعّل
+                  <RafeeqIcon name="warning" size={14} /> زر Caps Lock مفعّل
                 </p>
               )}
             </div>
@@ -791,7 +792,9 @@ export default function Login() {
                 transition={{ duration: 0.3 }}
                 className="flex items-center gap-4 rounded-[22px] border border-white/20 bg-white/10 p-4 backdrop-blur-md"
               >
-                <div className="feature-symbol soft-float">{feature.icon}</div>
+                <div className="feature-symbol soft-float">
+                  <RafeeqIcon name={feature.icon} size={24} weight="duotone" />
+                </div>
                 <div>
                   <div className="text-sm font-bold">{feature.title}</div>
                   <div className="mt-1 text-[11px] leading-5 text-white/75">

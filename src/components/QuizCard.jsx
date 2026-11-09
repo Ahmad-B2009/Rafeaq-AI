@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { saveItem } from '../lib/studyStore'
 import FlashcardDeck from './FlashcardDeck'
+import { RafeeqIcon } from './RafeeqIcon.jsx'
 
 const LETTERS = ['أ', 'ب', 'جـ', 'د']
 
@@ -12,7 +13,7 @@ function Chip({ active, onClick, children }) {
         active ? 'bg-sky-200 text-sky-900' : 'bg-gray-100 text-gray-700'
       }`}
     >
-      {active && <span>✓</span>}
+      {active && <RafeeqIcon name="check" size={14} weight="bold" />}
       {children}
     </button>
   )
@@ -125,7 +126,7 @@ export default function QuizCard({ data, topic, request, onClose }) {
             {q.hint && picked[i] === undefined && (
               <div className="mt-6">
                 <button onClick={() => setShowHint(!showHint)} className="flex items-center gap-1 text-sm">
-                  <span>💡</span> تلميح
+                  <RafeeqIcon name="lightbulb" size={15} /> تلميح
                 </button>
                 {showHint && <p className="mt-2 text-sm text-gray-600">{q.hint}</p>}
               </div>

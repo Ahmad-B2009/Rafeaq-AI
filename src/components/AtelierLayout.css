@@ -1,0 +1,729 @@
+
+/* =========================================
+   RAFEEQ ATELIER — SIDEBAR FIX
+========================================= */
+
+.atelier-shell {
+  --atelier-purple: #7955c8;
+  --atelier-purple-light: #f2edfa;
+  --atelier-cyan: #24bbd1;
+  --atelier-text: #282532;
+  --atelier-muted: #817c89;
+  --atelier-border: #eae6ee;
+  --atelier-surface: #ffffff;
+  --atelier-background: #fbfaf7;
+
+  display: flex;
+  min-height: 100vh;
+  direction: rtl;
+  color: var(--atelier-text);
+  background: var(--atelier-background);
+  font-family: 'Tajawal', sans-serif;
+}
+
+.atelier-shell *,
+.atelier-shell *::before,
+.atelier-shell *::after {
+  box-sizing: border-box;
+}
+
+/* SIDEBAR */
+
+.atelier-sidebar {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  right: 0;
+  bottom: 0;
+
+  display: flex;
+  width: 255px;
+  flex-direction: column;
+
+  padding: 22px 15px 16px;
+
+  border-left: 1px solid var(--atelier-border);
+  background: var(--atelier-surface);
+  background: color-mix(in srgb, var(--atelier-surface) 94%, transparent);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  box-shadow: -8px 0 30px rgba(49, 39, 72, 0.035);
+
+  overflow: hidden;
+
+  transition:
+    width 0.25s ease,
+    transform 0.25s ease;
+}
+
+.sidebar-collapsed .atelier-sidebar {
+  width: 82px;
+}
+
+/* BRAND */
+
+.atelier-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 68px;
+  flex-shrink: 0;
+  padding: 0 5px 17px;
+  border-bottom: 1px solid var(--atelier-border);
+}
+
+.atelier-brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 14px;
+  color: white;
+  background: linear-gradient(145deg, #9474dc, #6744b4);
+  box-shadow: 0 5px 15px #7955c82e;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.atelier-brand-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.atelier-brand-text strong {
+  font-size: 18px;
+}
+
+.atelier-brand-text span {
+  color: var(--atelier-muted);
+  font-size: 11px;
+}
+
+.atelier-collapse {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--atelier-border);
+  border-radius: 8px;
+  color: var(--atelier-muted);
+  background: white;
+  cursor: pointer;
+  font-size: 19px;
+  transition: 0.2s ease;
+}
+
+.atelier-collapse:hover {
+  color: var(--atelier-purple);
+  background: var(--atelier-purple-light);
+}
+
+/* COLLAPSED BRAND */
+
+.sidebar-collapsed .atelier-brand {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar-collapsed .atelier-collapse {
+  position: absolute;
+  top: 73px;
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.sidebar-collapsed .atelier-sidebar {
+  padding-inline: 10px;
+}
+
+/* SIDEBAR CONTENT */
+
+.atelier-sidebar-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 23px;
+  scrollbar-width: thin;
+}
+
+.atelier-nav-group {
+  margin-bottom: 27px;
+}
+
+.atelier-nav-heading {
+  margin: 0 10px 10px;
+  color: #aaa4b0;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.atelier-nav-group nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.atelier-nav-link {
+  display: flex;
+  width: 100%;
+  min-height: 43px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: 11px;
+  color: #716b7b;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: 0.2s ease;
+}
+
+.atelier-nav-link:hover {
+  color: var(--atelier-purple);
+  background: #f8f5fc;
+}
+
+.atelier-nav-link.active {
+  color: var(--atelier-purple);
+  background: var(--atelier-purple-light);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(121, 85, 200, 0.08), 0 4px 12px rgba(121, 85, 200, 0.06);
+}
+
+.atelier-nav-icon {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  place-items: center;
+  font-size: 19px;
+}
+
+.sidebar-collapsed .atelier-nav-link {
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+}
+
+.sidebar-collapsed .atelier-nav-icon {
+  width: 30px;
+}
+
+/* BOTTOM */
+
+.atelier-sidebar-bottom {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 13px;
+  border-top: 1px solid var(--atelier-border);
+}
+
+.atelier-profile {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 5px 0;
+}
+
+.atelier-avatar,
+.atelier-topbar-avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+  color: #6744b4;
+  background: #eee8fa;
+  font-weight: 700;
+}
+
+.atelier-profile-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.atelier-profile-info strong {
+  font-size: 11px;
+}
+
+.atelier-profile-info span {
+  color: var(--atelier-muted);
+  font-size: 10px;
+}
+
+.sidebar-collapsed .atelier-profile {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* MAIN CONTENT */
+
+.atelier-main {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: calc(100% - 255px);
+  min-width: 0;
+  min-height: 100vh;
+  flex: 1;
+  flex-direction: column;
+  margin-right: 255px;
+  background:
+    radial-gradient(ellipse at 18% 0%, rgba(121, 85, 200, 0.075), transparent 34%),
+    radial-gradient(ellipse at 88% 16%, rgba(36, 187, 209, 0.06), transparent 30%);
+  transition: margin-right 0.25s ease;
+}
+
+.atelier-page {
+  position: relative;
+  z-index: 1;
+}
+
+.atelier-main > .atelier-topbar {
+  z-index: 30;
+}
+
+.atelier-main::before {
+  position: absolute;
+  z-index: 0;
+  inset: 72px 0 0;
+  background:
+    radial-gradient(ellipse at 18% 8%, rgba(139, 112, 209, .15), transparent 38%),
+    radial-gradient(ellipse at 86% 22%, rgba(36, 187, 209, .12), transparent 34%),
+    radial-gradient(ellipse at 55% 85%, rgba(184, 159, 231, .09), transparent 42%);
+  background-size: 130% 130%;
+  content: '';
+  opacity: .8;
+  pointer-events: none;
+  animation: atelier-ambient-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes atelier-ambient-drift {
+  from { background-position: 0% 0%, 100% 0%, 45% 100%; }
+  to { background-position: 35% 20%, 65% 35%, 70% 65%; }
+}
+
+.sidebar-collapsed .atelier-main {
+  width: calc(100% - 82px);
+  margin-right: 82px;
+}
+
+/* TOPBAR */
+
+.atelier-topbar {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+
+  display: flex;
+  height: 72px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 32px;
+
+  border-bottom: 1px solid var(--atelier-border);
+  background: #ffffffed;
+  background: color-mix(in srgb, var(--atelier-surface) 88%, transparent);
+  box-shadow: 0 5px 22px rgba(49, 39, 72, 0.035);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+}
+
+.atelier-topbar-start,
+.atelier-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.atelier-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--atelier-muted);
+  font-size: 12px;
+}
+
+.atelier-breadcrumb strong {
+  color: var(--atelier-text);
+}
+
+.atelier-breadcrumb-separator {
+  color: #c5bfca;
+}
+
+.atelier-topbar-actions {
+  gap: 10px;
+}
+
+.atelier-icon-button {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--atelier-border);
+  border-radius: 11px;
+  color: #777180;
+  background: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.atelier-icon-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(121, 85, 200, 0.2);
+  color: var(--atelier-purple);
+  background: var(--atelier-purple-light);
+  box-shadow: 0 5px 14px rgba(121, 85, 200, 0.1);
+}
+
+.atelier-icon-button i {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--atelier-cyan);
+}
+
+/* PAGE */
+
+.atelier-page {
+  width: 100%;
+  max-width: 1500px;
+  min-width: 0;
+  flex: 1;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.atelier-mobile-menu {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--atelier-border);
+  border-radius: 10px;
+  color: var(--atelier-text);
+  background: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.atelier-mobile-overlay {
+  display: none;
+}
+
+/* Soft depth and hover feedback for the existing dashboard cards. */
+.atelier-shell .atelier-home {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(121, 85, 200, 0.085), transparent 35%),
+    radial-gradient(ellipse at 90% 10%, rgba(36, 187, 209, 0.075), transparent 32%),
+    var(--atelier-bg) !important;
+}
+
+.atelier-shell .atelier-home .atelier-welcome {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 80% 6%, rgba(255, 255, 255, .95), transparent 31%),
+    linear-gradient(118deg, rgba(237, 228, 251, .96), rgba(247, 244, 252, .92) 54%, rgba(224, 246, 248, .94)) !important;
+  box-shadow: 0 18px 48px rgba(80, 57, 118, .1), inset 0 1px rgba(255, 255, 255, .95);
+}
+
+.atelier-shell .atelier-home .atelier-welcome::before {
+  position: absolute;
+  z-index: -1;
+  inset: -42% -10%;
+  background:
+    radial-gradient(ellipse at 24% 54%, rgba(161, 130, 221, .32), transparent 37%),
+    radial-gradient(ellipse at 76% 45%, rgba(74, 193, 205, .28), transparent 35%);
+  content: '';
+  filter: blur(28px);
+  animation: atelier-welcome-aurora 12s ease-in-out infinite alternate;
+}
+
+.atelier-shell .atelier-home .atelier-welcome::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .96), rgba(121, 85, 200, .3), transparent);
+  content: '';
+  opacity: .9;
+}
+
+@keyframes atelier-welcome-aurora {
+  from { transform: translate3d(-3%, 1%, 0) scale(.92) rotate(-2deg); }
+  to { transform: translate3d(3%, -2%, 0) scale(1.08) rotate(2deg); }
+}
+
+.atelier-shell .atelier-home .atelier-welcome-copy,
+.atelier-shell .atelier-home .atelier-welcome-decoration {
+  z-index: 1;
+}
+
+.atelier-shell .atelier-home .atelier-welcome-decoration {
+  border-color: rgba(121, 85, 200, .22);
+  background: rgba(255, 255, 255, .66);
+  box-shadow: 0 18px 44px rgba(93, 66, 143, .16), inset 0 1px rgba(255, 255, 255, .96);
+  backdrop-filter: blur(14px);
+  animation: atelier-mark-float 5s ease-in-out infinite;
+}
+
+@keyframes atelier-mark-float {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(-4deg) translateY(-7px); }
+}
+
+.atelier-shell .atelier-app-card,
+.atelier-shell .atelier-info-card {
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.atelier-shell .atelier-app-card:hover,
+.atelier-shell .atelier-info-card:hover {
+  transform: translateY(-5px) perspective(800px) rotateX(1deg);
+  border-color: rgba(121, 85, 200, 0.28);
+  box-shadow: 0 20px 38px rgba(49, 39, 72, 0.13), 0 0 30px rgba(121, 85, 200, 0.1);
+}
+
+.atelier-shell .atelier-app-card {
+  overflow: hidden;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  animation: atelier-card-arrive .65s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.atelier-shell .atelier-app-card:nth-child(2) { animation-delay: .06s; }
+.atelier-shell .atelier-app-card:nth-child(3) { animation-delay: .12s; }
+.atelier-shell .atelier-app-card:nth-child(4) { animation-delay: .18s; }
+.atelier-shell .atelier-app-card:nth-child(5) { animation-delay: .24s; }
+.atelier-shell .atelier-app-card:nth-child(6) { animation-delay: .30s; }
+
+@keyframes atelier-card-arrive {
+  from { opacity: 0; translate: 0 16px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+.atelier-shell .atelier-app-card::before {
+  position: absolute;
+  z-index: 0;
+  top: -25%;
+  bottom: -25%;
+  left: -70%;
+  width: 44%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .82), transparent);
+  content: '';
+  pointer-events: none;
+  transform: skewX(-18deg);
+  transition: left .7s cubic-bezier(.2, .7, .2, 1);
+}
+
+.atelier-shell .atelier-app-card:hover::before {
+  left: 130%;
+}
+
+.atelier-shell .atelier-app-card > * {
+  position: relative;
+  z-index: 1;
+  transition: transform .24s ease, box-shadow .24s ease;
+}
+
+.atelier-shell .atelier-app-card:hover .atelier-app-icon {
+  transform: translateZ(12px) scale(1.06);
+  box-shadow: 0 8px 20px rgba(121, 85, 200, .14);
+}
+
+.atelier-shell .atelier-info-card {
+  background: rgba(255, 255, 255, .82);
+  box-shadow: 0 8px 24px rgba(49, 39, 72, .045);
+  backdrop-filter: blur(12px);
+}
+
+.atelier-shell .atelier-app-card:focus-visible {
+  outline: 2px solid rgba(121, 85, 200, 0.65);
+  outline-offset: 3px;
+}
+
+/* TABLET */
+
+@media (max-width: 900px) and (min-width: 701px) {
+  .atelier-sidebar {
+    width: 225px;
+  }
+
+  .atelier-main {
+    width: calc(100% - 225px);
+    margin-right: 225px;
+  }
+
+  .sidebar-collapsed .atelier-main {
+    width: calc(100% - 82px);
+    margin-right: 82px;
+  }
+
+  .atelier-page {
+    padding: 24px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+  .atelier-sidebar,
+  .sidebar-collapsed .atelier-sidebar {
+    z-index: 100;
+    width: min(285px, 85vw);
+    padding: 22px 15px 16px;
+    transform: translateX(105%);
+  }
+
+  .atelier-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .atelier-main,
+  .sidebar-collapsed .atelier-main {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .atelier-mobile-overlay {
+    position: fixed;
+    z-index: 90;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: #21172e66;
+  }
+
+  .atelier-topbar {
+    height: 62px;
+    padding: 0 15px;
+  }
+
+  .atelier-mobile-menu {
+    display: grid;
+    place-items: center;
+  }
+
+  .atelier-page {
+    padding: 20px 15px;
+  }
+
+  .atelier-breadcrumb {
+    font-size: 11px;
+  }
+
+  .atelier-collapse {
+    position: static;
+    transform: none;
+  }
+
+  .sidebar-collapsed .atelier-brand {
+    justify-content: flex-start;
+    padding-inline: 5px;
+  }
+
+  .sidebar-collapsed .atelier-collapse {
+    position: static;
+    transform: none;
+  }
+
+  .sidebar-collapsed .atelier-sidebar {
+    padding-inline: 15px;
+  }
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+  .atelier-shell *,
+  .atelier-shell *::before,
+  .atelier-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .atelier-shell .atelier-app-card:hover,
+  .atelier-shell .atelier-info-card:hover,
+  .atelier-shell .atelier-icon-button:hover {
+    transform: none;
+  }
+
+  .atelier-main::before,
+  .atelier-shell .atelier-home .atelier-welcome::before,
+  .atelier-shell .atelier-home .atelier-welcome-decoration,
+  .atelier-shell .atelier-app-card,
+  .atelier-shell .atelier-app-card::before {
+    animation: none;
+    transition: none;
+  }
+}
+
+.atelier-shell[data-reduce-motion='true'] *,
+.atelier-shell[data-reduce-motion='true'] *::before,
+.atelier-shell[data-reduce-motion='true'] *::after {
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+.atelier-shell[data-reduce-motion='true'] .atelier-app-card:hover,
+.atelier-shell[data-reduce-motion='true'] .atelier-info-card:hover,
+.atelier-shell[data-reduce-motion='true'] .atelier-icon-button:hover {
+  transform: none;
+}
+
+.atelier-shell[data-reduce-motion='true'] .atelier-main::before,
+.atelier-shell[data-reduce-motion='true'] .atelier-home .atelier-welcome::before,
+.atelier-shell[data-reduce-motion='true'] .atelier-home .atelier-welcome-decoration,
+.atelier-shell[data-reduce-motion='true'] .atelier-app-card,
+.atelier-shell[data-reduce-motion='true'] .atelier-app-card::before {
+  animation: none;
+  transition: none;
+}
+
+.atelier-page > .dash-embed {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 12% 4%, rgba(139, 112, 209, .12), transparent 35%),
+    radial-gradient(ellipse at 92% 18%, rgba(36, 187, 209, .09), transparent 31%);
+  background-size: 150% 150%;
+  animation: atelier-ambient-drift 24s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atelier-page > .dash-embed {
+    animation: none;
+  }
+}
+
+.atelier-shell[data-reduce-motion='true'] .atelier-page > .dash-embed {
+  animation: none;
+}
